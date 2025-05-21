@@ -1,0 +1,33 @@
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10%;
+  gap: 30%;
+  color: #fff;
+}
+
+.home-header img {
+  width: 300px;
+  border-radius: 10px;
+}
+
+.home-header-text {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.home-intro {
+  text-align: center;
+  margin: 20px;
+  font-size: 150%;
+  color: #fff;
+}
+
+.products-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+}
