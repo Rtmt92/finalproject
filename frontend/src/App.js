@@ -8,6 +8,9 @@ import Login from './pages/login';
 import Register from './pages/register';
 import Home from './pages/home';
 import GeneralTerm from './pages/GeneralTerm';
+import CreateAnnounce from './pages/CreateAnnounce';
+import UpdateAnnounce from './pages/UpdateAnnounce';
+import Pay from './pages/Pay';
 
 
 const App = () => {
@@ -21,6 +24,10 @@ const App = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/home" element={<Home />} />
             <Route path="/GeneralTerm" element={<GeneralTerm />} />
+            <Route path="/CreateAnnounce" element={<CreateAnnounce />} />
+            <Route path="/UpdateAnnounce" element={<UpdateAnnounce />} />
+            <Route path="/Pay" element={<Pay />} />
+
           </Routes>
         </Router>
       </div>

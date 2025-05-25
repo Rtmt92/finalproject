@@ -1,0 +1,118 @@
+
+/* Styles communs aux inputs */
+.commonInputStyle {
+  background-color: #4a555f;
+  border: none;
+  border-radius: 10px;
+  color: #ccc;
+  padding: 10px;
+  font-size: 14px;
+  font-family: sans-serif;
+}
+
+/* Formulaire */
+.form {
+  background: #000;
+  color: #ccc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  border-radius: 10px;
+  font-family: sans-serif;
+}
+
+/* Inputs full width */
+.fullInput {
+  composes: commonInputStyle;
+  width: 100%;
+}
+
+/* Inputs half width */
+.halfInput {
+  composes: commonInputStyle;
+  width: 48%;
+}
+
+/* Textarea */
+.textarea {
+  composes: commonInputStyle;
+  width: 100%;
+  resize: none;
+}
+
+/* Bouton valider */
+.button {
+  background-color: #4a555f;
+  border: none;
+  border-radius: 10px;
+  color: #ccc;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  width: 40%;
+}
+
+/* Ligne avec 2 inputs */
+.row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 4%;
+}
+
+/* Container des images */
+.imagePreviewContainer {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Wrapper image */
+.imageWrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+/* Image */
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+/* Bouton suppression image */
+.deleteImageBtn {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  padding: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Bouton supprimer annonce */
+.deleteBtn {
+  background-color: red;
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  padding: 10px 30px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 20px;
+  width: 80%;
+}
