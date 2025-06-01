@@ -1,0 +1,19 @@
+{
+    "name": "rayan/backend",
+    "autoload": {
+    "psr-4": {
+        "Core\\": "core/",
+        "Config\\": "config/",
+        "Controllers\\": "controllers/",
+        "Src\\Models\\": "src/Models/"
+    }
+    },
+
+    "authors": [
+        {
+            "name": "Rtmt92",
+            "email": "rayantoumert.rt@gmail.com"
+        }
+    ],
+    "require": {}
+}
