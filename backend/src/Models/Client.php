@@ -118,14 +118,9 @@ class Client {
      * @param int $id
      * @return bool
      */
-    public function delete(int $id): bool {
-        try {
-            $stmt = $this->db->prepare("DELETE FROM client WHERE id_client = :id");
-            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            // Optionnel : logger $e->getMessage()
-            return false;
-        }
+    public function delete(int $id): void {
+        $stmt = $this->db->prepare("DELETE FROM client WHERE id_client = :id");
+        $stmt->execute(['id' => $id]);
     }
+
 }
