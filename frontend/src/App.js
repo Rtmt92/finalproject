@@ -1,38 +1,68 @@
-import logo from './logo.svg';
-import './App.css';
-import Header from './compenents/Header';
-import Footer from './compenents/Footer';
-import ProductCard from './compenents/ProductCard';
+// frontend/src/App.js
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Login from './pages/login';
-import Register from './pages/register';
-import Home from './pages/home';
-import GeneralTerm from './pages/GeneralTerm';
-import CreateAnnounce from './pages/CreateAnnounce';
-import UpdateAnnounce from './pages/UpdateAnnounce';
-import Pay from './pages/Pay';
 
+import Header         from "./compenents/Header";
+import Footer         from "./compenents/Footer";
+import Login          from "./pages/login";
+import Register       from "./pages/register";
+import Home           from "./pages/home";
+import GeneralTerm    from "./pages/GeneralTerm";
+import CreateAnnounce from "./pages/CreateAnnounce";
+import UpdateAnnounce from "./pages/UpdateAnnounce";
+import Pay            from "./pages/Pay";
+import ProductDetail  from "./pages/ProductDetail"; // ← importe la page détail
 
 const App = () => {
-  return (
-    <div>
-      <Header />
-      <div className="main-content">
-        <Router>
-          <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/GeneralTerm" element={<GeneralTerm />} />
-            <Route path="/CreateAnnounce" element={<CreateAnnounce />} />
-            <Route path="/UpdateAnnounce" element={<UpdateAnnounce />} />
-            <Route path="/Pay" element={<Pay />} />
+  const token = localStorage.getItem("token");
 
-          </Routes>
-        </Router>
-      </div>
+  return (
+    <Router>
+      <Header />
+
+      <main className="main-content">
+        <Routes>
+          {/* Page d’accueil protégée */}
+          <Route
+            path="/"
+            element={token ? <Home /> : <Navigate to="/login" replace />}
+          />
+
+          {/* Auth routes */}
+          <Route path="/login"    element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Détail produit */}
+          <Route
+            path="/product/:id"
+            element={token ? <ProductDetail /> : <Navigate to="/login" replace />}
+          />
+
+          {/* Autres pages protégées */}
+          <Route
+            path="/GeneralTerm"
+            element={token ? <GeneralTerm /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/CreateAnnounce"
+            element={token ? <CreateAnnounce /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/UpdateAnnounce"
+            element={token ? <UpdateAnnounce /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/Pay"
+            element={token ? <Pay /> : <Navigate to="/login" replace />}
+          />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+
       <Footer />
-    </div>
+    </Router>
   );
 };
 

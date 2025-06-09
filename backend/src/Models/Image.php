@@ -12,50 +12,22 @@ class Image {
         $this->db = Database::getConnection();
     }
 
-    /** Récupère toutes les images */
-    public function getAll(): array {
-        $stmt = $this->db->query("SELECT * FROM image");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /** Récupère une image par son ID */
+    /**
+     * Récupère une image par son ID.
+     * La colonne `lien` contient déjà l'URL complète ou le chemin public.
+     *
+     * @param int $id
+     * @return array<string,mixed>|null ['id_image'=>…, 'lien'=>…] ou null
+     */
     public function getById(int $id): ?array {
-        $stmt = $this->db->prepare("SELECT * FROM image WHERE id_image = :id");
-        $stmt->execute(['id' => $id]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ?: null;
-    }
-
-    /**
-     * Crée une nouvelle image
-     * @param array $data ['lien' => string]
-     * @return int ID inséré
-     */
-    public function create(array $data): int {
-        $stmt = $this->db->prepare("INSERT INTO image (lien) VALUES (:lien)");
-        $stmt->execute(['lien' => $data['lien']]);
-        return (int)$this->db->lastInsertId();
-    }
-
-    /**
-     * Met à jour le lien d’une image
-     * @param int   $id   ID de l’image
-     * @param array $data ['lien' => string]
-     * @return bool
-     */
-    public function update(int $id, array $data): bool {
-        $stmt = $this->db->prepare(
-            "UPDATE image SET lien = :lien WHERE id_image = :id"
-        );
-        return $stmt->execute([
-            'lien' => $data['lien'],
-            'id'   => $id
-        ]);
-    }
-
-    /** Supprime une image par son ID */
-    public function delete(int $id): bool {
-        $stmt = $this->db->prepare("DELETE FROM image WHERE id_image = :id");
-        return $stmt->execute(['id' => $id]);
+        try {
+            $stmt = $this->db->prepare("SELECT id_image, lien FROM image WHERE id_image = :id");
+            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row ?: null;
+        } catch (PDOException $e) {
+            return null;
+        }
     }
 }

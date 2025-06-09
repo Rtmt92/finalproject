@@ -11,6 +11,10 @@ class ComposerStaticInit1f508bf9c251bd8df4d5a06cceee7041
         array (
             'Src\\Models\\' => 11,
         ),
+        'F' => 
+        array (
+            'Firebase\\JWT\\' => 13,
+        ),
         'C' => 
         array (
             'Core\\' => 5,
@@ -23,6 +27,10 @@ class ComposerStaticInit1f508bf9c251bd8df4d5a06cceee7041
         'Src\\Models\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src/Models',
+        ),
+        'Firebase\\JWT\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
         ),
         'Core\\' => 
         array (

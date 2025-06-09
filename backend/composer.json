@@ -15,5 +15,7 @@
             "email": "rayantoumert.rt@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+        "firebase/php-jwt": "^6.11"
+    }
 }

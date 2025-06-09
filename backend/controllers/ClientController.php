@@ -6,18 +6,17 @@ use Src\Models\Message;
 use Src\Models\Signaler;
 use Src\Models\Panier;
 use Src\Models\Transaction;
+use PDOException;
 
 class ClientController {
     private Client $clientModel;
 
     public function __construct() {
-        // Instancie le modèle Client
         $this->clientModel = new Client();
     }
 
     /**
      * GET /client
-     * Renvoie la liste de tous les clients
      */
     public function index(): void {
         $clients = $this->clientModel->getAll();
@@ -27,7 +26,6 @@ class ClientController {
 
     /**
      * GET /client/{id}
-     * Renvoie un seul client ou 404 si non trouvé
      */
     public function show(int $id): void {
         $client = $this->clientModel->getById($id);
@@ -43,42 +41,52 @@ class ClientController {
 
     /**
      * POST /client
-     * Crée un nouveau client (JSON: nom, prenom, email, numero_telephone, mot_de_passe, role)
      */
     public function store(): void {
         $data = json_decode(file_get_contents('php://input'), true);
+
+        // Champs obligatoires
         if (
             empty($data['nom']) ||
             empty($data['prenom']) ||
             empty($data['email']) ||
             empty($data['numero_telephone']) ||
-            empty($data['mot_de_passe']) ||
-            empty($data['role'])
+            empty($data['mot_de_passe'])
         ) {
             http_response_code(400);
             header('Content-Type: application/json');
-            echo json_encode(['error' => 'Champs manquants']);
+            echo json_encode(['error' => 'Champs obligatoires manquants']);
             return;
         }
 
-        // Hasher le mot de passe
+        // Hash du mot de passe
         $data['mot_de_passe'] = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
 
-        $newId = $this->clientModel->create($data);
-        if ($newId) {
+        // Création
+        $result = $this->clientModel->create([
+            'nom'              => $data['nom'],
+            'prenom'           => $data['prenom'],
+            'email'            => $data['email'],
+            'numero_telephone' => $data['numero_telephone'],
+            'mot_de_passe'     => $data['mot_de_passe'],
+            'role'             => $data['role'] ?? 'client',
+            'photo_profil'     => $data['photo_profil'] ?? null,
+            'description'      => $data['description']  ?? null,
+        ]);
+
+        if (is_int($result)) {
             http_response_code(201);
             header('Content-Type: application/json');
-            echo json_encode(['message' => 'Client créé', 'id_client' => $newId]);
+            echo json_encode(['message' => 'Client créé', 'id_client' => $result]);
         } else {
             http_response_code(500);
             header('Content-Type: application/json');
-            echo json_encode(['error' => 'Impossible de créer le client']);
+            echo json_encode(['error' => is_string($result) ? $result : 'Impossible de créer le client']);
         }
     }
 
     /**
-     * PUT/PATCH /client/{id}
-     * Met à jour le client existant
+     * PUT|PATCH /client/{id}
      */
     public function update(int $id): void {
         $existing = $this->clientModel->getById($id);
@@ -90,14 +98,14 @@ class ClientController {
         }
 
         $data = json_decode(file_get_contents('php://input'), true);
-        if (!$data || !is_array($data)) {
+        if (!is_array($data)) {
             http_response_code(400);
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Données invalides']);
             return;
         }
 
-        // Hasher le mot de passe si fourni
+        // Hasher si on modifie le mot de passe
         if (!empty($data['mot_de_passe'])) {
             $data['mot_de_passe'] = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
         }
@@ -109,13 +117,12 @@ class ClientController {
         } else {
             http_response_code(500);
             header('Content-Type: application/json');
-            echo json_encode(['error' => 'Impossible de mettre à jour']);
+            echo json_encode(['error' => 'Impossible de mettre à jour le client']);
         }
     }
 
     /**
      * DELETE /client/{id}
-     * Supprime le client et toutes ses données enfant (messages, signalements, paniers, transactions)
      */
     public function destroy(int $id): void {
         $existing = $this->clientModel->getById($id);
@@ -126,13 +133,13 @@ class ClientController {
             return;
         }
 
-        // Suppression en cascade des données enfants
+        // Suppression des enfants
         (new Message())->deleteByClient($id);
         (new Signaler())->deleteByClient($id);
         (new Panier())->deleteByClient($id);
-        (new Transaction())->deleteByClient($id);
+        // Si vous gérez les transactions en cascade
+        //(new Transaction())->deleteByClient($id);
 
-        // Suppression du client
         try {
             $this->clientModel->delete($id);
             header('Content-Type: application/json');

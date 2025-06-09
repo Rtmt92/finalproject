@@ -1,0 +1,69 @@
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import '../styles/ProductDetail.css';
+
+export default function ProductDetail() {
+  const { id } = useParams();
+  const [prod, setProd]             = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  useEffect(() => {
+    fetch(`/api/produit/${id}`)
+      .then(res => {
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        setProd(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Erreur fetch produit:', err);
+        setError('Impossible de charger le produit');
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) return <div className="detail-container">Chargement…</div>;
+  if (error)   return <div className="detail-container">{error}</div>;
+  if (!prod)  return null;
+
+  const images = prod.images || [];
+  const mainImg = images[selectedIndex]?.lien || '';
+
+  return (
+    <div className="detail-container">
+      <div className="detail-main">
+        <div className="thumbnail-list">
+          {images.map((img, idx) => (
+            <img
+              key={idx}
+              src={img.lien}
+              alt={`${prod.nom_produit} ${idx}`}
+              className={idx === selectedIndex ? 'selected' : ''}
+              onClick={() => setSelectedIndex(idx)}
+            />
+          ))}
+        </div>
+        <div className="main-image">
+          {mainImg
+            ? <img src={mainImg} alt={prod.nom_produit} />
+            : <div className="image-placeholder" />
+          }
+        </div>
+      </div>
+
+      <div className="info-panel">
+        <p className="name">{prod.nom_produit}</p>
+        <p className="description">{prod.description}</p>
+        <p className="price">{prod.prix}€</p>
+      </div>
+
+      <div className="add-cart-wrapper">
+        <button className="add-cart-btn">Ajouter au panier</button>
+      </div>
+    </div>
+  );
+}

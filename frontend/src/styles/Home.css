@@ -1,33 +1,78 @@
-.home-header {
+/* Conteneur principal */
+.home {
+  background: #000;
+  color: #fff;
+  padding: 2rem;
+}
+
+.home-welcome {
+  background: none !important;  /* supprime tout fond */
+  padding: 0 !important;        /* supprime tout padding */
+  margin: 2rem auto !important; /* centre horizontalement et espace vertical */
+  text-align: center !important;
+  font-size: 2rem;
+  font-weight: 300;
+  color: #fff;
+  max-width: none !important;   /* retire toute limite de largeur */
+  border: none !important;      /* supprime toute bordure */
+}
+
+/* Écran coupé en deux pour la bannière */
+.home-hero {
   display: flex;
+  width: 100%;
+  height: 400px;            /* hauteur de la section */
+  margin-bottom: 2rem;
+}
+
+/* Moitié gauche : on centre l’image */
+.home-hero-left {
+  flex: 1;                   /* 50% */
+  display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: center;
-  padding: 10%;
-  gap: 30%;
-  color: #fff;
 }
 
-.home-header img {
-  width: 300px;
-  border-radius: 10px;
-}
-
-.home-header-text {
-  font-size: 24px;
-  margin-bottom: 10px;
-}
-
-.home-intro {
-  text-align: center;
-  margin: 20px;
-  font-size: 150%;
-  color: #fff;
-}
-
-.products-grid {
+/* Moitié droite : on centre le texte */
+.home-hero-right {
+  flex: 1;                   /* 50% */
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
-  gap: 20px;
-  padding: 20px;
+  align-items: center;
+}
+
+/* Image un peu plus petite, au milieu */
+.home-hero-img {
+  max-width: 80%;            /* 80% de la largeur de sa moitié */
+  max-height: 80%;           /* idem pour la hauteur */
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+/* Texte centré de la moitié droite */
+.home-hero-text {
+  font-size: 170%;
+  font-style: italic;
+  font-weight: 300;
+  text-align: center;
+  color: #fff;
+}
+
+/* Intro italique inchangée */
+.home-intro {
+  font-size: 170%;
+  text-align: center;
+  font-style: italic;
+  color: #fff;
+  max-width: 800px;
+  margin: 0 auto 7%;
+}
+
+/* Grille de produits inchangée */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  padding-bottom: 2rem;
 }

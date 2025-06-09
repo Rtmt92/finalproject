@@ -1,11 +1,11 @@
 <?php
-// backend/index.php
-// Active l'affichage des erreurs pour debug
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+declare(strict_types=1);
 
-// Inclusion manuelle des classes sans autoloader
-// Chargement de la configuration DB
+// --- Affichage des erreurs (dev) ---
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
+// --- Chargement de la config DB ---
 $possiblePaths = [
     __DIR__ . '/config/DatabaseConfig.php',
     __DIR__ . '/src/Core/Database.php'
@@ -24,19 +24,16 @@ if (!$loaded) {
     exit;
 }
 
-// Models
-foreach (glob(__DIR__ . '/src/Models/*.php') as $modelFile) {
-    require_once $modelFile;
-}
-// Core (Database)
-// La classe Database est dans config/Database.php avec namespace Core;
-// on l'a déjà chargé.
+// --- Chargement des Models et Controllers ---
+foreach (glob(__DIR__ . '/src/Models/*.php') as $f) require_once $f;
+foreach (glob(__DIR__ . '/controllers/*.php') as $f) require_once $f;
 
-// Controllers
-foreach (glob(__DIR__ . '/controllers/*.php') as $ctrlFile) {
-    require_once $ctrlFile;
-}
-
+// --- Composer & JWT ---
+require_once __DIR__ . '/vendor/autoload.php';
+use Config\JwtConfig;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use Controllers\AuthController;
 use Controllers\ClientController;
 use Controllers\MessageController;
 use Controllers\SignalerController;
@@ -49,94 +46,151 @@ use Controllers\PanierProduitController;
 use Controllers\ProduitImageController;
 use Controllers\TransactionPanierController;
 
-// Routeur minimal
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+// --- CORS & JSON headers ---
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Content-Type: application/json; charset=utf-8');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
+
+$uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
 
-function dispatch($pattern, $methods, $callback) {
+/** Vérifie le Bearer JWT, ou renvoie 401 */
+function authenticate(): object {
+    $h = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    if (!preg_match('/Bearer\s(\S+)/', $h, $m)) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Token manquant']);
+        exit;
+    }
+    try {
+        return JWT::decode($m[1], new Key(JwtConfig::SECRET_KEY, 'HS256'));
+    } catch (\Exception $e) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Token invalide']);
+        exit;
+    }
+}
+
+/** Dispatch simplifié */
+function dispatch(string $pattern, array|string $methods, callable $cb): bool {
     global $uri, $method;
     if (!in_array($method, (array)$methods)) return false;
-    if (preg_match($pattern, $uri, $matches)) {
-        array_shift($matches);
-        call_user_func_array($callback, $matches);
+    if (preg_match($pattern, $uri, $m)) {
+        array_shift($m);
+        call_user_func_array($cb, $m);
         exit;
     }
     return false;
 }
 
-// CRUD routes
-// CLIENT
-dispatch('#^/client$#', ['GET'], function() { (new ClientController())->index(); });
-dispatch('#^/client$#', ['POST'], function() { (new ClientController())->store(); });
-dispatch('#^/client/(\d+)$#', ['GET'], function($id) { (new ClientController())->show((int)$id); });
-dispatch('#^/client/(\d+)$#', ['PUT','PATCH'], function($id) { (new ClientController())->update((int)$id); });
-dispatch('#^/client/(\d+)$#', ['DELETE'], function($id) { (new ClientController())->destroy((int)$id); });
+// --- ENDPOINTS AUTH (/api) ---
+dispatch('#^/api/register$#', ['POST'], fn()=> (new AuthController())->register());
+dispatch('#^/api/login$#',    ['POST'], fn()=> (new AuthController())->login());
+dispatch('#^/api/me$#', ['GET'], function() {
+  $payload = authenticate();
+  $client  = (new \Src\Models\Client())->getById((int)$payload->sub);
+  if (!$client) {
+    http_response_code(404);
+    echo json_encode(['error'=>'Utilisateur non trouvé']);
+    return;
+  }
+  header('Content-Type: application/json');
+  echo json_encode($client);
+});
 
-// MESSAGE
-dispatch('#^/message$#', ['GET'], function() { (new MessageController())->index(); });
-dispatch('#^/message$#', ['POST'], function() { (new MessageController())->store(); });
-dispatch('#^/message/(\d+)$#', ['GET'], function($id) { (new MessageController())->show((int)$id); });
-dispatch('#^/message/(\d+)$#', ['PUT','PATCH'], function($id) { (new MessageController())->update((int)$id); });
-dispatch('#^/message/(\d+)$#', ['DELETE'], function($id) { (new MessageController())->destroy((int)$id); });
 
-// SIGNALER
-dispatch('#^/signaler$#', ['GET'], function() { (new SignalerController())->index(); });
-dispatch('#^/signaler$#', ['POST'], function() { (new SignalerController())->store(); });
-dispatch('#^/signaler/(\d+)$#', ['GET'], function($id) { (new SignalerController())->show((int)$id); });
-dispatch('#^/signaler/(\d+)$#', ['PUT','PATCH'], function($id) { (new SignalerController())->update((int)$id); });
-dispatch('#^/signaler/(\d+)$#', ['DELETE'], function($id) { (new SignalerController())->destroy((int)$id); });
+// --- CRUD CLIENT ---
+dispatch('#^/client$#',         ['GET'],         fn()=> (new ClientController())->index());
+dispatch('#^/client$#',         ['POST'],        fn()=> (new ClientController())->store());
+dispatch('#^/client/(\d+)$#',    ['GET'],         fn($i)=>(new ClientController())->show((int)$i));
+dispatch('#^/client/(\d+)$#',    ['PUT','PATCH'], fn($i)=>(new ClientController())->update((int)$i));
+dispatch('#^/client/(\d+)$#',    ['DELETE'],      fn($i)=>(new ClientController())->destroy((int)$i));
 
-// PRODUIT
-dispatch('#^/produit$#', ['GET'], function() { (new ProduitController())->index(); });
-dispatch('#^/produit$#', ['POST'], function() { (new ProduitController())->store(); });
-dispatch('#^/produit/(\d+)$#', ['GET'], function($id) { (new ProduitController())->show((int)$id); });
-dispatch('#^/produit/(\d+)$#', ['PUT','PATCH'], function($id) { (new ProduitController())->update((int)$id); });
-dispatch('#^/produit/(\d+)$#', ['DELETE'], function($id) { (new ProduitController())->destroy((int)$id); });
+// --- CRUD MESSAGE ---
+dispatch('#^/message$#',         ['GET'],         fn()=> (new MessageController())->index());
+dispatch('#^/message$#',         ['POST'],        fn()=> (new MessageController())->store());
+dispatch('#^/message/(\d+)$#',    ['GET'],         fn($i)=>(new MessageController())->show((int)$i));
+dispatch('#^/message/(\d+)$#',    ['PUT','PATCH'], fn($i)=>(new MessageController())->update((int)$i));
+dispatch('#^/message/(\d+)$#',    ['DELETE'],      fn($i)=>(new MessageController())->destroy((int)$i));
 
-// IMAGE
-dispatch('#^/image$#', ['GET'], function() { (new ImageController())->index(); });
-dispatch('#^/image$#', ['POST'], function() { (new ImageController())->store(); });
-dispatch('#^/image/(\d+)$#', ['GET'], function($id) { (new ImageController())->show((int)$id); });
-dispatch('#^/image/(\d+)$#', ['PUT','PATCH'], function($id) { (new ImageController())->update((int)$id); });
-dispatch('#^/image/(\d+)$#', ['DELETE'], function($id) { (new ImageController())->destroy((int)$id); });
+// --- CRUD SIGNALEMENT ---
+dispatch('#^/signaler$#',        ['GET'],         fn()=> (new SignalerController())->index());
+dispatch('#^/signaler$#',        ['POST'],        fn()=> (new SignalerController())->store());
+dispatch('#^/signaler/(\d+)$#',   ['GET'],         fn($i)=>(new SignalerController())->show((int)$i));
+dispatch('#^/signaler/(\d+)$#',   ['PUT','PATCH'], fn($i)=>(new SignalerController())->update((int)$i));
+dispatch('#^/signaler/(\d+)$#',   ['DELETE'],      fn($i)=>(new SignalerController())->destroy((int)$i));
 
-// CATEGORIE
-dispatch('#^/categorie$#', ['GET'], function() { (new CategorieController())->index(); });
-dispatch('#^/categorie$#', ['POST'], function() { (new CategorieController())->store(); });
-dispatch('#^/categorie/(\d+)$#', ['GET'], function($id) { (new CategorieController())->show((int)$id); });
-dispatch('#^/categorie/(\d+)$#', ['PUT','PATCH'], function($id) { (new CategorieController())->update((int)$id); });
-dispatch('#^/categorie/(\d+)$#', ['DELETE'], function($id) { (new CategorieController())->destroy((int)$id); });
+// --- CRUD PRODUIT ---
+// CRUD PRODUIT AVEC PRÉFIXE /api
+dispatch('#^/api/produit$#',         ['GET'],    fn() => (new ProduitController())->index());
+dispatch('#^/api/produit$#',         ['POST'],   fn() => (new ProduitController())->store());
+dispatch('#^/api/produit/(\d+)$#',   ['GET'],    fn($i)=>(new ProduitController())->show((int)$i));
+dispatch('#^/api/produit/(\d+)$#',   ['PUT','PATCH'], fn($i)=>(new ProduitController())->update((int)$i));
+dispatch('#^/api/produit/(\d+)$#',   ['DELETE'], fn($i)=>(new ProduitController())->destroy((int)$i));
 
-// PANIER
-dispatch('#^/panier$#', ['GET'], function() { (new PanierController())->index(); });
-dispatch('#^/panier$#', ['POST'], function() { (new PanierController())->store(); });
-dispatch('#^/panier/(\d+)$#', ['GET'], function($id) { (new PanierController())->show((int)$id); });
-dispatch('#^/panier/(\d+)$#', ['PUT','PATCH'], function($id) { (new PanierController())->update((int)$id); });
-dispatch('#^/panier/(\d+)$#', ['DELETE'], function($id) { (new PanierController())->destroy((int)$id); });
+// --- ENDPOINT PRODUIT RANDOM ---
+dispatch('#^/api/produit/random$#',['GET'], fn()=> (new ProduitController())->random());
 
-// TRANSACTION
-dispatch('#^/transaction$#', ['GET'], function() { (new TransactionController())->index(); });
-dispatch('#^/transaction$#', ['POST'], function() { (new TransactionController())->store(); });
-dispatch('#^/transaction/(\d+)$#', ['GET'], function($id) { (new TransactionController())->show((int)$id); });
-dispatch('#^/transaction/(\d+)$#', ['PUT','PATCH'], function($id) { (new TransactionController())->update((int)$id); });
-dispatch('#^/transaction/(\d+)$#', ['DELETE'], function($id) { (new TransactionController())->destroy((int)$id); });
+// --- CRUD IMAGE ---
+dispatch('#^/image$#',           ['GET'],         fn()=> (new ImageController())->index());
+dispatch('#^/image$#',           ['POST'],        fn()=> (new ImageController())->store());
+dispatch('#^/image/(\d+)$#',      ['GET'],         fn($i)=>(new ImageController())->show((int)$i));
+dispatch('#^/image/(\d+)$#',      ['PUT','PATCH'], fn($i)=>(new ImageController())->update((int)$i));
+dispatch('#^/image/(\d+)$#',      ['DELETE'],      fn($i)=>(new ImageController())->destroy((int)$i));
 
-// PANIER_PRODUIT (pivot)
-dispatch('#^/panier_produit$#', ['GET'], function() { (new PanierProduitController())->index(); });
-dispatch('#^/panier_produit$#', ['POST'], function() { (new PanierProduitController())->store(); });
-dispatch('#^/panier_produit/(\d+)/(\d+)$#', ['DELETE'], function($p, $pr) { (new PanierProduitController())->destroy((int)$p, (int)$pr); });
+// --- CRUD CATEGORIE ---
+dispatch('#^/categorie$#',       ['GET'],         fn()=> (new CategorieController())->index());
+dispatch('#^/categorie$#',       ['POST'],        fn()=> (new CategorieController())->store());
+dispatch('#^/categorie/(\d+)$#',  ['GET'],         fn($i)=>(new CategorieController())->show((int)$i));
+dispatch('#^/categorie/(\d+)$#',  ['PUT','PATCH'], fn($i)=>(new CategorieController())->update((int)$i));
+dispatch('#^/categorie/(\d+)$#',  ['DELETE'],      fn($i)=>(new CategorieController())->destroy((int)$i));
 
-// PRODUIT_IMAGE (pivot)
-dispatch('#^/produit_image$#', ['GET'], function() { (new ProduitImageController())->index(); });
-dispatch('#^/produit_image$#', ['POST'], function() { (new ProduitImageController())->store(); });
-dispatch('#^/produit_image/(\d+)/(\d+)$#', ['DELETE'], function($pr, $i) { (new ProduitImageController())->destroy((int)$pr, (int)$i); });
+// --- CRUD PANIER ---
+dispatch('#^/panier$#',          ['GET'],         fn()=> (new PanierController())->index());
+dispatch('#^/panier$#',          ['POST'],        fn()=> (new PanierController())->store());
+dispatch('#^/panier/(\d+)$#',     ['GET'],         fn($i)=>(new PanierController())->show((int)$i));
+dispatch('#^/panier/(\d+)$#',     ['PUT','PATCH'], fn($i)=>(new PanierController())->update((int)$i));
+dispatch('#^/panier/(\d+)$#',     ['DELETE'],      fn($i)=>(new PanierController())->destroy((int)$i));
 
-// TRANSACTION_PANIER (pivot)
-dispatch('#^/transaction_panier$#', ['GET'], function() { (new TransactionPanierController())->index(); });
-dispatch('#^/transaction_panier$#', ['POST'], function() { (new TransactionPanierController())->store(); });
-dispatch('#^/transaction_panier/(\d+)/(\d+)$#', ['DELETE'], function($p, $t) { (new TransactionPanierController())->destroy((int)$p, (int)$t); });
+// --- CRUD TRANSACTION ---
+dispatch('#^/transaction$#',      ['GET'],         fn()=> (new TransactionController())->index());
+dispatch('#^/transaction$#',      ['POST'],        fn()=> (new TransactionController())->store());
+dispatch('#^/transaction/(\d+)$#', ['GET'],        fn($i)=>(new TransactionController())->show((int)$i));
+dispatch('#^/transaction/(\d+)$#', ['PUT','PATCH'],fn($i)=>(new TransactionController())->update((int)$i));
+dispatch('#^/transaction/(\d+)$#', ['DELETE'],     fn($i)=>(new TransactionController())->destroy((int)$i));
 
-// 404
+// --- PIVOTS ---
+dispatch('#^/panier_produit$#',             ['GET'],  fn()=> (new PanierProduitController())->index());
+dispatch('#^/panier_produit$#',             ['POST'], fn()=> (new PanierProduitController())->store());
+dispatch('#^/panier_produit/(\d+)/(\d+)$#', ['DELETE'], fn($p,$pr)=>(new PanierProduitController())->destroy((int)$p,(int)$pr));
+
+dispatch('#^/produit_image$#',              ['GET'],  fn()=> (new ProduitImageController())->index());
+dispatch('#^/produit_image$#',              ['POST'], fn()=> (new ProduitImageController())->store());
+dispatch('#^/produit_image/(\d+)/(\d+)$#',   ['DELETE'], fn($pr,$i)=>(new ProduitImageController())->destroy((int)$pr,(int)$i));
+
+dispatch('#^/transaction_panier$#',         ['GET'],  fn()=> (new TransactionPanierController())->index());
+dispatch('#^/transaction_panier$#',         ['POST'], fn()=> (new TransactionPanierController())->store());
+dispatch('#^/transaction_panier/(\d+)/(\d+)$#',['DELETE'],fn($p,$t)=>(new TransactionPanierController())->destroy((int)$p,(int)$t));
+
+dispatch('#^/api/me$#', ['GET'], function() {
+    $payload = authenticate();
+    // Récupère l’utilisateur complet pour photo & description
+    $client = (new \Src\Models\Client())->getById((int)$payload->sub);
+    if (!$client) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Utilisateur non trouvé']);
+        return;
+    }
+    header('Content-Type: application/json');
+    echo json_encode($client);
+});
+
+// 404 par défaut
 http_response_code(404);
-header('Content-Type: application/json');
 echo json_encode(['error' => 'Route non trouvée']);

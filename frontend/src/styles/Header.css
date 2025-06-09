@@ -67,6 +67,11 @@
     align-items: center;
     gap: 16px;
   }
+
+  .logout-icon {
+    color: red;
+  }
+
   
   .header-icon {
     color: white;
