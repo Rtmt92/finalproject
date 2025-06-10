@@ -14,10 +14,11 @@ const Header = () => {
 
   return (
     <header className="header">
-      <div className="header-content">
+    <div className="header-content">
         <div className="header-left">
-          <img src="/logo.png" alt="Logo" className="header-logo" />
-          <span className="header-logo-text">Justice</span>
+            <a href="/">
+                <img src="/dejaVuLogoWhite.png" alt="Logo" className="header-logo" />
+            </a>
         </div>
 
         <div className="header-search">

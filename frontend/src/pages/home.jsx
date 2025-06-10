@@ -28,7 +28,6 @@ export default function Home() {
       )}
 
       <div className="home-hero">
-        {/* Moitié gauche */}
         <div className="home-hero-left">
           <img
             src="/RTX5090.jpg"
@@ -37,7 +36,6 @@ export default function Home() {
           />
         </div>
 
-        {/* Moitié droite */}
         <div className="home-hero-right">
           <h2 className="home-hero-text">
             Une nouvelle génération de gaming<br/>
