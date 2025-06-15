@@ -11,7 +11,16 @@ import GeneralTerm    from "./pages/GeneralTerm";
 import CreateAnnounce from "./pages/CreateAnnounce";
 import UpdateAnnounce from "./pages/UpdateAnnounce";
 import Pay            from "./pages/Pay";
-import ProductDetail  from "./pages/ProductDetail"; // ← importe la page détail
+import ProductDetail  from "./pages/ProductDetail";
+import AdminHome from "./pages/AdminHome";
+import RequireAdmin from "./compenents/RequireAdmin";
+import EditProduct from "./pages/EditProduct";
+import AdminClient from "./pages/AdminClient";
+import EditClient from "./pages/EditClient";
+import AdminCategorie from "./pages/AdminCategorie";
+
+
+
 
 const App = () => {
   const token = localStorage.getItem("token");
@@ -55,6 +64,23 @@ const App = () => {
             path="/Pay"
             element={token ? <Pay /> : <Navigate to="/login" replace />}
           />
+
+          <Route path="/edit-product/:id" element={<EditProduct />} />
+
+          <Route path="/admin/client" element={<AdminClient />} />
+          <Route path="/admin/categorie" element={<AdminCategorie />} />
+
+
+          <Route
+            path="/admin"
+            element={
+              <RequireAdmin>
+                <AdminHome />
+              </RequireAdmin>
+            }
+          />
+          <Route path="/admin/client/edit/:id" element={<EditClient />} />
+
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

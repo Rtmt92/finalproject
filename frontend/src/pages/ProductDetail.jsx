@@ -26,6 +26,29 @@ export default function ProductDetail() {
       });
   }, [id]);
 
+  const ajouterAuPanier = async (idProduit) => {
+    try {
+      const response = await fetch('http://localhost:3000/panier_produit', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id_produit: idProduit })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert(data.message);
+      } else {
+        alert(data.error || 'Une erreur est survenue.');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la requête :', error);
+      alert('Erreur de communication avec le serveur.');
+    }
+  };
+
   if (loading) return <div className="detail-container">Chargement…</div>;
   if (error)   return <div className="detail-container">{error}</div>;
   if (!prod)  return null;
@@ -62,7 +85,9 @@ export default function ProductDetail() {
       </div>
 
       <div className="add-cart-wrapper">
-        <button className="add-cart-btn">Ajouter au panier</button>
+        <button className="add-cart-btn" onClick={() => ajouterAuPanier(prod.id_produit)}>
+          Ajouter au panier
+        </button>
       </div>
     </div>
   );

@@ -47,15 +47,17 @@ use Controllers\ProduitImageController;
 use Controllers\TransactionPanierController;
 
 // --- CORS & JSON headers ---
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('Content-Type: application/json; charset=utf-8');
+header("Access-Control-Allow-Origin: http://localhost:3000");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
+header("Content-Type: application/json; charset=utf-8");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
+
 
 $uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
@@ -133,6 +135,9 @@ dispatch('#^/api/produit$#',         ['POST'],   fn() => (new ProduitController(
 dispatch('#^/api/produit/(\d+)$#',   ['GET'],    fn($i)=>(new ProduitController())->show((int)$i));
 dispatch('#^/api/produit/(\d+)$#',   ['PUT','PATCH'], fn($i)=>(new ProduitController())->update((int)$i));
 dispatch('#^/api/produit/(\d+)$#',   ['DELETE'], fn($i)=>(new ProduitController())->destroy((int)$i));
+dispatch('#^/api/produit/(\d+)/image/(\d+)$#', ['DELETE'], fn($pid, $iid) => (new ProduitController())->deleteImage((int)$pid, (int)$iid));
+dispatch('#^/api/produit/(\d+)/image$#', ['POST'], fn($id) => (new ProduitController())->uploadImage((int)$id));
+
 
 // --- ENDPOINT PRODUIT RANDOM ---
 dispatch('#^/api/produit/random$#',['GET'], fn()=> (new ProduitController())->random());

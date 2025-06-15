@@ -1,0 +1,78 @@
+.client-banner {
+  background-color: #141414;
+  padding: 2rem;
+  margin: 2rem auto;
+  width: 90%;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.client-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.large-left, .large-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.client-avatar {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+}
+
+.client-text {
+  background-color: #4a555f;
+  color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 400px;
+  text-align: center;
+  font-style: italic;
+}
+
+.client-text h3 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.client-delete-btn {
+  margin-top: 2rem;
+  padding: 1rem;
+  width: 100%;
+  background-color: #d6342d;
+  color: white;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 40px;
+  cursor: pointer;
+  font-style: italic;
+}
+.client-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.edit-icon {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: white;
+}
+.edit-icon:hover {
+  color: #aaa;
+}
+

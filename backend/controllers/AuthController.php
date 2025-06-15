@@ -66,6 +66,7 @@ class AuthController {
             'iss'   => 'your-app',
             'sub'   => $id,
             'email' => $data['email'],
+            'role'  => $data['role'] ?? 'client',
             'iat'   => time(),
             'exp'   => time() + 3600,
         ];
@@ -74,7 +75,8 @@ class AuthController {
         http_response_code(201);
         echo json_encode([
             'message' => 'Inscription réussie',
-            'token'   => $token
+            'token'   => $token,
+            'role'    => $data['role'] ?? 'client'
         ]);
     }
 
@@ -102,11 +104,15 @@ class AuthController {
             'iss'   => 'your-app',
             'sub'   => $user['id_client'],
             'email' => $user['email'],
+            'role'  => $user['role'],
             'iat'   => time(),
             'exp'   => time() + 3600,
         ];
         $token = JWT::encode($payload, JwtConfig::SECRET_KEY, 'HS256');
 
-        echo json_encode(['token' => $token]);
+        echo json_encode([
+            'token' => $token,
+            'role'  => $user['role']
+        ]);
     }
 }

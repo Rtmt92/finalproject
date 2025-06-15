@@ -24,6 +24,14 @@ class Produit {
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
+    public function getByCategorie(int $id): array {
+        $stmt = $this->db->prepare("SELECT * FROM produit WHERE id_categorie = :id");
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+
     public function create(array $data): ?int {
         try {
             $stmt = $this->db->prepare(

@@ -30,9 +30,17 @@ export default function Login() {
         throw new Error(body.error || 'Erreur lors de la connexion');
       }
 
-      // Stocke le token et redirige
+      // Stockage du token et du rôle
       localStorage.setItem('token', body.token);
-      navigate('/home');    // ← ou navigate('/home') si votre route Home est '/home'
+      localStorage.setItem('role', body.role);
+
+      // Redirection conditionnelle
+      if (body.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/home');
+      }
+
     } catch (err) {
       console.error('Erreur login :', err);
       setError(err.message);

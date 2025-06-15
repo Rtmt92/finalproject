@@ -1,24 +1,29 @@
+// src/compenents/ProductBanner.jsx
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import "../styles/ProductBanner.css";
 
-   const ProductBanner = () => {
-      return (
-        <div className="banner">
-          <div className="image-placeholder">
-            <span>Image PC</span>
-          </div>
+const ProductBanner = ({ titre, description, prix, image, id, auteur }) => {
+  const navigate = useNavigate();
 
-          <div className="content">
-            <h2>PC complet neuf</h2>
-            <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, in consequat hendrerit...
-            </p>
-          </div>
+  const handleClick = () => {
+    navigate(`/edit-product/${id}`);
+  };
 
-          <div className="price-section">
-            <p>offre de Quentin</p>
-            <p>35$</p>
-          </div>
-        </div>
-      );
-    };
+  return (
+    <div className="banner" onClick={handleClick}>
+      <div className="banner-image">
+        {image ? <img src={image} alt={titre} /> : <div className="no-image">Image</div>}
+      </div>
+      <div className="banner-details">
+        <h3>{titre}</h3>
+        <p>{description}</p>
+      </div>
+      <div className="banner-price">
+        <p className="prix">{prix}$</p>
+      </div>
+    </div>
+  );
+};
 
 export default ProductBanner;

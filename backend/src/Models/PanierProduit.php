@@ -72,4 +72,37 @@ class PanierProduit {
         $stmt = $this->db->prepare("DELETE FROM panier_produit WHERE id_panier = :id");
         $stmt->execute(['id' => $panierId]);
     }
+
+    public function ajouterProduitAuPanier() {
+        session_start();
+
+        if (!isset($_SESSION['id_client'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Utilisateur non connecté']);
+            return;
+        }
+
+        $idClient = $_SESSION['id_client'];
+        $data = json_decode(file_get_contents('php://input'), true);
+        $idProduit = $data['id_produit'] ?? null;
+
+        if (!$idProduit) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Produit non précisé']);
+            return;
+        }
+
+        // 1. Récupérer ou créer le panier
+        $panier = $this->panierModel->getByClientId($idClient);
+        if (!$panier) {
+            $idPanier = $this->panierModel->create(['id_client' => $idClient]);
+        } else {
+            $idPanier = $panier['id_panier'];
+        }
+
+        // 2. Ajouter dans panier_produit
+        $this->panierProduitModel->addProduit($idPanier, $idProduit);
+
+        echo json_encode(['message' => 'Produit ajouté au panier']);
+    }
 }

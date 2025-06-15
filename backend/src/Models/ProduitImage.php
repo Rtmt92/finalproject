@@ -31,4 +31,15 @@ class ProduitImage {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    public function detachImageFromProduct(int $idProduit, int $idImage): bool {
+    $stmt = $this->db->prepare("
+        DELETE FROM produit_image 
+        WHERE id_produit = :id_produit AND id_image = :id_image
+    ");
+    return $stmt->execute([
+        'id_produit' => $idProduit,
+        'id_image'   => $idImage
+    ]);
+    }
+
 }
