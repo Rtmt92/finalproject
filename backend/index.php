@@ -174,6 +174,9 @@ dispatch('#^/transaction/(\d+)$#', ['DELETE'],     fn($i)=>(new TransactionContr
 dispatch('#^/panier_produit$#',             ['GET'],  fn()=> (new PanierProduitController())->index());
 dispatch('#^/panier_produit$#',             ['POST'], fn()=> (new PanierProduitController())->store());
 dispatch('#^/panier_produit/(\d+)/(\d+)$#', ['DELETE'], fn($p,$pr)=>(new PanierProduitController())->destroy((int)$p,(int)$pr));
+dispatch('#^/panier_produit$#', ['POST'], fn() => (new PanierController())->ajouterProduit());
+dispatch('#^/fake-login$#', ['GET'], fn() => (new PanierProduitController())->testLogin());
+
 
 dispatch('#^/produit_image$#',              ['GET'],  fn()=> (new ProduitImageController())->index());
 dispatch('#^/produit_image$#',              ['POST'], fn()=> (new ProduitImageController())->store());

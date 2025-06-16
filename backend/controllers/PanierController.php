@@ -93,4 +93,5 @@ class PanierController {
             echo json_encode(['error' => 'Impossible de supprimer']);
         }
     }
+    
 }

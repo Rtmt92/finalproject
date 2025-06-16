@@ -16,10 +16,9 @@ class PanierProduitController {
         echo json_encode($this->model->getAll());
     }
 
-    /** POST /panier_produit (ajouter produit au panier) */
+    /** POST /panier_produit */
     public function store(): void {
         session_start();
-
         header('Content-Type: application/json');
 
         if (!isset($_SESSION['id_client'])) {
@@ -28,21 +27,21 @@ class PanierProduitController {
             exit;
         }
 
-
         $data = json_decode(file_get_contents('php://input'), true);
-        if (!isset($data['id_produit'])) {
+        if (empty($data['id_produit'])) {
             http_response_code(400);
             echo json_encode(['error' => 'ID produit manquant']);
             return;
         }
 
-        $id_client = $_SESSION['user_id'];
+        $id_client  = $_SESSION['id_client'];
         $id_produit = (int) $data['id_produit'];
 
         try {
-            $db = new \PDO("mysql:host=localhost;dbname=dejavu", "root", "");
+            // ✅ Connexion avec mot de passe explicite
+            $db = new \PDO("mysql:host=localhost;dbname=dejavu", "root", "admin");
 
-            // Récupérer ou créer le panier pour le client
+            // Vérifie ou crée un panier
             $stmt = $db->prepare("SELECT id_panier FROM panier WHERE id_client = ?");
             $stmt->execute([$id_client]);
             $row = $stmt->fetch();
@@ -55,7 +54,7 @@ class PanierProduitController {
                 $id_panier = $row['id_panier'];
             }
 
-            // Vérifier si le produit est déjà dans le panier
+            // Produit déjà dans panier ?
             $stmt = $db->prepare("SELECT 1 FROM panier_produit WHERE id_panier = ? AND id_produit = ?");
             $stmt->execute([$id_panier, $id_produit]);
             if ($stmt->fetch()) {
@@ -63,11 +62,11 @@ class PanierProduitController {
                 return;
             }
 
-            // Ajouter le produit au panier
+            // Ajoute au panier
             $stmt = $db->prepare("INSERT INTO panier_produit (id_panier, id_produit) VALUES (?, ?)");
             $stmt->execute([$id_panier, $id_produit]);
 
-            // Mettre à jour le prix total du panier
+            // Met à jour le prix total
             $stmt = $db->prepare("SELECT prix FROM produit WHERE id_produit = ?");
             $stmt->execute([$id_produit]);
             $produit = $stmt->fetch();
@@ -92,13 +91,19 @@ class PanierProduitController {
     /** DELETE /panier_produit/{panier}/{produit} */
     public function destroy(int $idPanier, int $idProduit): void {
         $ok = $this->model->delete($idPanier, $idProduit);
+        header('Content-Type: application/json');
         if ($ok) {
-            header('Content-Type: application/json');
             echo json_encode(['message' => 'Ligne panier supprimée']);
         } else {
             http_response_code(500);
-            header('Content-Type: application/json');
             echo json_encode(['error' => 'Impossible de supprimer']);
         }
+    }
+
+    /** GET /fake-login (pour Postman) */
+    public function testLogin(): void {
+        session_start();
+        $_SESSION['id_client'] = 17; // à adapter
+        echo json_encode(['message' => 'Session active', 'id_client' => $_SESSION['id_client']]);
     }
 }

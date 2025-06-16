@@ -4,15 +4,16 @@ import '../styles/ProductDetail.css';
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const [prod, setProd]             = useState(null);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState('');
+  const [prod, setProd] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  // Charger les infos du produit à l'affichage
   useEffect(() => {
-    fetch(`/api/produit/${id}`)
+    fetch(`http://localhost:3000/api/produit/${id}`)
       .then(res => {
-        if (!res.ok) throw new Error(`Status ${res.status}`);
+        if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
         return res.json();
       })
       .then(data => {
@@ -20,17 +21,18 @@ export default function ProductDetail() {
         setLoading(false);
       })
       .catch(err => {
-        console.error('Erreur fetch produit:', err);
-        setError('Impossible de charger le produit');
+        console.error('Erreur fetch produit :', err);
+        setError("Impossible de charger le produit.");
         setLoading(false);
       });
   }, [id]);
 
+  // Ajouter au panier
   const ajouterAuPanier = async (idProduit) => {
     try {
       const response = await fetch('http://localhost:3000/panier_produit', {
         method: 'POST',
-        credentials: 'include',
+        credentials: 'include', // Inclut les cookies/session
         headers: {
           'Content-Type': 'application/json'
         },
@@ -38,20 +40,21 @@ export default function ProductDetail() {
       });
 
       const data = await response.json();
+
       if (response.ok) {
-        alert(data.message);
+        alert(data.message || 'Produit ajouté au panier !');
       } else {
-        alert(data.error || 'Une erreur est survenue.');
+        alert(data.error || 'Erreur lors de l’ajout au panier.');
       }
-    } catch (error) {
-      console.error('Erreur lors de la requête :', error);
-      alert('Erreur de communication avec le serveur.');
+    } catch (err) {
+      console.error('Erreur réseau :', err);
+      alert("Erreur de communication avec le serveur.");
     }
   };
 
   if (loading) return <div className="detail-container">Chargement…</div>;
-  if (error)   return <div className="detail-container">{error}</div>;
-  if (!prod)  return null;
+  if (error) return <div className="detail-container">{error}</div>;
+  if (!prod) return null;
 
   const images = prod.images || [];
   const mainImg = images[selectedIndex]?.lien || '';
@@ -70,11 +73,13 @@ export default function ProductDetail() {
             />
           ))}
         </div>
+
         <div className="main-image">
-          {mainImg
-            ? <img src={mainImg} alt={prod.nom_produit} />
-            : <div className="image-placeholder" />
-          }
+          {mainImg ? (
+            <img src={mainImg} alt={prod.nom_produit} />
+          ) : (
+            <div className="image-placeholder" />
+          )}
         </div>
       </div>
 
@@ -85,7 +90,10 @@ export default function ProductDetail() {
       </div>
 
       <div className="add-cart-wrapper">
-        <button className="add-cart-btn" onClick={() => ajouterAuPanier(prod.id_produit)}>
+        <button
+          className="add-cart-btn"
+          onClick={() => ajouterAuPanier(prod.id_produit)}
+        >
           Ajouter au panier
         </button>
       </div>
