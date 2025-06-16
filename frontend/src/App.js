@@ -18,6 +18,7 @@ import EditProduct from "./pages/EditProduct";
 import AdminClient from "./pages/AdminClient";
 import EditClient from "./pages/EditClient";
 import AdminCategorie from "./pages/AdminCategorie";
+import Profil from "./pages/Profil";
 
 
 
@@ -52,6 +53,8 @@ const App = () => {
             path="/GeneralTerm"
             element={token ? <GeneralTerm /> : <Navigate to="/login" replace />}
           />
+          <Route path="/profil" element={<Profil />} /> {/* <-- nouvelle route */}
+
           <Route
             path="/CreateAnnounce"
             element={token ? <CreateAnnounce /> : <Navigate to="/login" replace />}
@@ -69,6 +72,7 @@ const App = () => {
 
           <Route path="/admin/client" element={<AdminClient />} />
           <Route path="/admin/categorie" element={<AdminCategorie />} />
+        
 
 
           <Route

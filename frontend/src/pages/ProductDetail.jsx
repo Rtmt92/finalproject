@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import '../styles/ProductDetail.css';
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+
   const [prod, setProd] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Charger les infos du produit à l'affichage
   useEffect(() => {
-    fetch(`http://localhost:3000/api/produit/${id}`)
+    fetch(`/api/produit/${id}`)
       .then(res => {
-        if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
+        if (!res.ok) throw new Error(`Status ${res.status}`);
         return res.json();
       })
       .then(data => {
@@ -21,34 +22,36 @@ export default function ProductDetail() {
         setLoading(false);
       })
       .catch(err => {
-        console.error('Erreur fetch produit :', err);
-        setError("Impossible de charger le produit.");
+        console.error('Erreur fetch produit:', err);
+        setError('Impossible de charger le produit');
         setLoading(false);
       });
   }, [id]);
 
-  // Ajouter au panier
   const ajouterAuPanier = async (idProduit) => {
     try {
       const response = await fetch('http://localhost:3000/panier_produit', {
         method: 'POST',
-        credentials: 'include', // Inclut les cookies/session
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id_produit: idProduit })
+        body: JSON.stringify({ id_produit: idProduit }),
       });
 
       const data = await response.json();
-
       if (response.ok) {
-        alert(data.message || 'Produit ajouté au panier !');
+        if (data.message === 'Produit ajouté au panier') {
+          navigate('/profil');
+        } else if (data.message === 'Produit déjà dans le panier') {
+          alert(data.message);
+        }
       } else {
-        alert(data.error || 'Erreur lors de l’ajout au panier.');
+        alert(data.error || 'Une erreur est survenue.');
       }
-    } catch (err) {
-      console.error('Erreur réseau :', err);
-      alert("Erreur de communication avec le serveur.");
+    } catch (error) {
+      console.error('Erreur lors de la requête :', error);
+      alert('Erreur de communication avec le serveur.');
     }
   };
 
@@ -73,7 +76,6 @@ export default function ProductDetail() {
             />
           ))}
         </div>
-
         <div className="main-image">
           {mainImg ? (
             <img src={mainImg} alt={prod.nom_produit} />
@@ -90,10 +92,7 @@ export default function ProductDetail() {
       </div>
 
       <div className="add-cart-wrapper">
-        <button
-          className="add-cart-btn"
-          onClick={() => ajouterAuPanier(prod.id_produit)}
-        >
+        <button className="add-cart-btn" onClick={() => ajouterAuPanier(prod.id_produit)}>
           Ajouter au panier
         </button>
       </div>
