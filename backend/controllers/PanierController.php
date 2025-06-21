@@ -93,5 +93,43 @@ class PanierController {
             echo json_encode(['error' => 'Impossible de supprimer']);
         }
     }
+
+    public function showUserPanier(): void {
+        session_start();
+        if (!isset($_SESSION['id_client'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Utilisateur non connecté']);
+            return;
+        }
+
+        $idClient = $_SESSION['id_client'];
+        $result = $this->panierModel->getPanierWithProduitsByClientId($idClient);
+
+        if (!$result) {
+            echo json_encode(['id_panier' => null, 'prix_total' => 0, 'produits' => []]);
+            return;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($result);
+    }
+
+    public function getMyPanier() {
+        session_start();
+        if (!isset($_SESSION['id_client'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Non connecté']);
+            return;
+        }
+
+        $data = $this->panierModel->getWithProduitsByClientId($_SESSION['id_client']);
+        if (!$data) {
+            echo json_encode(['produits' => [], 'prix_total' => 0]);
+        } else {
+            echo json_encode($data);
+        }
+    }
+
+
     
 }

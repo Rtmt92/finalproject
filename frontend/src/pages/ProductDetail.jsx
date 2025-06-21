@@ -88,7 +88,9 @@ export default function ProductDetail() {
       <div className="info-panel">
         <p className="name">{prod.nom_produit}</p>
         <p className="description">{prod.description}</p>
-        <p className="price">{prod.prix}€</p>
+        <p className="etat">État : {prod.etat || 'N/A'}</p>
+        <p className="quantite">Quantité : {prod.quantite ?? 'N/A'}</p>
+        <p className="price">Prix : {prod.prix}€</p>
       </div>
 
       <div className="add-cart-wrapper">

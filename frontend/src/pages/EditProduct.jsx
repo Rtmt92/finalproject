@@ -1,4 +1,3 @@
-// src/pages/EditProduct.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../styles/EditProduct.css";
@@ -12,10 +11,14 @@ const EditProduct = () => {
     prix: "",
     description: "",
     id_categorie: "",
+    quantite: "",
+    etat: "très bon état", // valeur par défaut
   });
 
   const [categories, setCategories] = useState([]);
   const [images, setImages] = useState([]);
+
+  const etats = ["parfait état", "très bon état", "correct"];
 
   useEffect(() => {
     fetch(`http://localhost:3000/api/produit/${id}`)
@@ -26,6 +29,8 @@ const EditProduct = () => {
           prix: data.prix || "",
           description: data.description || "",
           id_categorie: data.id_categorie || "",
+          quantite: data.quantite || 1,
+          etat: data.etat || "très bon état",
         });
         setImages(data.images || []);
       });
@@ -55,23 +60,15 @@ const EditProduct = () => {
   };
 
   const handleDeleteImage = async (imageId) => {
-    try {
-      const res = await fetch(
-        `http://localhost:3000/api/produit/${id}/image/${imageId}`,
-        {
-          method: "DELETE",
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Erreur suppression image");
-      }
-
-      setImages((prev) => prev.filter((img) => img.id_image !== imageId));
-    } catch (err) {
-      alert("Erreur lors de la suppression de l'image");
-      console.error(err);
+    const res = await fetch(`http://localhost:3000/api/produit/${id}/image/${imageId}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || "Erreur suppression image");
+      return;
     }
+    setImages((prev) => prev.filter((img) => img.id_image !== imageId));
   };
 
   const handleDelete = async () => {
@@ -107,15 +104,31 @@ const EditProduct = () => {
             value={form.prix}
             onChange={handleChange}
           />
-          <select
-            name="id_categorie"
-            value={form.id_categorie}
-            onChange={handleChange}
-          >
+
+          <select name="id_categorie" value={form.id_categorie} onChange={handleChange}>
             <option value="">Catégorie</option>
             {categories.map((cat) => (
               <option key={cat.id_categorie} value={cat.id_categorie}>
                 {cat.nom}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="input-row">
+          <input
+            type="number"
+            name="quantite"
+            placeholder="Quantité"
+            value={form.quantite}
+            onChange={handleChange}
+            min="0"
+          />
+
+          <select name="etat" value={form.etat} onChange={handleChange}>
+            {etats.map((e, i) => (
+              <option key={i} value={e}>
+                {e}
               </option>
             ))}
           </select>

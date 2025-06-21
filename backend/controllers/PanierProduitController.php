@@ -88,22 +88,45 @@ class PanierProduitController {
         }
     }
 
-    /** DELETE /panier_produit/{panier}/{produit} */
     public function destroy(int $idPanier, int $idProduit): void {
-        $ok = $this->model->delete($idPanier, $idProduit);
         header('Content-Type: application/json');
-        if ($ok) {
-            echo json_encode(['message' => 'Ligne panier supprimée']);
-        } else {
+        
+        try {
+            $db = new \PDO("mysql:host=localhost;dbname=dejavu", "root", "admin");
+
+            // 1. Récupérer le prix du produit
+            $stmt = $db->prepare("SELECT prix FROM produit WHERE id_produit = :idProduit");
+            $stmt->execute(['idProduit' => $idProduit]);
+            $produit = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$produit) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Produit introuvable']);
+                return;
+            }
+
+            $prix = (float)$produit['prix'];
+
+            // 2. Supprimer l'entrée panier_produit
+            $stmt = $db->prepare("DELETE FROM panier_produit WHERE id_panier = :idPanier AND id_produit = :idProduit");
+            $stmt->execute(['idPanier' => $idPanier, 'idProduit' => $idProduit]);
+
+            // 3. Mettre à jour le prix_total du panier
+            $stmt = $db->prepare("UPDATE panier SET prix_total = prix_total - :prix WHERE id_panier = :idPanier");
+            $stmt->execute(['prix' => $prix, 'idPanier' => $idPanier]);
+
+            echo json_encode(['message' => 'Produit supprimé et total mis à jour']);
+        } catch (\PDOException $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Impossible de supprimer']);
+            echo json_encode(['error' => 'Erreur serveur : ' . $e->getMessage()]);
         }
     }
+
 
     /** GET /fake-login (pour Postman) */
     public function testLogin(): void {
         session_start();
-        $_SESSION['id_client'] = 17; // à adapter
+        $_SESSION['id_client'] = 19; // à adapter
         echo json_encode(['message' => 'Session active', 'id_client' => $_SESSION['id_client']]);
     }
 }

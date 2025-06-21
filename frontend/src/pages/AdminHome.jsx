@@ -7,17 +7,28 @@ const AdminHome = () => {
   const [annonces, setAnnonces] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCat, setSelectedCat] = useState('');
+  const [selectedEtat, setSelectedEtat] = useState('');
 
   useEffect(() => {
-    fetchAnnonces();
     fetchCategories();
   }, []);
 
-  const fetchAnnonces = async (categoryId = '') => {
+  useEffect(() => {
+    fetchAnnonces(selectedCat, selectedEtat);
+  }, [selectedCat, selectedEtat]);
+
+  const fetchAnnonces = async (categoryId = '', etat = '') => {
     try {
-      const url = categoryId
-        ? `http://localhost:3000/api/produit?categorie=${categoryId}`
-        : "http://localhost:3000/api/produit";
+      let url = "http://localhost:3000/api/produit";
+      const params = [];
+
+      if (categoryId) params.push(`categorie=${categoryId}`);
+      if (etat)       params.push(`etat=${encodeURIComponent(etat)}`);
+
+      if (params.length > 0) {
+        url += '?' + params.join('&');
+      }
+
       const res = await fetch(url);
       const data = await res.json();
       setAnnonces(data);
@@ -36,23 +47,26 @@ const AdminHome = () => {
     }
   };
 
-  const handleCategoryChange = (e) => {
-    const id = e.target.value;
-    setSelectedCat(id);
-    fetchAnnonces(id);
-  };
-
   return (
     <div className="admin-home">
       <h2 className="admin-title">Toutes les offres</h2>
 
       <div className="admin-layout">
         <div className="admin-sidebar">
-          <select className="category-select" value={selectedCat} onChange={handleCategoryChange}>
+          {/* Select Catégories */}
+          <select className="category-select" value={selectedCat} onChange={e => setSelectedCat(e.target.value)}>
             <option value="">Toutes les catégories</option>
             {Array.isArray(categories) && categories.map(cat => (
               <option key={cat.id_categorie} value={cat.id_categorie}>{cat.nom}</option>
             ))}
+          </select>
+
+          {/* Select État */}
+          <select className="etat-select" value={selectedEtat} onChange={e => setSelectedEtat(e.target.value)}>
+            <option value="">Tous les états</option>
+            <option value="parfait état">Parfait état</option>
+            <option value="très bon état">Très bon état</option>
+            <option value="correct">Correct</option>
           </select>
         </div>
 
@@ -60,11 +74,13 @@ const AdminHome = () => {
           {Array.isArray(annonces) && annonces.map((a, i) => (
             <ProductBanner
             key={i}
-            id={a.id} 
+            id={a.id}
             titre={a.titre}
             description={a.description}
             prix={a.prix}
             image={a.image}
+            etat={a.etat}
+            quantite={a.quantite}
             />
 
           ))}

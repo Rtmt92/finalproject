@@ -22,7 +22,6 @@ import Profil from "./pages/Profil";
 
 
 
-
 const App = () => {
   const token = localStorage.getItem("token");
 

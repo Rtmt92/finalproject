@@ -1,4 +1,3 @@
-// frontend/src/compenents/ProductCard.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/ProductCard.css';
@@ -27,7 +26,7 @@ export default function ProductCard() {
 
   if (loading) return <div className="product-card">Chargement…</div>;
   if (error)   return <div className="product-card error">{error}</div>;
-  if (!prod)  return null;
+  if (!prod)   return null;
 
   return (
     <Link
@@ -49,6 +48,8 @@ export default function ProductCard() {
 
         <div className="product-info">
           <p className="product-price">Prix : {prod.prix}€</p>
+          <p className="product-etat">État : {prod.etat || 'N/A'}</p>
+          <p className="product-quantite">Quantité : {prod.quantite ?? 'N/A'}</p>
         </div>
       </div>
     </Link>

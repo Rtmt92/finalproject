@@ -157,11 +157,14 @@ dispatch('#^/categorie/(\d+)$#',  ['PUT','PATCH'], fn($i)=>(new CategorieControl
 dispatch('#^/categorie/(\d+)$#',  ['DELETE'],      fn($i)=>(new CategorieController())->destroy((int)$i));
 
 // --- CRUD PANIER ---
-dispatch('#^/panier$#',          ['GET'],         fn()=> (new PanierController())->index());
+dispatch('#^/panier/?$#', ['GET'], fn() => (new PanierController())->getMyPanier());
 dispatch('#^/panier$#',          ['POST'],        fn()=> (new PanierController())->store());
 dispatch('#^/panier/(\d+)$#',     ['GET'],         fn($i)=>(new PanierController())->show((int)$i));
 dispatch('#^/panier/(\d+)$#',     ['PUT','PATCH'], fn($i)=>(new PanierController())->update((int)$i));
 dispatch('#^/panier/(\d+)$#',     ['DELETE'],      fn($i)=>(new PanierController())->destroy((int)$i));
+dispatch('#^/panier$#', ['GET'], fn() => (new \Controllers\PanierController())->showUserPanier());
+dispatch('#^/panier$#', ['GET'], fn() => (new PanierController())->getMyPanier());
+
 
 // --- CRUD TRANSACTION ---
 dispatch('#^/transaction$#',      ['GET'],         fn()=> (new TransactionController())->index());

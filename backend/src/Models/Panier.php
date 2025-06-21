@@ -87,4 +87,46 @@ class Panier {
         $stmt = $this->db->prepare("DELETE FROM panier WHERE id_client = :id");
         $stmt->execute(['id' => $clientId]);
     }
+
+    public function getWithProduitsByClientId($idClient) {
+        $stmt = $this->db->prepare("
+            SELECT 
+                p.id_produit,
+                p.nom_produit AS titre,
+                p.description,
+                p.prix,
+                p.etat,
+                p.quantite,
+                i.lien AS image
+            FROM 
+                panier pa
+            JOIN 
+                panier_produit pp ON pa.id_panier = pp.id_panier
+            JOIN 
+                produit p ON pp.id_produit = p.id_produit
+            LEFT JOIN 
+                produit_image pi ON pi.id_produit = p.id_produit
+            LEFT JOIN 
+                image i ON i.id_image = pi.id_image
+            WHERE 
+                pa.id_client = :idClient
+        ");
+        $stmt->execute(['idClient' => $idClient]);
+        $produits = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $stmt = $this->db->prepare("SELECT id_panier, prix_total FROM panier WHERE id_client = :idClient");
+        $stmt->execute(['idClient' => $idClient]);
+        $panier = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return [
+            'id_panier' => $panier['id_panier'],
+            'prix_total' => $panier['prix_total'],
+            'produits' => $produits
+        ];
+    }
+
+
+
+
+
 }
