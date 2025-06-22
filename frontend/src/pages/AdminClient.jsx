@@ -43,9 +43,12 @@ useEffect(() => {
         nom={client.nom}
         prenom={client.prenom}
         description={client.description}
-        photo={client.photo_profil} 
+        email={client.email}               // ← ajouter
+        telephone={client.numero_telephone}       // ← ajouter
+        photo={client.photo_profil}
         onDelete={handleDelete}
         />
+
 
       ))}
     </div>

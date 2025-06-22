@@ -10,17 +10,26 @@ export default function Profil() {
 
   const navigate = useNavigate();
 
+  const token = localStorage.getItem("token");
+
+  // Récupérer les infos client
   useEffect(() => {
-    fetch('http://localhost:3000/api/me', { credentials: 'include' })
+    fetch('http://localhost:3000/api/me', {
+      credentials: 'include',
+    })
       .then(res => res.json())
       .then(data => setClient(data))
       .catch(err => console.error('Erreur profil:', err));
   }, []);
 
-  useEffect(() => {
-    if (!client) return;
-
-    fetch('http://localhost:3000/panier', { credentials: 'include' })
+  // Fonction pour charger le panier
+  const refreshPanier = () => {
+    fetch('http://localhost:3000/panier', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
       .then(res => res.json())
       .then(data => {
         if (!data || !data.id_panier) return;
@@ -29,25 +38,35 @@ export default function Profil() {
         setPanierProduits(data.produits);
       })
       .catch(err => console.error('Erreur panier:', err));
+  };
+
+  // Charger le panier une fois que le client est chargé
+  useEffect(() => {
+    if (client) {
+      refreshPanier();
+    }
   }, [client]);
 
+  // Supprimer un produit du panier
   const handleDeleteFromPanier = async (idProduit) => {
     if (!idPanier) return;
+
     const res = await fetch(`http://localhost:3000/panier_produit/${idPanier}/${idProduit}`, {
       method: 'DELETE',
-      credentials: 'include',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
 
     if (res.ok) {
-      setPanierProduits(prev => prev.filter(p => p.id_produit !== idProduit));
-      fetch('http://localhost:3000/panier', { credentials: 'include' })
-        .then(res => res.json())
-        .then(data => setPrixTotal(data.prix_total));
+      // Recharger panier après suppression
+      refreshPanier();
     } else {
       alert("Erreur lors de la suppression.");
     }
   };
 
+  // Supprimer le compte
   const handleDeleteAccount = async () => {
     if (!window.confirm("Supprimer votre compte ?")) return;
     const res = await fetch(`http://localhost:3000/client/${client.id_client}`, {
@@ -65,7 +84,7 @@ export default function Profil() {
 
   return (
     <div className="profil-container">
-        <ClientBanner
+      <ClientBanner
         id={client.id_client}
         nom={client.nom}
         prenom={client.prenom}
@@ -74,8 +93,7 @@ export default function Profil() {
         telephone={client.telephone}
         photo={client.photo_profil}
         mode="edit"
-        />
-
+      />
 
       <h3 className="section-title">Votre panier</h3>
       <div className="panier-section">
@@ -118,9 +136,11 @@ export default function Profil() {
 
       <div className="profil-actions">
         <button className="btn-valider" onClick={() => navigate('/pay')}>
-        Valider mon panier
+          Valider mon panier
         </button>
-        <button onClick={handleDeleteAccount} className="btn-danger">SUPPRIMER MON COMPTE</button>
+        <button onClick={handleDeleteAccount} className="btn-danger">
+          SUPPRIMER MON COMPTE
+        </button>
       </div>
     </div>
   );

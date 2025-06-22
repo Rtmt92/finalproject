@@ -7,7 +7,7 @@ const ProductBanner = ({ titre, description, prix, image, id, auteur, etat, quan
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/edit-product/${id}`);
+    navigate(`/admin/edit-product/${id}`);
   };
 
   return (

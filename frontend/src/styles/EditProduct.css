@@ -64,3 +64,13 @@
 .client-delete-btn:hover {
   background-color: #a91d1d;
 }
+
+.image-preview-wrapper img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #ccc;
+}
+
+

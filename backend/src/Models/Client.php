@@ -12,20 +12,11 @@ class Client {
         $this->db = Database::getConnection();
     }
 
-    /**
-     * Récupère tous les clients
-     * @return array<int, array<string,mixed>>
-     */
     public function getAll(): array {
         $stmt = $this->db->query("SELECT * FROM client");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Récupère un client par son ID
-     * @param int $id
-     * @return array<string,mixed>|null
-     */
     public function getById(int $id): ?array {
         $stmt = $this->db->prepare("SELECT * FROM client WHERE id_client = :id");
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
@@ -33,20 +24,6 @@ class Client {
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    /**
-     * Crée un nouveau client
-     * @param array{
-     *   nom: string,
-     *   prenom: string,
-     *   email: string,
-     *   numero_telephone: string,
-     *   mot_de_passe: string,
-     *   role: string,
-     *   photo_profil?: string|null,
-     *   description?: string|null
-     * } $data
-     * @return int|string|false  ID inséré, message d'erreur SQL ou false
-     */
     public function create(array $data) {
         try {
             $sql = "INSERT INTO client
@@ -65,73 +42,36 @@ class Client {
             $stmt->execute();
             return (int)$this->db->lastInsertId();
         } catch (PDOException $e) {
-            // En développement, renvoyer l’erreur pour debug
             return 'SQL_ERROR: ' . $e->getMessage();
         }
     }
 
-    /**
-     * Met à jour un client existant
-     * @param int $id
-     * @param array{
-     *   nom?: string,
-     *   prenom?: string,
-     *   email?: string,
-     *   numero_telephone?: string,
-     *   mot_de_passe?: string,
-     *   role?: string,
-     *   photo_profil?: string|null,
-     *   description?: string|null
-     * } $data
-     * @return bool
-     */
     public function update(int $id, array $data): bool {
         $fields = [];
         $params = [':id' => $id];
 
-        if (isset($data['nom'])) {
-            $fields[]        = 'nom = :nom';
-            $params[':nom']  = $data['nom'];
-        }
-        if (isset($data['prenom'])) {
-            $fields[]           = 'prenom = :prenom';
-            $params[':prenom']  = $data['prenom'];
-        }
-        if (isset($data['email'])) {
-            $fields[]           = 'email = :email';
-            $params[':email']   = $data['email'];
-        }
-        if (isset($data['numero_telephone'])) {
-            $fields[]                  = 'numero_telephone = :numero_telephone';
-            $params[':numero_telephone'] = $data['numero_telephone'];
-        }
-        if (isset($data['mot_de_passe'])) {
-            $fields[]               = 'mot_de_passe = :mot_de_passe';
-            $params[':mot_de_passe'] = $data['mot_de_passe'];
-        }
-        if (isset($data['role'])) {
-            $fields[]         = 'role = :role';
-            $params[':role']  = $data['role'];
-        }
-        if (array_key_exists('photo_profil', $data)) {
-            $fields[]                  = 'photo_profil = :photo_profil';
-            $params[':photo_profil']   = $data['photo_profil'];
-        }
-        if (array_key_exists('description', $data)) {
-            $fields[]                  = 'description = :description';
-            $params[':description']    = $data['description'];
+        $allowed = [
+            'nom', 'prenom', 'email', 'numero_telephone',
+            'mot_de_passe', 'role', 'photo_profil', 'description'
+        ];
+
+        foreach ($allowed as $key) {
+            if (array_key_exists($key, $data)) {
+                $fields[] = "$key = :$key";
+                $params[":$key"] = $key === 'mot_de_passe'
+                    ? password_hash($data[$key], PASSWORD_DEFAULT)
+                    : $data[$key];
+            }
         }
 
-        if (empty($fields)) {
-            // Rien à mettre à jour
-            return false;
-        }
+        if (empty($fields)) return false;
 
         $sql = "UPDATE client SET " . implode(', ', $fields) . " WHERE id_client = :id";
+
         try {
             $stmt = $this->db->prepare($sql);
-            foreach ($params as $placeholder => $val) {
-                $stmt->bindValue($placeholder, $val);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
             }
             return $stmt->execute();
         } catch (PDOException $e) {
@@ -139,11 +79,6 @@ class Client {
         }
     }
 
-    /**
-     * Supprime un client par son ID
-     * @param int $id
-     * @return bool
-     */
     public function delete(int $id): bool {
         try {
             $stmt = $this->db->prepare("DELETE FROM client WHERE id_client = :id");
@@ -154,11 +89,6 @@ class Client {
         }
     }
 
-    /**
-     * Recherche un client par email
-     * @param string $email
-     * @return array<string,mixed>|null
-     */
     public function findByEmail(string $email): ?array {
         $stmt = $this->db->prepare("SELECT * FROM client WHERE email = :email");
         $stmt->execute([':email' => $email]);

@@ -3,13 +3,32 @@ namespace Controllers;
 
 use Src\Models\Panier;
 use Core\Database;
-
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use Config\JwtConfig;
 
 class PanierController {
     private Panier $panierModel;
 
     public function __construct() {
         $this->panierModel = new Panier();
+    }
+
+    private function getClientIdFromToken(): int {
+        $h = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        if (!preg_match('/Bearer\s(\S+)/', $h, $m)) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Token manquant']);
+            exit;
+        }
+        try {
+            $decoded = JWT::decode($m[1], new Key(JwtConfig::SECRET_KEY, 'HS256'));
+            return (int)$decoded->sub;
+        } catch (\Exception $e) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Token invalide']);
+            exit;
+        }
     }
 
     /** GET /panier */
@@ -97,14 +116,7 @@ class PanierController {
     }
 
     public function showUserPanier(): void {
-        session_start();
-        if (!isset($_SESSION['id_client'])) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Utilisateur non connecté']);
-            return;
-        }
-
-        $idClient = $_SESSION['id_client'];
+        $idClient = $this->getClientIdFromToken();
         $result = $this->panierModel->getPanierWithProduitsByClientId($idClient);
 
         if (!$result) {
@@ -117,14 +129,9 @@ class PanierController {
     }
 
     public function getMyPanier() {
-        session_start();
-        if (!isset($_SESSION['id_client'])) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Non connecté']);
-            return;
-        }
+        $idClient = $this->getClientIdFromToken();
 
-        $data = $this->panierModel->getWithProduitsByClientId($_SESSION['id_client']);
+        $data = $this->panierModel->getWithProduitsByClientId($idClient);
         if (!$data) {
             echo json_encode(['produits' => [], 'prix_total' => 0]);
         } else {
@@ -133,7 +140,7 @@ class PanierController {
     }
 
     public function vider(int $id_panier): void {
-        $db = \Core\Database::getConnection();
+        $db = Database::getConnection();
 
         // Supprimer les lignes dans panier_produit liées à ce panier
         $stmt = $db->prepare("DELETE FROM panier_produit WHERE id_panier = ?");
@@ -145,8 +152,4 @@ class PanierController {
 
         echo json_encode(['message' => 'Panier vidé avec succès']);
     }
-
-
-
-    
 }

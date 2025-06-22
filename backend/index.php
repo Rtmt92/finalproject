@@ -55,6 +55,14 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
 header("Content-Type: application/json; charset=utf-8");
 
+$uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+$file = __DIR__ . $uri;
+
+if ($uri !== '/' && file_exists($file)) {
+    return false; // Sert directement les fichiers (images, CSS, etc.)
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;

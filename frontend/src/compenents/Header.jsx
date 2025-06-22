@@ -1,5 +1,14 @@
-import React from "react";
-import { Search, MessageCircle, User, Power, Gavel, LayoutDashboard, ClipboardCheck } from "lucide-react"; // exemple pour les icônes admin
+// frontend/src/compenents/Header.jsx
+import React, { useState } from 'react';
+import {
+  Search,
+  MessageCircle,
+  User,
+  Power,
+  Gavel,
+  PlusCircle,
+  FolderKanban,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import '../styles/Header.css';
 import '../styles/Global.css';
@@ -7,6 +16,13 @@ import '../styles/Global.css';
 const Header = () => {
   const navigate = useNavigate();
   const role = localStorage.getItem('role');
+  const [search, setSearch] = useState("");
+
+  const handleSearch = (e) => {
+    if (e.key === "Enter" && search.trim()) {
+      navigate(`/recherche?q=${encodeURIComponent(search.trim())}`);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -25,35 +41,36 @@ const Header = () => {
   return (
     <header className="header">
       <div className="header-content">
-        {/* Logo cliquable vers page d'accueil spécifique */}
         <div className="header-left" onClick={handleHomeClick} style={{ cursor: 'pointer' }}>
           <img src="/dejaVuLogoWhite.png" alt="Logo" className="header-logo" />
         </div>
 
-        {/* Barre de recherche */}
         <div className="header-search">
           <Search size={16} className="search-icon" />
           <input
             type="text"
             placeholder="votre recherche..."
             className="search-input"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={handleSearch}
           />
         </div>
 
-        {/* Icônes selon rôle */}
         <div className="header-icons">
           {role === 'admin' ? (
             <>
-              <Gavel size={24} className="header-icon" title="Modération" />
-              <LayoutDashboard size={24} className="header-icon" title="Dashboard" />
-              <ClipboardCheck size={24} className="header-icon" title="Contrats" />
+              <Gavel size={24} className="header-icon" title="Modération" onClick={() => navigate('/admin/client')} />
+              <FolderKanban size={24} className="header-icon" title="Catégories" onClick={() => navigate('/admin/categorie')} />
+              <PlusCircle size={24} className="header-icon" title="Créer une annonce" onClick={() => navigate('/admin/CreateAnnounce')} />
             </>
           ) : (
             <>
-              <MessageCircle size={24} className="header-icon" title="Messages" />
-              <User size={24} className="header-icon" title="Profil" />
+              <MessageCircle size={24} className="header-icon" title="Messages" onClick={() => navigate('/messages')} />
+              <User size={24} className="header-icon" title="Profil" onClick={() => navigate('/profil')} />
             </>
           )}
+
           <Power
             size={24}
             onClick={handleLogout}

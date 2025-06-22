@@ -28,32 +28,40 @@ export default function ProductDetail() {
       });
   }, [id]);
 
-  const ajouterAuPanier = async (idProduit) => {
+    const ajouterAuPanier = async (idProduit) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Veuillez vous connecter pour ajouter un produit au panier.");
+        navigate("/login");
+        return;
+    }
+
     try {
-      const response = await fetch('http://localhost:3000/panier_produit', {
+        const response = await fetch('http://localhost:3000/panier_produit', {
         method: 'POST',
-        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` // ✅ Ajout du token ici
         },
         body: JSON.stringify({ id_produit: idProduit }),
-      });
+        });
 
-      const data = await response.json();
-      if (response.ok) {
+        const data = await response.json();
+        if (response.ok) {
         if (data.message === 'Produit ajouté au panier') {
-          navigate('/profil');
+            navigate('/profil');
         } else if (data.message === 'Produit déjà dans le panier') {
-          alert(data.message);
+            alert(data.message);
         }
-      } else {
+        } else {
         alert(data.error || 'Une erreur est survenue.');
-      }
+        }
     } catch (error) {
-      console.error('Erreur lors de la requête :', error);
-      alert('Erreur de communication avec le serveur.');
+        console.error('Erreur lors de la requête :', error);
+        alert('Erreur de communication avec le serveur.');
     }
-  };
+    };
+
 
   if (loading) return <div className="detail-container">Chargement…</div>;
   if (error) return <div className="detail-container">{error}</div>;

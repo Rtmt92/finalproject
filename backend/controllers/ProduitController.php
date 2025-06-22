@@ -18,25 +18,17 @@ class ProduitController {
         $this->imageModel     = new Image();
         $this->db             = Database::getConnection();
     }
-
     /**
      * GET /produit
      */
     public function index(): void {
         header('Content-Type: application/json; charset=utf-8');
 
-        $categorieId = $_GET['categorie'] ?? null;
-        $etat        = $_GET['etat'] ?? null;
+        $categorie = $_GET['categorie'] ?? null;
+        $etat = $_GET['etat'] ?? null;
+        $search = $_GET['q'] ?? null;
 
-        if ($categorieId && $etat) {
-            $produits = $this->produitModel->getByCategorieAndEtat((int)$categorieId, $etat);
-        } elseif ($categorieId) {
-            $produits = $this->produitModel->getByCategorie((int)$categorieId);
-        } elseif ($etat) {
-            $produits = $this->produitModel->getByEtat($etat);
-        } else {
-            $produits = $this->produitModel->getAll();
-        }
+        $produits = $this->produitModel->filter($categorie, $etat, $search);
 
         $resultats = [];
 
@@ -60,11 +52,12 @@ class ProduitController {
                 'quantite'    => $prod['quantite'] ?? 0,
                 'image'       => $imageUrl,
             ];
-
         }
 
         echo json_encode($resultats);
     }
+
+
 
 
     /**
@@ -300,4 +293,6 @@ public function destroy(int $id) {
         $prod['image_url'] = $url;
         echo json_encode($prod);
     }
+
+
 }

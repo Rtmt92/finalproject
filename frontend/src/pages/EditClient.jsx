@@ -49,6 +49,23 @@ const EditClient = () => {
     }
   };
 
+  const handleDelete = async () => {
+    const confirmation = window.confirm("Supprimer définitivement ce client ?");
+    if (!confirmation) return;
+
+    const res = await fetch(`http://localhost:3000/client/${id}`, {
+        method: "DELETE",
+    });
+
+    if (res.ok) {
+        alert("Client supprimé !");
+        navigate("/admin/client");
+    } else {
+        alert("Échec de la suppression");
+    }
+    };
+
+
   return (
     <div className="edit-product-page">
       <h2 className="client-edit-title">Modifier : {form.nom}</h2>
@@ -90,6 +107,11 @@ const EditClient = () => {
       <button type="submit" onClick={handleSubmit}>
         Valider
       </button>
+
+        <button className="delete-button" onClick={handleDelete} style={{ backgroundColor: "darkred", color: "white", marginTop: "1rem" }}>
+            Supprimer le client
+        </button>
+
     </div>
   );
 };

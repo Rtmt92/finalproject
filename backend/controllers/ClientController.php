@@ -15,37 +15,25 @@ class ClientController {
         $this->clientModel = new Client();
     }
 
-    /**
-     * GET /client
-     */
     public function index(): void {
         $clients = $this->clientModel->getAll();
         header('Content-Type: application/json');
         echo json_encode($clients);
     }
 
-    /**
-     * GET /client/{id}
-     */
     public function show(int $id): void {
         $client = $this->clientModel->getById($id);
         if (!$client) {
             http_response_code(404);
-            header('Content-Type: application/json');
             echo json_encode(['error' => 'Client non trouvé']);
             return;
         }
-        header('Content-Type: application/json');
         echo json_encode($client);
     }
 
-    /**
-     * POST /client
-     */
     public function store(): void {
         $data = json_decode(file_get_contents('php://input'), true);
 
-        // Champs obligatoires
         if (
             empty($data['nom']) ||
             empty($data['prenom']) ||
@@ -54,15 +42,12 @@ class ClientController {
             empty($data['mot_de_passe'])
         ) {
             http_response_code(400);
-            header('Content-Type: application/json');
             echo json_encode(['error' => 'Champs obligatoires manquants']);
             return;
         }
 
-        // Hash du mot de passe
         $data['mot_de_passe'] = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
 
-        // Création
         $result = $this->clientModel->create([
             'nom'              => $data['nom'],
             'prenom'           => $data['prenom'],
@@ -76,77 +61,57 @@ class ClientController {
 
         if (is_int($result)) {
             http_response_code(201);
-            header('Content-Type: application/json');
             echo json_encode(['message' => 'Client créé', 'id_client' => $result]);
         } else {
             http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => is_string($result) ? $result : 'Impossible de créer le client']);
+            echo json_encode(['error' => is_string($result) ? $result : 'Erreur lors de la création']);
         }
     }
 
-    /**
-     * PUT|PATCH /client/{id}
-     */
     public function update(int $id): void {
         $existing = $this->clientModel->getById($id);
         if (!$existing) {
             http_response_code(404);
-            header('Content-Type: application/json');
             echo json_encode(['error' => 'Client non trouvé']);
             return;
         }
 
         $data = json_decode(file_get_contents('php://input'), true);
+
         if (!is_array($data)) {
             http_response_code(400);
-            header('Content-Type: application/json');
             echo json_encode(['error' => 'Données invalides']);
             return;
         }
 
-        // Hasher si on modifie le mot de passe
-        if (!empty($data['mot_de_passe'])) {
-            $data['mot_de_passe'] = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
-        }
-
+        // Si mot de passe est présent ET non vide, il sera hashé dans le modèle
         $ok = $this->clientModel->update($id, $data);
         if ($ok) {
-            header('Content-Type: application/json');
             echo json_encode(['message' => 'Client mis à jour']);
         } else {
             http_response_code(500);
-            header('Content-Type: application/json');
             echo json_encode(['error' => 'Impossible de mettre à jour le client']);
         }
     }
 
-    /**
-     * DELETE /client/{id}
-     */
     public function destroy(int $id): void {
         $existing = $this->clientModel->getById($id);
         if (!$existing) {
             http_response_code(404);
-            header('Content-Type: application/json');
             echo json_encode(['error' => 'Client non trouvé']);
             return;
         }
 
-        // Suppression des enfants
         (new Message())->deleteByClient($id);
         (new Signaler())->deleteByClient($id);
         (new Panier())->deleteByClient($id);
-        // Si vous gérez les transactions en cascade
-        //(new Transaction())->deleteByClient($id);
+        // (new Transaction())->deleteByClient($id); // Si géré
 
         try {
             $this->clientModel->delete($id);
-            header('Content-Type: application/json');
-            echo json_encode(['message' => 'Client et ses données enfants supprimés']);
+            echo json_encode(['message' => 'Client supprimé avec ses données associées']);
         } catch (PDOException $e) {
             http_response_code(500);
-            header('Content-Type: application/json');
             echo json_encode(['error' => 'Erreur SQL : ' . $e->getMessage()]);
         }
     }

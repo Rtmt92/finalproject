@@ -143,6 +143,31 @@ class Produit {
         $stmt = $this->db->query("SELECT * FROM produit ORDER BY RAND() LIMIT 1");
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
+
+    public function filter($cat = null, $etat = null, $search = null) {
+        $sql = "SELECT * FROM produit WHERE 1=1";
+        $params = [];
+
+        if ($cat) {
+            $sql .= " AND id_categorie = ?";
+            $params[] = $cat;
+        }
+
+        if ($etat) {
+            $sql .= " AND etat = ?";
+            $params[] = $etat;
+        }
+
+        if ($search) {
+            $sql .= " AND (nom_produit LIKE ? OR description LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 }
 
 
