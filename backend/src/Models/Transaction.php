@@ -12,20 +12,15 @@ class Transaction {
         $this->db = Database::getConnection();
     }
 
-    /**
-     * Récupère toutes les transactions
-     * @return array
-     */
+    public function getDb(): PDO {
+        return $this->db;
+    }
+
     public function getAll(): array {
         $stmt = $this->db->query("SELECT * FROM `transaction`");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Récupère une transaction par son ID
-     * @param int $id
-     * @return array|null
-     */
     public function getById(int $id): ?array {
         $stmt = $this->db->prepare("SELECT * FROM `transaction` WHERE id_transaction = :id");
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
@@ -34,33 +29,27 @@ class Transaction {
         return $row ?: null;
     }
 
-    /**
-     * Crée une nouvelle transaction
-     * @param array $data ['montant_total','date_transaction','id_client']
-     * @return bool
-     */
-    public function create(array $data): bool {
+    public function create(array $data): int|false {
         try {
             $stmt = $this->db->prepare("
                 INSERT INTO `transaction` (montant_total, date_transaction, id_client)
                 VALUES (:montant_total, :date_transaction, :id_client)
             ");
-            $stmt->bindValue(':montant_total',   $data['montant_total']);
+            $stmt->bindValue(':montant_total',    $data['montant_total']);
             $stmt->bindValue(':date_transaction', $data['date_transaction']);
             $stmt->bindValue(':id_client',        $data['id_client'], PDO::PARAM_INT);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            // Vous pouvez logger $e->getMessage() ici si besoin
+
+            if ($stmt->execute()) {
+                return (int) $this->db->lastInsertId();
+            }
             return false;
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'PDOException: ' . $e->getMessage()]);
+            exit;
         }
     }
 
-    /**
-     * Met à jour une transaction existante
-     * @param int $id
-     * @param array $data
-     * @return bool
-     */
     public function update(int $id, array $data): bool {
         try {
             $fields = [];
@@ -79,10 +68,7 @@ class Transaction {
                 $params['id_client'] = $data['id_client'];
             }
 
-            if (empty($fields)) {
-                // Rien à mettre à jour
-                return false;
-            }
+            if (empty($fields)) return false;
 
             $sql = "UPDATE `transaction` SET " . implode(', ', $fields) . " WHERE id_transaction = :id";
             $stmt = $this->db->prepare($sql);
@@ -92,11 +78,6 @@ class Transaction {
         }
     }
 
-    /**
-     * Supprime une transaction
-     * @param int $id
-     * @return bool
-     */
     public function delete(int $id): bool {
         try {
             $stmt = $this->db->prepare("DELETE FROM `transaction` WHERE id_transaction = :id");

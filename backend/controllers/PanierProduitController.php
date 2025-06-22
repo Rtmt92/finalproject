@@ -129,4 +129,26 @@ class PanierProduitController {
         $_SESSION['id_client'] = 19; // à adapter
         echo json_encode(['message' => 'Session active', 'id_client' => $_SESSION['id_client']]);
     }
+
+    public function viderPanier(int $id_panier): void {
+        header('Content-Type: application/json');
+
+        try {
+            $db = new \PDO("mysql:host=localhost;dbname=dejavu", "root", "admin");
+
+            // Supprimer les produits du panier
+            $stmt = $db->prepare("DELETE FROM panier_produit WHERE id_panier = :id");
+            $stmt->execute(['id' => $id_panier]);
+
+            // Réinitialiser le prix total du panier à 0
+            $stmt = $db->prepare("UPDATE panier SET prix_total = 0 WHERE id_panier = :id");
+            $stmt->execute(['id' => $id_panier]);
+
+            echo json_encode(['message' => 'Panier vidé avec succès']);
+        } catch (\PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur lors du vidage du panier']);
+        }
+    }
+
 }

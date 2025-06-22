@@ -13,14 +13,10 @@ class AuthController {
         $this->clientModel = new Client();
     }
 
-    /**
-     * POST /api/register
-     */
     public function register(): void {
         header('Content-Type: application/json; charset=utf-8');
         $data = json_decode(file_get_contents('php://input'), true);
 
-        // Vérification des champs obligatoires
         if (
             empty($data['nom']) ||
             empty($data['prenom']) ||
@@ -33,17 +29,14 @@ class AuthController {
             return;
         }
 
-        // Pas de doublon sur l’email
         if ($this->clientModel->findByEmail($data['email'])) {
             http_response_code(409);
             echo json_encode(['error' => 'Email déjà utilisé']);
             return;
         }
 
-        // Hash du mot de passe
         $data['mot_de_passe'] = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
 
-        // Création du client
         $id = $this->clientModel->create([
             'nom'              => $data['nom'],
             'prenom'           => $data['prenom'],
@@ -52,7 +45,7 @@ class AuthController {
             'mot_de_passe'     => $data['mot_de_passe'],
             'role'             => $data['role'] ?? 'client',
             'photo_profil'     => $data['photo_profil'] ?? null,
-            'description'      => $data['description']  ?? null,
+            'description'      => $data['description'] ?? null,
         ]);
 
         if (!is_int($id)) {
@@ -61,7 +54,6 @@ class AuthController {
             return;
         }
 
-        // Génération du token
         $payload = [
             'iss'   => 'your-app',
             'sub'   => $id,
@@ -72,17 +64,18 @@ class AuthController {
         ];
         $token = JWT::encode($payload, JwtConfig::SECRET_KEY, 'HS256');
 
-        http_response_code(201);
-        echo json_encode([
-            'message' => 'Inscription réussie',
-            'token'   => $token,
-            'role'    => $data['role'] ?? 'client'
+        setcookie('token', $token, [
+            'expires' => time() + 3600,
+            'path' => '/',
+            'secure' => false,
+            'httponly' => true,
+            'samesite' => 'Lax',
         ]);
+
+        http_response_code(201);
+        echo json_encode(['message' => 'Inscription réussie', 'token' => $token]);
     }
 
-    /**
-     * POST /api/login
-     */
     public function login(): void {
         header('Content-Type: application/json; charset=utf-8');
         $data = json_decode(file_get_contents('php://input'), true);
@@ -110,9 +103,41 @@ class AuthController {
         ];
         $token = JWT::encode($payload, JwtConfig::SECRET_KEY, 'HS256');
 
-        echo json_encode([
-            'token' => $token,
-            'role'  => $user['role']
+        setcookie('token', $token, [
+            'expires' => time() + 3600,
+            'path' => '/',
+            'secure' => false,
+            'httponly' => true,
+            'samesite' => 'Lax',
         ]);
+
+        echo json_encode(['token' => $token, 'role' => $user['role']]);
+    }
+
+    public function me(): void {
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!isset($_COOKIE['token'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Token manquant']);
+            return;
+        }
+
+        try {
+            $decoded = JWT::decode($_COOKIE['token'], new Key(JwtConfig::SECRET_KEY, 'HS256'));
+            $user = $this->clientModel->getById((int)$decoded->sub);
+
+            if (!$user) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Utilisateur non trouvé']);
+                return;
+            }
+
+            unset($user['mot_de_passe']);
+            echo json_encode($user);
+        } catch (\Exception $e) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Token invalide ou expiré']);
+        }
     }
 }

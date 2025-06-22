@@ -2,6 +2,8 @@
 namespace Controllers;
 
 use Src\Models\Panier;
+use Core\Database;
+
 
 class PanierController {
     private Panier $panierModel;
@@ -129,6 +131,21 @@ class PanierController {
             echo json_encode($data);
         }
     }
+
+    public function vider(int $id_panier): void {
+        $db = \Core\Database::getConnection();
+
+        // Supprimer les lignes dans panier_produit liées à ce panier
+        $stmt = $db->prepare("DELETE FROM panier_produit WHERE id_panier = ?");
+        $stmt->execute([$id_panier]);
+
+        // Réinitialiser le prix total du panier à 0
+        $stmt = $db->prepare("UPDATE panier SET prix_total = 0 WHERE id_panier = ?");
+        $stmt->execute([$id_panier]);
+
+        echo json_encode(['message' => 'Panier vidé avec succès']);
+    }
+
 
 
     

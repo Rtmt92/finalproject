@@ -45,6 +45,8 @@ use Controllers\TransactionController;
 use Controllers\PanierProduitController;
 use Controllers\ProduitImageController;
 use Controllers\TransactionPanierController;
+use Controllers\StripeController;
+
 
 // --- CORS & JSON headers ---
 header("Access-Control-Allow-Origin: http://localhost:3000");
@@ -94,17 +96,8 @@ function dispatch(string $pattern, array|string $methods, callable $cb): bool {
 // --- ENDPOINTS AUTH (/api) ---
 dispatch('#^/api/register$#', ['POST'], fn()=> (new AuthController())->register());
 dispatch('#^/api/login$#',    ['POST'], fn()=> (new AuthController())->login());
-dispatch('#^/api/me$#', ['GET'], function() {
-  $payload = authenticate();
-  $client  = (new \Src\Models\Client())->getById((int)$payload->sub);
-  if (!$client) {
-    http_response_code(404);
-    echo json_encode(['error'=>'Utilisateur non trouvé']);
-    return;
-  }
-  header('Content-Type: application/json');
-  echo json_encode($client);
-});
+dispatch('#^/api/me$#', ['GET'], fn() => (new \Controllers\AuthController())->me());
+
 
 
 // --- CRUD CLIENT ---
@@ -113,6 +106,8 @@ dispatch('#^/client$#',         ['POST'],        fn()=> (new ClientController())
 dispatch('#^/client/(\d+)$#',    ['GET'],         fn($i)=>(new ClientController())->show((int)$i));
 dispatch('#^/client/(\d+)$#',    ['PUT','PATCH'], fn($i)=>(new ClientController())->update((int)$i));
 dispatch('#^/client/(\d+)$#',    ['DELETE'],      fn($i)=>(new ClientController())->destroy((int)$i));
+dispatch('#^/upload-photo$#', ['POST'], fn() => require __DIR__ . '/uploads/upload-photo.php');
+
 
 // --- CRUD MESSAGE ---
 dispatch('#^/message$#',         ['GET'],         fn()=> (new MessageController())->index());
@@ -164,6 +159,7 @@ dispatch('#^/panier/(\d+)$#',     ['PUT','PATCH'], fn($i)=>(new PanierController
 dispatch('#^/panier/(\d+)$#',     ['DELETE'],      fn($i)=>(new PanierController())->destroy((int)$i));
 dispatch('#^/panier$#', ['GET'], fn() => (new \Controllers\PanierController())->showUserPanier());
 dispatch('#^/panier$#', ['GET'], fn() => (new PanierController())->getMyPanier());
+dispatch('#^/panier/(\d+)/vider$#', ['DELETE'], fn($id) => (new PanierController())->vider((int)$id));
 
 
 // --- CRUD TRANSACTION ---
@@ -188,6 +184,7 @@ dispatch('#^/produit_image/(\d+)/(\d+)$#',   ['DELETE'], fn($pr,$i)=>(new Produi
 dispatch('#^/transaction_panier$#',         ['GET'],  fn()=> (new TransactionPanierController())->index());
 dispatch('#^/transaction_panier$#',         ['POST'], fn()=> (new TransactionPanierController())->store());
 dispatch('#^/transaction_panier/(\d+)/(\d+)$#',['DELETE'],fn($p,$t)=>(new TransactionPanierController())->destroy((int)$p,(int)$t));
+dispatch('#^/enregistrer-transaction$#', ['POST'], fn() => require __DIR__ . '/save-transaction.php');
 
 dispatch('#^/api/me$#', ['GET'], function() {
     $payload = authenticate();
@@ -201,6 +198,10 @@ dispatch('#^/api/me$#', ['GET'], function() {
     header('Content-Type: application/json');
     echo json_encode($client);
 });
+
+dispatch('#^/create-checkout-session$#', ['POST'], fn() => (new \Controllers\StripeController())->createCheckoutSession());
+dispatch('#^/payment-intent$#', ['POST'], fn() => require __DIR__ . '/payment-intent.php');
+
 
 // 404 par défaut
 http_response_code(404);

@@ -1,78 +1,89 @@
 .client-banner {
-  background-color: #141414;
-  padding: 2rem;
-  margin: 2rem auto;
-  width: 90%;
-  border-radius: 20px;
+  display: flex;
+  gap: 40px;
+  padding: 30px;
+  background-color: #1a1a1a;
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.client-info {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.client-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.large-left, .large-right {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 .client-avatar {
-  width: 200px;
-  height: 200px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid white;
+  border: 3px solid #fff;
+  margin-bottom: 10px;
 }
 
 .client-text {
-  background-color: #4a555f;
-  color: white;
-  padding: 2rem;
+  background-color: #2d2d2d;
+  padding: 20px;
   border-radius: 10px;
-  width: 80%;
-  max-width: 400px;
-  text-align: center;
-  font-style: italic;
+  flex: 1;
+  min-width: 300px;
 }
 
-.client-text h3 {
-  font-size: 2rem;
-  margin-bottom: 1rem;
+.client-text label {
+  display: block;
+  font-weight: bold;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-size: 14px;
 }
 
-.client-delete-btn {
-  margin-top: 2rem;
-  padding: 1rem;
+.client-text input,
+.client-text textarea {
   width: 100%;
-  background-color: #d6342d;
+  padding: 10px;
+  background-color: #444;
   color: white;
-  font-size: 1.2rem;
   border: none;
-  border-radius: 40px;
-  cursor: pointer;
-  font-style: italic;
+  border-radius: 6px;
+  font-size: 14px;
 }
-.client-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+
+.client-text textarea {
+  resize: vertical;
+  min-height: 80px;
 }
 
 .edit-icon {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 20px;
   cursor: pointer;
-  color: white;
-}
-.edit-icon:hover {
-  color: #aaa;
+  margin-left: 10px;
+  color: #fcb040;
 }
 
+input[type="file"] {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #ccc;
+}
+
+button.btn-valider {
+  margin-top: 20px;
+  background-color: #fcb040;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  color: black;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button.btn-valider:hover {
+  background-color: #e09d30;
+}

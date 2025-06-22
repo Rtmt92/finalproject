@@ -65,13 +65,17 @@ export default function Profil() {
 
   return (
     <div className="profil-container">
-      <ClientBanner
+        <ClientBanner
+        id={client.id_client}
         nom={client.nom}
         prenom={client.prenom}
         description={client.description}
+        email={client.email}
+        telephone={client.telephone}
         photo={client.photo_profil}
-        id={client.id_client}
-      />
+        mode="edit"
+        />
+
 
       <h3 className="section-title">Votre panier</h3>
       <div className="panier-section">
@@ -113,7 +117,9 @@ export default function Profil() {
       </div>
 
       <div className="profil-actions">
-        <button className="btn-valider">Valider mon panier</button>
+        <button className="btn-valider" onClick={() => navigate('/pay')}>
+        Valider mon panier
+        </button>
         <button onClick={handleDeleteAccount} className="btn-danger">SUPPRIMER MON COMPTE</button>
       </div>
     </div>
