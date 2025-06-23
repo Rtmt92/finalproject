@@ -105,7 +105,6 @@ class ClientController {
         (new Message())->deleteByClient($id);
         (new Signaler())->deleteByClient($id);
         (new Panier())->deleteByClient($id);
-        // (new Transaction())->deleteByClient($id); // Si géré
 
         try {
             $this->clientModel->delete($id);

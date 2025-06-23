@@ -25,7 +25,6 @@ const AppRoutes = () => {
   const role = localStorage.getItem("role");
   const location = useLocation();
 
-  // 🔒 Redirection forcée vers /admin si admin essaie d’accéder à une route client
   if (token && role === "admin" && !location.pathname.startsWith("/admin")) {
     return <Navigate to="/admin" replace />;
   }

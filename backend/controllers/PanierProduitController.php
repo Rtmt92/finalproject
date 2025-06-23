@@ -46,6 +46,7 @@ class PanierProduitController {
         try {
             $db = Database::getConnection();
 
+            // Vérifier ou créer le panier de l'utilisateur
             $stmt = $db->prepare("SELECT id_panier FROM panier WHERE id_client = ?");
             $stmt->execute([$id_client]);
             $row = $stmt->fetch();
@@ -58,6 +59,7 @@ class PanierProduitController {
                 $id_panier = $row['id_panier'];
             }
 
+            // Vérifier si le produit est déjà dans le panier
             $stmt = $db->prepare("SELECT 1 FROM panier_produit WHERE id_panier = ? AND id_produit = ?");
             $stmt->execute([$id_panier, $id_produit]);
             if ($stmt->fetch()) {
@@ -65,9 +67,11 @@ class PanierProduitController {
                 return;
             }
 
+            // Ajouter le produit au panier
             $stmt = $db->prepare("INSERT INTO panier_produit (id_panier, id_produit) VALUES (?, ?)");
             $stmt->execute([$id_panier, $id_produit]);
 
+            // Mettre à jour le prix total
             $stmt = $db->prepare("SELECT prix FROM produit WHERE id_produit = ?");
             $stmt->execute([$id_produit]);
             $produit = $stmt->fetch();
@@ -102,6 +106,7 @@ class PanierProduitController {
 
         try {
             $decoded = JWT::decode($matches[1], new Key(JwtConfig::SECRET_KEY, 'HS256'));
+            $id_client = (int)$decoded->sub;
         } catch (\Exception $e) {
             http_response_code(401);
             echo json_encode(['error' => 'Token invalide']);
@@ -111,17 +116,24 @@ class PanierProduitController {
         try {
             $db = Database::getConnection();
 
-            // Supprimer la ligne panier_produit
+            $stmt = $db->prepare("SELECT id_panier FROM panier WHERE id_panier = ? AND id_client = ?");
+            $stmt->execute([$id_panier, $id_client]);
+            if (!$stmt->fetch()) {
+                http_response_code(403);
+                echo json_encode(['error' => 'Ce panier ne vous appartient pas']);
+                return;
+            }
+
+            // Supprimer le lien produit-panier
             $stmt = $db->prepare("DELETE FROM panier_produit WHERE id_panier = ? AND id_produit = ?");
             $stmt->execute([$id_panier, $id_produit]);
 
-            // Récupérer le prix du produit
+            // Mettre à jour le prix total
             $stmt = $db->prepare("SELECT prix FROM produit WHERE id_produit = ?");
             $stmt->execute([$id_produit]);
             $produit = $stmt->fetch();
 
             if ($produit) {
-                // Mettre à jour le total du panier
                 $stmt = $db->prepare("UPDATE panier SET prix_total = prix_total - ? WHERE id_panier = ?");
                 $stmt->execute([$produit['prix'], $id_panier]);
             }

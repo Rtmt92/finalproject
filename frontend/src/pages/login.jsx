@@ -34,7 +34,6 @@ export default function Login() {
       localStorage.setItem('token', body.token);
       localStorage.setItem('role', body.role);
 
-      // Redirection conditionnelle
       if (body.role === 'admin') {
         navigate('/admin');
       } else {

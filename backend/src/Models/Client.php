@@ -79,15 +79,12 @@ class Client {
         }
     }
 
-    public function delete(int $id): bool {
-        try {
-            $stmt = $this->db->prepare("DELETE FROM client WHERE id_client = :id");
-            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            return false;
-        }
+    public function delete(int $id): bool
+    {
+        $stmt = $this->db->prepare("DELETE FROM client WHERE id_client = ?");
+        return $stmt->execute([$id]);
     }
+
 
     public function findByEmail(string $email): ?array {
         $stmt = $this->db->prepare("SELECT * FROM client WHERE email = :email");

@@ -3,9 +3,17 @@ namespace Controllers;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Dotenv\Dotenv;
+
 class StripeController {
     public function createCheckoutSession() {
-        \Stripe\Stripe::setApiKey('sk_test_...'); // Ta clé secrète
+        // ⬇️ Charge les variables d'environnement si pas encore fait
+        if (!getenv('STRIPE_SECRET_KEY')) {
+            $dotenv = Dotenv::createImmutable(__DIR__ . '/../..');
+            $dotenv->load();
+        }
+
+        \Stripe\Stripe::setApiKey(getenv('STRIPE_SECRET_KEY'));
 
         header('Content-Type: application/json');
 
