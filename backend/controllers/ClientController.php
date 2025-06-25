@@ -114,4 +114,30 @@ class ClientController {
             echo json_encode(['error' => 'Erreur SQL : ' . $e->getMessage()]);
         }
     }
+
+    public function updatePassword(int $id): void {
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    if (empty($data['ancien']) || empty($data['nouveau'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Champs requis manquants']);
+        return;
+    }
+
+    $client = $this->clientModel->getById($id);
+    if (!$client || !password_verify($data['ancien'], $client['mot_de_passe'])) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Mot de passe actuel incorrect']);
+        return;
+    }
+
+    $success = $this->clientModel->update($id, ['mot_de_passe' => $data['nouveau']]);
+    if ($success) {
+        echo json_encode(['message' => 'Mot de passe mis à jour']);
+    } else {
+        http_response_code(500);
+        echo json_encode(['error' => 'Erreur lors de la mise à jour']);
+    }
+}
+
 }

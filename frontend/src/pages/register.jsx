@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/log.css';
+import '../styles/Global.css';
+
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -9,16 +11,23 @@ export default function Register() {
     email: '',
     numero_telephone: '',
     mot_de_passe: '',
+    accept: false,
   });
+
   const navigate = useNavigate();
 
-  const handleChange = e =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = e => {
+    const { name, value, type, checked } = e.target;
+    setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
+  };
 
   const handleSubmit = async e => {
     e.preventDefault();
+    if (!form.accept) {
+      alert('Vous devez accepter les conditions générales.');
+      return;
+    }
 
-    // ← ICI : on appelle votre API PHP
     const res = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -28,38 +37,38 @@ export default function Register() {
     const body = await res.json();
     if (res.ok) {
       localStorage.setItem('token', body.token);
-      navigate('/'); // redirige vers Home
+      navigate('/');
     } else {
       alert(body.error);
     }
   };
 
   return (
-    <div className="register-container">
-      <h1>Inscription</h1>
-      <form onSubmit={handleSubmit} className="form-register">
+    <div className="register-wrapper">
+      <form className="register-form" onSubmit={handleSubmit}>
+        <h1>Inscription</h1>
         <input name="nom" placeholder="Nom" onChange={handleChange} required />
         <input name="prenom" placeholder="Prénom" onChange={handleChange} required />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="numero_telephone"
-          placeholder="Téléphone"
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="mot_de_passe"
-          placeholder="Mot de passe"
-          onChange={handleChange}
-          required
-        />
+        <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
+        <input name="numero_telephone" placeholder="Téléphone" onChange={handleChange} required />
+        <input type="password" name="mot_de_passe" placeholder="Mot de passe" onChange={handleChange} required />
+
+        <div className="register-extra">
+          <label>
+            <input
+              type="checkbox"
+              name="accept"
+              checked={form.accept}
+              onChange={handleChange}
+            />
+            J’accepte les <a href="/generalterm">conditions générales</a>
+          </label>
+
+          <p className="login-link">
+            Tu es déjà un habitué ? <a href="/login">Connecte toi ici</a>
+          </p>
+        </div>
+
         <button type="submit">S’inscrire</button>
       </form>
     </div>

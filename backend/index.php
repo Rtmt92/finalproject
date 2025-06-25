@@ -101,6 +101,9 @@ function dispatch(string $pattern, array|string $methods, callable $cb): bool {
     return false;
 }
 
+dispatch('#^/client/(\d+)/password$#', ['PUT', 'PATCH'], fn($id) => (new ClientController())->updatePassword((int)$id));
+
+
 // --- ENDPOINTS AUTH (/api) ---
 dispatch('#^/api/register$#', ['POST'], fn()=> (new AuthController())->register());
 dispatch('#^/api/login$#',    ['POST'], fn()=> (new AuthController())->login());

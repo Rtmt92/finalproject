@@ -33,15 +33,17 @@ body {
     text-align: center;
   }
   
-  input {
-    width: 70%; /* Largeur ajustée pour correspondre à la première image */
+  /* Appliqué uniquement aux inputs du formulaire Register */
+  .register-form input {
+    width: 100%;
     padding: 0.75rem;
     background-color: #47545B;
-    color: #fff;
+    color: white;
     border: none;
-    font-size: 0.875rem;
-    border-radius: 0.25rem; /* Bords arrondis comme dans la première image */
+    border-radius: 5px;
+    font-size: 1rem;
   }
+
   
   input::placeholder {
     color: #9CA3AF;
@@ -76,3 +78,145 @@ body {
   button:hover {
     background-color: #6B7280;
   }
+
+  /* Spécifique à la page Register uniquement */
+
+.register-extra {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #ccc;
+  width: 70%;
+}
+
+.register-extra label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+.register-extra input[type="checkbox"] {
+  accent-color: #47545B;
+  transform: scale(1.2);
+}
+
+.register-extra a {
+  color: #00aaff;
+  text-decoration: underline;
+  font-size: 0.85rem;
+}
+
+.register-extra a:hover {
+  text-decoration: none;
+}
+
+.login-link {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #bbb;
+}
+
+.login-link a {
+  color: #00aaff;
+  text-decoration: underline;
+}
+
+.register-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: transparent;
+  gap: 1rem;
+  width: 90%;
+  max-width: 400px;
+}
+
+.register-form h1 {
+  color: white;
+  font-size: 1.5rem;
+  background-color: #47545B;
+  padding: 0.6rem 2rem;
+  border-radius: 5px;
+  text-align: center;
+  width: 100%;
+}
+
+.register-form input[type="text"],
+.register-form input[type="email"],
+.register-form input[type="password"],
+.register-form input[name="numero_telephone"] {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #47545B;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.register-form input::placeholder {
+  color: #c9c9c9;
+}
+
+.register-form input:focus {
+  outline: none;
+}
+
+.register-form button {
+  font-size: 1.25rem;     /* augmente la taille */
+  font-style: italic;     /* met en italique */
+  font-weight: 300;       /* texte plus fin */
+}
+
+
+.register-form button:hover {
+  background-color: #6B7280;
+}
+
+.register-extra {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.8rem;
+  font-size: 0.9rem;
+  width: 110%;
+}
+
+.register-extra label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  color: white;
+}
+
+.register-extra input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #00aaff;
+  cursor: pointer;
+}
+
+.register-extra a {
+  color: #00aaff;
+  text-decoration: underline;
+}
+
+.login-link {
+  text-align: center;
+  width: 100%;
+  color: white;
+  font-size: 0.9rem;
+}
