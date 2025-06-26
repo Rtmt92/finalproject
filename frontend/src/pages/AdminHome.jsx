@@ -53,7 +53,6 @@ const AdminHome = () => {
 
       <div className="admin-layout">
         <div className="admin-sidebar">
-          {/* Select Catégories */}
           <select className="category-select" value={selectedCat} onChange={e => setSelectedCat(e.target.value)}>
             <option value="">Toutes les catégories</option>
             {Array.isArray(categories) && categories.map(cat => (
@@ -61,7 +60,6 @@ const AdminHome = () => {
             ))}
           </select>
 
-          {/* Select État */}
           <select className="etat-select" value={selectedEtat} onChange={e => setSelectedEtat(e.target.value)}>
             <option value="">Tous les états</option>
             <option value="parfait état">Parfait état</option>

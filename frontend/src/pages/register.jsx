@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/log.css';
 import '../styles/Global.css';
 
-
 export default function Register() {
   const [form, setForm] = useState({
     nom: '',
@@ -11,9 +10,11 @@ export default function Register() {
     email: '',
     numero_telephone: '',
     mot_de_passe: '',
+    confirmation: '',
     accept: false,
   });
 
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = e => {
@@ -23,8 +24,15 @@ export default function Register() {
 
   const handleSubmit = async e => {
     e.preventDefault();
+    setError('');
+
+    if (form.mot_de_passe !== form.confirmation) {
+      setError("Les mots de passe ne sont pas identiques.");
+      return;
+    }
+
     if (!form.accept) {
-      alert('Vous devez accepter les conditions générales.');
+      setError('Vous devez accepter les conditions générales.');
       return;
     }
 
@@ -39,7 +47,7 @@ export default function Register() {
       localStorage.setItem('token', body.token);
       navigate('/');
     } else {
-      alert(body.error);
+      setError(body.error || "Une erreur est survenue.");
     }
   };
 
@@ -47,11 +55,26 @@ export default function Register() {
     <div className="register-wrapper">
       <form className="register-form" onSubmit={handleSubmit}>
         <h1>Inscription</h1>
+
         <input name="nom" placeholder="Nom" onChange={handleChange} required />
         <input name="prenom" placeholder="Prénom" onChange={handleChange} required />
         <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
         <input name="numero_telephone" placeholder="Téléphone" onChange={handleChange} required />
-        <input type="password" name="mot_de_passe" placeholder="Mot de passe" onChange={handleChange} required />
+
+        <input
+          type="password"
+          name="mot_de_passe"
+          placeholder="Mot de passe"
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="password"
+          name="confirmation"
+          placeholder="Confirmer le mot de passe"
+          onChange={handleChange}
+          required
+        />
 
         <div className="register-extra">
           <label>
@@ -69,6 +92,7 @@ export default function Register() {
           </p>
         </div>
 
+        {error && <p className="error">{error}</p>}
         <button type="submit">S’inscrire</button>
       </form>
     </div>

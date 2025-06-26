@@ -46,6 +46,8 @@ class ClientController {
             return;
         }
 
+        
+
         $data['mot_de_passe'] = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
 
         $result = $this->clientModel->create([
@@ -67,6 +69,26 @@ class ClientController {
             echo json_encode(['error' => is_string($result) ? $result : 'Erreur lors de la création']);
         }
     }
+
+        private function authenticate(): object {
+        if (!isset($_COOKIE['token'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Token manquant']);
+            exit;
+        }
+
+        try {
+            return \Firebase\JWT\JWT::decode(
+                $_COOKIE['token'],
+                new \Firebase\JWT\Key(\Config\JwtConfig::SECRET_KEY, 'HS256')
+            );
+        } catch (\Exception $e) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Token invalide ou expiré']);
+            exit;
+        }
+    }
+
 
     public function update(int $id): void {
         $existing = $this->clientModel->getById($id);
@@ -114,13 +136,30 @@ class ClientController {
             echo json_encode(['error' => 'Erreur SQL : ' . $e->getMessage()]);
         }
     }
+public function updatePassword(int $id): void {
+    $payload = $this->authenticate(); // appel interne
 
-    public function updatePassword(int $id): void {
+    if ((int)$payload->sub !== $id) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Accès interdit']);
+        return;
+    }
+
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (empty($data['ancien']) || empty($data['nouveau'])) {
+    if (
+        empty($data['ancien']) ||
+        empty($data['nouveau']) ||
+        empty($data['confirmation'])
+    ) {
         http_response_code(400);
         echo json_encode(['error' => 'Champs requis manquants']);
+        return;
+    }
+
+    if ($data['nouveau'] !== $data['confirmation']) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Les mots de passe ne correspondent pas']);
         return;
     }
 
@@ -139,5 +178,6 @@ class ClientController {
         echo json_encode(['error' => 'Erreur lors de la mise à jour']);
     }
 }
+
 
 }

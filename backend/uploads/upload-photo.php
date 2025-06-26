@@ -1,6 +1,6 @@
 <?php
-$uploadDir = __DIR__ . '/uploads/profils/';
-$baseUrl = 'http://localhost:3000/uploads/profils/';
+$uploadDir = __DIR__ . '/profils/';
+$baseUrl = 'http://localhost:8000/uploads/profils/';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

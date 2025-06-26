@@ -7,45 +7,41 @@ export default function Profil() {
   const [panierProduits, setPanierProduits] = useState([]);
   const [prixTotal, setPrixTotal] = useState(0);
   const [idPanier, setIdPanier] = useState(null);
-  const [passwordForm, setPasswordForm] = useState({
-    ancien: '',
-    nouveau: '',
-    confirmation: ''
-  });
+  const [passwordForm, setPasswordForm] = useState({ ancien: '', nouveau: '', confirmation: '' });
   const [messagePwd, setMessagePwd] = useState('');
-
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
+  // 🔧 Génère une URL image complète
+  const getImageUrl = (lien) => lien ? `http://localhost:8000/${lien}` : null;
+
+  // Chargement du client
   useEffect(() => {
-    fetch('http://localhost:3000/api/me', {
-      credentials: 'include',
-    })
+    fetch('http://localhost:3000/api/me', { credentials: 'include' })
       .then(res => res.json())
       .then(data => setClient(data))
       .catch(err => console.error('Erreur profil:', err));
   }, []);
 
-  const refreshPanier = () => {
-    fetch('http://localhost:3000/panier', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (!data || !data.id_panier) return;
-        setIdPanier(data.id_panier);
-        setPrixTotal(data.prix_total);
-        setPanierProduits(data.produits);
-      })
-      .catch(err => console.error('Erreur panier:', err));
-  };
-
+  // Chargement du panier après chargement client
   useEffect(() => {
     if (client) refreshPanier();
   }, [client]);
+
+  const refreshPanier = () => {
+    fetch('http://localhost:3000/panier', {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}` },
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (!data || !data.id_panier) return;
+      setIdPanier(data.id_panier);
+      setPrixTotal(data.prix_total);
+      setPanierProduits(data.produits);
+    })
+    .catch(err => console.error('Erreur panier:', err));
+  };
 
   const handleDeleteFromPanier = async (idProduit) => {
     if (!idPanier) return;
@@ -53,7 +49,6 @@ export default function Profil() {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     });
-
     if (res.ok) refreshPanier();
     else alert("Erreur lors de la suppression.");
   };
@@ -95,37 +90,50 @@ export default function Profil() {
 
   if (!client) return <div>Chargement...</div>;
 
+  // Produits uniques dans le panier
+  const produitsUniques = panierProduits.filter(
+    (prod, index, self) => index === self.findIndex(p => p.id_produit === prod.id_produit)
+  );
+
   return (
     <div className="profil-container">
-      <ClientBanner {...client} mode="edit" />
+      <ClientBanner {...client} photo={client.photo_profil} mode="edit" />
 
       <h3 className="section-title">Votre panier</h3>
       <div className="panier-section">
-        {panierProduits.length === 0 ? (
+        {produitsUniques.length === 0 ? (
           <p>Votre panier est vide.</p>
         ) : (
-          panierProduits.map((prod, index) => (
-            <div key={index} className="panier-item">
-              <div className="banner">
-                <div className="banner-image">
-                  {prod.image ? <img src={prod.image} alt={prod.titre || "Produit"} /> : <div className="no-image">Image</div>}
+          produitsUniques.map((prod, index) => {
+            const firstImage = getImageUrl(prod.images?.[0]?.lien);
+
+            return (
+              <div key={index} className="panier-item">
+                <div className="banner">
+                  <div className="banner-image">
+                    {firstImage ? (
+                      <img src={firstImage} alt={prod.titre || "Produit"} />
+                    ) : (
+                      <div className="no-image">Image</div>
+                    )}
+                  </div>
+                  <div className="banner-details">
+                    <h3>{prod.titre || "Produit"}</h3>
+                    <p>{prod.description || "Pas de description"}</p>
+                    <p><strong>État :</strong> {prod.etat || 'Non spécifié'}</p>
+                    <p><strong>Quantité :</strong> {prod.quantite ?? 'NC'}</p>
+                  </div>
+                  <div className="banner-price">
+                    <p className="prix">{parseFloat(prod.prix || prod.price || 0).toFixed(2)} €</p>
+                  </div>
                 </div>
-                <div className="banner-details">
-                  <h3>{prod.titre || "Produit"}</h3>
-                  <p>{prod.description || "Pas de description"}</p>
-                  <p><strong>État :</strong> {prod.etat || 'Non spécifié'}</p>
-                  <p><strong>Quantité :</strong> {prod.quantite ?? 'NC'}</p>
-                </div>
-                <div className="banner-price">
-                  <p className="prix">{prod.prix || prod.price || 0} €</p>
-                </div>
+                <button className="btn-danger" onClick={() => handleDeleteFromPanier(prod.id_produit)}>Supprimer</button>
               </div>
-              <button className="btn-danger" onClick={() => handleDeleteFromPanier(prod.id_produit)}>Supprimer</button>
-            </div>
-          ))
+            );
+          })
         )}
         <div className="panier-total">
-          <strong>Total : {prixTotal} €</strong>
+        <strong>Total : {Number(prixTotal).toFixed(2)} €</strong>
         </div>
       </div>
 

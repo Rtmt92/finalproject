@@ -4,7 +4,6 @@ import { loadStripe } from "@stripe/stripe-js";
 import CheckoutForm from "../compenents/CheckoutForm";
 import "../styles/pay.css";
 
-// Clé publique Stripe
 const stripePromise = loadStripe("pk_test_51RcVcGPut8fuuvIhnhfeTWcZSSHq4IOgJg37oodYS2KIX2XjCFNQ7P1ZP6izxuFzQOqGvQ0NvNyng6sRr0508etp009qmdvCYo");
 
 const Pay = () => {
@@ -16,7 +15,6 @@ const Pay = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    // 1. Récupérer les infos du client connecté
     fetch("http://localhost:3000/api/me", {
       headers: {
         Authorization: `Bearer ${token}`
@@ -24,7 +22,7 @@ const Pay = () => {
     })
       .then(res => res.json())
       .then(data => {
-        setClientId(data.id_client); // ✅ Assure-toi que le backend retourne bien `id_client`
+        setClientId(data.id_client);
       })
       .catch(() => setClientId(null));
 

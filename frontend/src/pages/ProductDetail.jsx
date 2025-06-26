@@ -74,22 +74,24 @@ export default function ProductDetail() {
     <div className="detail-container">
       <div className="detail-main">
         <div className="thumbnail-list">
-          {images.map((img, idx) => (
+            {images.map((img, idx) => (
             <img
-              key={idx}
-              src={img.lien}
-              alt={`${prod.nom_produit} ${idx}`}
-              className={idx === selectedIndex ? 'selected' : ''}
-              onClick={() => setSelectedIndex(idx)}
+                key={idx}
+                src={`http://localhost:8000/${img.lien}`}
+                alt={`${prod.nom_produit} ${idx}`}
+                className={idx === selectedIndex ? 'selected' : ''}
+                onClick={() => setSelectedIndex(idx)}
             />
-          ))}
+            ))}
+
         </div>
         <div className="main-image">
-          {mainImg ? (
-            <img src={mainImg} alt={prod.nom_produit} />
-          ) : (
+            {mainImg ? (
+            <img src={`http://localhost:8000/${mainImg}`} alt={prod.nom_produit} />
+            ) : (
             <div className="image-placeholder" />
-          )}
+            )}
+
         </div>
       </div>
 

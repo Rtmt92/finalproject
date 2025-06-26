@@ -9,23 +9,13 @@ class PanierProduit {
     private PDO $db;
 
     public function __construct() {
-        // Obtient la connexion PDO via la classe Database
         $this->db = Database::getConnection();
     }
 
-    /**
-     * Récupère toutes les lignes panier_produit
-     * @return array
-     */
     public function getAll(): array {
         return $this->db->query("SELECT * FROM panier_produit")->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Crée une nouvelle ligne dans panier_produit
-     * @param array $data [id_panier, id_produit, price, description]
-     * @return bool
-     */
     public function create(array $data): bool {
         try {
             $stmt = $this->db->prepare(
@@ -38,17 +28,10 @@ class PanierProduit {
             $stmt->bindValue(':desc',     $data['description']);
             return $stmt->execute();
         } catch (PDOException $e) {
-            // En cas d'erreur SQL, on peut logger l'erreur si besoin
             return false;
         }
     }
 
-    /**
-     * Supprime une ligne de panier_produit
-     * @param int $panier
-     * @param int $produit
-     * @return bool
-     */
     public function delete(int $panier, int $produit): bool {
         try {
             $stmt = $this->db->prepare(
@@ -63,11 +46,6 @@ class PanierProduit {
         }
     }
 
-    /**
-     * Supprime toutes les lignes associées à un panier
-     * @param int $panierId
-     * @return void
-     */
     public function deleteByPanier(int $panierId): void {
         $stmt = $this->db->prepare("DELETE FROM panier_produit WHERE id_panier = :id");
         $stmt->execute(['id' => $panierId]);
@@ -92,17 +70,10 @@ class PanierProduit {
             return;
         }
 
-        // 1. Récupérer ou créer le panier
         $panier = $this->panierModel->getByClientId($idClient);
-        if (!$panier) {
-            $idPanier = $this->panierModel->create(['id_client' => $idClient]);
-        } else {
-            $idPanier = $panier['id_panier'];
-        }
+        $idPanier = $panier ? $panier['id_panier'] : $this->panierModel->create(['id_client' => $idClient]);
 
-        // 2. Ajouter dans panier_produit
         $this->panierProduitModel->addProduit($idPanier, $idProduit);
-
         echo json_encode(['message' => 'Produit ajouté au panier']);
     }
 }

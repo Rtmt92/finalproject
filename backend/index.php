@@ -46,6 +46,8 @@ use Controllers\PanierProduitController;
 use Controllers\ProduitImageController;
 use Controllers\TransactionPanierController;
 use Controllers\StripeController;
+use Controllers\UploadImageController;
+
 
 
 // --- CORS & JSON headers ---
@@ -212,6 +214,13 @@ dispatch('#^/api/me$#', ['GET'], function() {
 
 dispatch('#^/create-checkout-session$#', ['POST'], fn() => (new \Controllers\StripeController())->createCheckoutSession());
 dispatch('#^/payment-intent$#', ['POST'], fn() => require __DIR__ . '/payment-intent.php');
+dispatch('#^/api/upload-images$#', ['POST'], fn() => (new UploadImageController())->uploadMultiple());
+dispatch('#^/client/(\d+)/password$#', ['POST'], function($id) {
+    (new \Controllers\ClientController())->updatePassword((int)$id);
+});
+
+
+
 
 
 // 404 par défaut

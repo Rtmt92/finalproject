@@ -91,4 +91,6 @@ class Client {
         $stmt->execute([':email' => $email]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
+
+    
 }

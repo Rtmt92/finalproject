@@ -6,6 +6,7 @@ use Config\JwtConfig;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
+
 class AuthController {
     private Client $clientModel;
 
@@ -35,7 +36,6 @@ class AuthController {
             return;
         }
 
-        $data['mot_de_passe'] = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
 
         $id = $this->clientModel->create([
             'nom'              => $data['nom'],

@@ -49,7 +49,7 @@ export default function Home() {
       </p>
 
       <div className="products-grid">
-        {Array.from({ length: 14 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <ProductCard key={i} />
         ))}
       </div>

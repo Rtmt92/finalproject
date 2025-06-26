@@ -7,26 +7,33 @@ const ClientBanner = ({
   nom,
   prenom,
   description,
-  photo, // <- reçu en tant que photo_profil depuis le parent
+  photo,
   email,
-  telephone,
+  numero_telephone,
   mode = "admin",
 }) => {
   const navigate = useNavigate();
   const [id, setId] = useState(idFromProps);
   const [loading, setLoading] = useState(false);
+  const token = localStorage.getItem("token");
 
   const [form, setForm] = useState({
     nom: nom || "",
     prenom: prenom || "",
     email: email || "",
-    telephone: telephone || "",
+    numero_telephone: numero_telephone || "",
     description: description || "",
     mot_de_passe: "",
-    photo_profil: photo || "", // bien nommé
+    photo_profil: photo || "",
   });
 
-  // 🔁 Récupérer ID si absent
+  const [passwordForm, setPasswordForm] = useState({
+    ancien: '',
+    nouveau: '',
+    confirmation: ''
+  });
+  const [messagePwd, setMessagePwd] = useState('');
+
   useEffect(() => {
     if (!idFromProps) {
       fetch("http://localhost:3000/api/me", { credentials: "include" })
@@ -64,33 +71,91 @@ const ClientBanner = ({
     }
   };
 
-  const handleSave = async () => {
-    if (!id) return alert("ID utilisateur manquant");
+    const handleSave = async () => {
+  if (!id) return alert("ID utilisateur manquant");
+  setLoading(true);
 
-    setLoading(true);
-    try {
-      const res = await fetch(`http://localhost:3000/client/${id}`, {
+  try {
+    // ⚙️ 1. Mise à jour des infos de profil
+    const resInfo = await fetch(`http://localhost:3000/client/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(form),
+    });
+
+    if (!resInfo.ok) {
+      const err = await resInfo.json();
+      alert(err.error || "Erreur lors de la mise à jour des infos");
+      setLoading(false);
+      return;
+    }
+
+    // 🔐 2. Mise à jour du mot de passe SI les champs sont remplis
+    if (passwordForm.ancien || passwordForm.nouveau || passwordForm.confirmation) {
+      if (passwordForm.nouveau !== passwordForm.confirmation) {
+        alert("Les mots de passe ne correspondent pas.");
+        setLoading(false);
+        return;
+      }
+
+      const resPwd = await fetch(`http://localhost:3000/client/${id}/password`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(form),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(passwordForm),
       });
 
-      if (res.ok) {
-        alert("Modifications enregistrées !");
-        navigate(0); // rafraîchit la page
-      } else {
-        const err = await res.json();
-        alert(err.error || "Erreur lors de la mise à jour");
+      const body = await resPwd.json();
+      if (!resPwd.ok) {
+        alert(body.error || "Erreur lors du changement de mot de passe");
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      alert("Erreur réseau");
-    } finally {
-      setLoading(false);
+    }
+
+    alert("Modifications enregistrées !");
+    setPasswordForm({ ancien: '', nouveau: '', confirmation: '' });
+    navigate(0);
+
+  } catch (err) {
+    alert("Erreur réseau");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setMessagePwd('');
+
+    if (passwordForm.nouveau !== passwordForm.confirmation) {
+      return setMessagePwd("Les mots de passe ne correspondent pas.");
+    }
+
+    const res = await fetch(`http://localhost:3000/client/${id}/password`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(passwordForm)
+    });
+
+    const body = await res.json();
+    if (res.ok) {
+      setMessagePwd("Mot de passe mis à jour.");
+      setPasswordForm({ ancien: '', nouveau: '', confirmation: '' });
+    } else {
+      setMessagePwd(body.error || 'Erreur lors du changement de mot de passe');
     }
   };
 
-  const defaultAvatar = "/default-avatar.png";
+  const defaultAvatar = "frontend/public/default-avatar.png";
 
   return (
     <div className="client-banner">
@@ -113,54 +178,45 @@ const ClientBanner = ({
           {mode === "edit" ? (
             <>
               <label>Nom</label>
-              <input
-                type="text"
-                name="nom"
-                value={form.nom}
-                onChange={handleChange}
-              />
+              <input type="text" name="nom" value={form.nom} onChange={handleChange} />
               <label>Prénom</label>
-              <input
-                type="text"
-                name="prenom"
-                value={form.prenom}
-                onChange={handleChange}
-              />
+              <input type="text" name="prenom" value={form.prenom} onChange={handleChange} />
               <label>Email</label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-              />
+              <input type="email" name="email" value={form.email} onChange={handleChange} />
               <label>Téléphone</label>
-              <input
-                type="text"
-                name="telephone"
-                value={form.telephone}
-                onChange={handleChange}
-              />
+              <input type="text" name="numero_telephone" value={form.numero_telephone} onChange={handleChange} />
               <label>Biographie</label>
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-              />
-              <label>Nouveau mot de passe</label>
-              <input
-                type="password"
-                name="mot_de_passe"
-                value={form.mot_de_passe}
-                onChange={handleChange}
-              />
-
-              <button
-                onClick={handleSave}
-                className="btn-valider"
-                disabled={loading}
-              >
+              <textarea name="description" value={form.description} onChange={handleChange} />
+              <div className="change-password">
+                <h4>Changer le mot de passe</h4>
+                <form onSubmit={handleChangePassword}>
+                  <input
+                    type="password"
+                    placeholder="Ancien mot de passe"
+                    value={passwordForm.ancien}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, ancien: e.target.value })}
+                    required
+                  />
+                  <input
+                    type="password"
+                    placeholder="Nouveau mot de passe"
+                    value={passwordForm.nouveau}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, nouveau: e.target.value })}
+                    required
+                  />
+                  <input
+                    type="password"
+                    placeholder="Confirmer le mot de passe"
+                    value={passwordForm.confirmation}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmation: e.target.value })}
+                    required
+                  />
+                </form>
+              </div>
+              <button onClick={handleSave} className="btn-valider" disabled={loading}>
                 {loading ? "Enregistrement..." : "💾 Enregistrer"}
               </button>
+
             </>
           ) : (
             <>
@@ -177,7 +233,7 @@ const ClientBanner = ({
                 )}
               </div>
               <p><strong>Email :</strong> {email}</p>
-              <p><strong>Téléphone :</strong> {telephone}</p>
+              <p><strong>Téléphone :</strong> {numero_telephone}</p>
               <p><strong>Biographie :</strong> {description}</p>
             </>
           )}

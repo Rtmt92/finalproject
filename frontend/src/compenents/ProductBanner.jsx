@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/ProductBanner.css";
 
-const ProductBanner = ({ titre, description, prix, image, id, auteur, etat, quantite }) => {
+const ProductBanner = ({ titre, description, prix, image, id, etat, quantite }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -13,7 +13,11 @@ const ProductBanner = ({ titre, description, prix, image, id, auteur, etat, quan
   return (
     <div className="banner" onClick={handleClick}>
       <div className="banner-image">
-        {image ? <img src={image} alt={titre} /> : <div className="no-image">Image</div>}
+        {image ? (
+          <img src={`http://localhost:8000/${image}`} alt={titre} />
+        ) : (
+          <div className="no-image">Image</div>
+        )}
       </div>
       <div className="banner-details">
         <h3>{titre}</h3>

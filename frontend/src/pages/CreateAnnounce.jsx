@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/CreateAnnounce.css';
 
 const CreateAnnounce = () => {
@@ -12,19 +12,73 @@ const CreateAnnounce = () => {
     images: [],
   });
 
+  const [categories, setCategories] = useState([]); // ← catégories dynamiques
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const etatOptions = ['parfait état', 'très bon état', 'correct'];
+
+useEffect(() => {
+  fetch('http://localhost:8000/categorie')
+    .then(res => res.json())
+    .then(data => {
+      console.log("Données reçues:", data); // ← ajoute cette ligne
+
+      if (Array.isArray(data)) {
+        setCategories(data);
+      } else if (Array.isArray(data.categories)) {
+        setCategories(data.categories);
+      } else {
+        console.error("Données inattendues :", data);
+        setCategories([]); // fallback vide
+      }
+    })
+    .catch(err => {
+      console.error("Erreur lors du chargement des catégories", err);
+      setCategories([]); // fallback vide en cas d'erreur
+    });
+}, []);
+
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
+
     if (name === 'images') {
-      setFormData({ ...formData, images: files });
+      const validFiles = Array.from(files).filter(file =>
+        file.type === 'image/jpeg' || file.type === 'image/png'
+      );
+
+      if (validFiles.length !== files.length) {
+        alert("Seuls les fichiers JPG ou PNG sont autorisés.");
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, ...validFiles]
+      }));
+
+      const newPreviews = validFiles.map(file => ({
+        file,
+        url: URL.createObjectURL(file)
+      }));
+
+      setImagePreviews(prev => [...prev, ...newPreviews]);
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    const updatedPreviews = imagePreviews.filter((_, index) => index !== indexToRemove);
+    const updatedFiles = formData.images.filter((_, index) => index !== indexToRemove);
+
+    setImagePreviews(updatedPreviews);
+    setFormData((prev) => ({ ...prev, images: updatedFiles }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     const payload = {
       nom_produit: formData.nom_produit,
@@ -36,33 +90,60 @@ const CreateAnnounce = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:8000/api/produit', {
+      const res = await fetch('http://localhost:8000/api/produit', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        alert('Produit créé avec succès !');
-        setFormData({
-          nom_produit: '',
-          prix: '',
-          id_categorie: '',
-          description: '',
-          etat: 'très bon état',
-          quantite: 1,
-          images: [],
-        });
-      } else {
-        alert('Erreur lors de la création : ' + (result.error || 'Erreur inconnue'));
+      const produit = await res.json();
+      if (!res.ok || !produit?.id_produit) {
+        alert("Erreur lors de la création du produit");
+        setLoading(false);
+        return;
       }
+
+      if (!formData.images || formData.images.length === 0) {
+        alert("Veuillez sélectionner au moins une image");
+        setLoading(false);
+        return;
+      }
+
+      const formImages = new FormData();
+      formImages.append('id_produit', produit.id_produit);
+
+      formData.images.forEach(img => {
+        formImages.append('images[]', img);
+      });
+
+      const resUpload = await fetch('http://localhost:8000/api/upload-images', {
+        method: 'POST',
+        body: formImages,
+      });
+
+      const result = await resUpload.json();
+      if (!resUpload.ok || !Array.isArray(result.uploaded)) {
+        alert("Erreur lors de l'envoi des images");
+        setLoading(false);
+        return;
+      }
+
+      alert("Annonce créée avec succès !");
+      setFormData({
+        nom_produit: '',
+        prix: '',
+        id_categorie: '',
+        description: '',
+        etat: 'très bon état',
+        quantite: 1,
+        images: [],
+      });
+      setImagePreviews([]);
     } catch (err) {
-      alert('Erreur de connexion au serveur');
+      alert("Erreur réseau");
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,17 +168,19 @@ const CreateAnnounce = () => {
           onChange={handleChange}
           className="half-input"
         />
-
         <select
           name="id_categorie"
           value={formData.id_categorie}
           onChange={handleChange}
           className="half-input"
+          required
         >
           <option value="">Catégorie</option>
-          <option value="1">Électronique</option>
-          <option value="2">Vêtements</option>
-          <option value="3">Livres</option>
+          {categories.map(cat => (
+            <option key={cat.id_categorie} value={cat.id_categorie}>
+              {cat.nom}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -136,13 +219,38 @@ const CreateAnnounce = () => {
       <input
         type="file"
         name="images"
+        accept=".jpg,.jpeg,.png"
         onChange={handleChange}
         multiple
         className="full-input"
       />
 
-      <button type="submit" className="button">
-        Valider
+      <div className="image-previews">
+        {imagePreviews.map((img, i) => (
+          <div key={i} style={{ position: "relative", display: "inline-block", margin: "5px" }}>
+            <img src={img.url} alt={`preview-${i}`} style={{ width: "100px", height: "100px", objectFit: "cover" }} />
+            <button
+              type="button"
+              onClick={() => handleRemoveImage(i)}
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                background: "red",
+                color: "white",
+                border: "none",
+                cursor: "pointer",
+                padding: "2px 5px"
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <button type="submit" className="button" disabled={loading}>
+        {loading ? "Chargement..." : "Valider"}
       </button>
     </form>
   );

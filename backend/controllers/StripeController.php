@@ -7,7 +7,6 @@ use Dotenv\Dotenv;
 
 class StripeController {
     public function createCheckoutSession() {
-        // ⬇️ Charge les variables d'environnement si pas encore fait
         if (!getenv('STRIPE_SECRET_KEY')) {
             $dotenv = Dotenv::createImmutable(__DIR__ . '/../..');
             $dotenv->load();
@@ -27,7 +26,7 @@ class StripeController {
                     'price_data' => [
                         'currency' => 'eur',
                         'product_data' => ['name' => 'Paiement Panier'],
-                        'unit_amount' => (int)($amount * 100), // Converti en centimes
+                        'unit_amount' => (int)($amount * 100), 
                     ],
                     'quantity' => 1,
                 ]],

@@ -40,7 +40,7 @@ const CheckoutForm = ({ amount, clientId, panierId }) => {
       }
 
       if (result.paymentIntent.status === "succeeded") {
-        alert("💳 Paiement réussi !");
+        alert("Paiement réussi !");
 
         // 3. Enregistrer la transaction
         const save = await fetch("http://localhost:3000/enregistrer-transaction", {
