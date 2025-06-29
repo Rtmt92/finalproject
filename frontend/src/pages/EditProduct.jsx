@@ -12,7 +12,7 @@ const EditProduct = () => {
     description: "",
     id_categorie: "",
     quantite: "",
-    etat: "très bon état", // valeur par défaut
+    etat: "très bon état",
   });
 
   const [categories, setCategories] = useState([]);
@@ -50,7 +50,6 @@ const EditProduct = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
-    const data = await res.json();
     if (!res.ok) {
       alert("Erreur lors de la mise à jour");
       return;
@@ -63,9 +62,8 @@ const EditProduct = () => {
     const res = await fetch(`http://localhost:3000/api/produit/${id}/image/${imageId}`, {
       method: "DELETE",
     });
-    const data = await res.json();
     if (!res.ok) {
-      alert(data.error || "Erreur suppression image");
+      alert("Erreur suppression image");
       return;
     }
     setImages((prev) => prev.filter((img) => img.id_image !== imageId));
@@ -76,7 +74,6 @@ const EditProduct = () => {
     const res = await fetch(`http://localhost:3000/api/produit/${id}`, {
       method: "DELETE",
     });
-    const data = await res.json();
     if (!res.ok) {
       alert("Erreur lors de la suppression");
       return;
@@ -86,8 +83,8 @@ const EditProduct = () => {
   };
 
   return (
-    <div className="edit-product-page">
-      <form className="edit-product-form" onSubmit={(e) => e.preventDefault()}>
+    <div className="edit-page">
+      <form className="edit-form" onSubmit={(e) => e.preventDefault()}>
         <input
           type="text"
           name="nom_produit"
@@ -96,7 +93,7 @@ const EditProduct = () => {
           onChange={handleChange}
         />
 
-        <div className="input-row">
+        <div className="row">
           <input
             type="number"
             name="prix"
@@ -104,7 +101,6 @@ const EditProduct = () => {
             value={form.prix}
             onChange={handleChange}
           />
-
           <select name="id_categorie" value={form.id_categorie} onChange={handleChange}>
             <option value="">Catégorie</option>
             {categories.map((cat) => (
@@ -115,16 +111,15 @@ const EditProduct = () => {
           </select>
         </div>
 
-        <div className="input-row">
+        <div className="row">
           <input
             type="number"
             name="quantite"
             placeholder="Quantité"
+            min="0"
             value={form.quantite}
             onChange={handleChange}
-            min="0"
           />
-
           <select name="etat" value={form.etat} onChange={handleChange}>
             {etats.map((e, i) => (
               <option key={i} value={e}>
@@ -139,29 +134,28 @@ const EditProduct = () => {
           placeholder="Description"
           value={form.description}
           onChange={handleChange}
+          rows="4"
         />
 
-        <div className="image-preview-container">
+        <div className="images-wrapper">
           {images.map((img, i) => (
-            <div key={i} className="image-preview-wrapper">
+            <div key={i} className="img-preview">
               <img src={img.lien} alt={`img-${i}`} />
               <button type="button" onClick={() => handleDeleteImage(img.id_image)}>×</button>
             </div>
           ))}
         </div>
 
-        <label className="image-upload-label">
+        <label className="add-images-label">
           Ajouter des Images
           <input type="file" multiple hidden />
         </label>
 
-        <div className="action-buttons">
-          <button type="submit" onClick={handleUpdate}>
-            Valider
-          </button>
-        </div>
+        <button type="button" className="submit-btn" onClick={handleUpdate}>
+          Valider
+        </button>
 
-        <button className="delete-button" onClick={handleDelete}>
+        <button type="button" className="delete-btn" onClick={handleDelete}>
           SUPPRIMER L'ANNONCE
         </button>
       </form>

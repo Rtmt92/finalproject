@@ -1,76 +1,127 @@
-/* styles/ClientBanner.css */
+.edit-page {
+  background: #000;
+  color: white;
+  font-family: 'Arial', sans-serif;
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+}
 
-.client-banner {
-  background-color: #151515;
-  border-radius: 2rem;
-  padding: 2rem;
-  margin: 2rem auto;
-  max-width: 1000px;
-  width: 90%;
+.edit-form {
+  width: 100%;
+  max-width: 700px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2rem;
+  gap: 16px;
 }
 
-.client-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  gap: 2rem;
-}
-
-.client-avatar {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid white;
-  margin-left: 0;
-}
-
-.client-text {
-  background-color: #4b555d;
-  border-radius: 10px;
-  padding: 1.5rem;
-  flex-grow: 1;
+.edit-form input,
+.edit-form select,
+.edit-form textarea {
+  background-color: #4A555F;
   color: white;
-  font-style: italic;
-  font-size: 1.2rem;
-}
-
-.client-text h3 {
-  font-size: 1.8rem;
-  font-style: italic;
-  margin-bottom: 1rem;
-  color: white;
-}
-
-.client-delete-btn {
-  width: 100%;
-  background-color: #d62828;
-  color: white;
-  padding: 1rem;
   border: none;
-  border-radius: 30px;
-  font-size: 1.2rem;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  font-style: italic;
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  gap: 20px;
+}
+
+.row input,
+.row select {
+  width: 100%;
+}
+
+textarea {
+  resize: none;
+}
+
+.images-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.img-preview {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+
+.img-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #888;
+}
+
+.img-preview button {
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #000;
+  color: white;
+  border: 2px solid white;
+  border-radius: 50%;
+  font-size: 20px;
+  width: 30px;   /* Réduit de 35px à 30px */
+  height: 30px;  /* Réduit aussi */
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.add-images-label {
+  background-color: #4A555F;
+  color: white;
+  padding: 12px;
+  text-align: center;
+  font-style: italic;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.submit-btn {
+  background-color: #4A555F;
+  color: white;
+  font-style: italic;
+  padding: 12px;
+  border: none;
+  border-radius: 20px;
+  font-size: 16px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.delete-btn {
+  margin-top: 10px;
+  background-color: #D62828;
+  color: white;
   font-style: italic;
   font-weight: bold;
+  padding: 14px;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  text-transform: uppercase;
+  width: 100%;
   cursor: pointer;
   transition: background 0.3s ease;
 }
 
-.client-delete-btn:hover {
-  background-color: #a91d1d;
+.delete-btn:hover {
+  background-color: #b71c1c;
 }
-
-.image-preview-wrapper img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 10px;
-  border: 2px solid #ccc;
-}
-
-

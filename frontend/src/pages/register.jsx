@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/log.css';
-import '../styles/Global.css';
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -32,7 +31,7 @@ export default function Register() {
     }
 
     if (!form.accept) {
-      setError('Vous devez accepter les conditions générales.');
+      setError("Vous devez accepter les conditions générales.");
       return;
     }
 
@@ -52,44 +51,26 @@ export default function Register() {
   };
 
   return (
-    <div className="register-wrapper">
-      <form className="register-form" onSubmit={handleSubmit}>
+    <div className="login-wrapper">
+      <form className="login-form" onSubmit={handleSubmit}>
         <h1>Inscription</h1>
 
         <input name="nom" placeholder="Nom" onChange={handleChange} required />
         <input name="prenom" placeholder="Prénom" onChange={handleChange} required />
         <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
         <input name="numero_telephone" placeholder="Téléphone" onChange={handleChange} required />
-
-        <input
-          type="password"
-          name="mot_de_passe"
-          placeholder="Mot de passe"
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="confirmation"
-          placeholder="Confirmer le mot de passe"
-          onChange={handleChange}
-          required
-        />
+        <input type="password" name="mot_de_passe" placeholder="Mot de passe" onChange={handleChange} required />
+        <input type="password" name="confirmation" placeholder="Confirmer le mot de passe" onChange={handleChange} required />
 
         <div className="register-extra">
           <label>
-            <input
-              type="checkbox"
-              name="accept"
-              checked={form.accept}
-              onChange={handleChange}
-            />
+            <input type="checkbox" name="accept" checked={form.accept} onChange={handleChange} />
             J’accepte les <a href="/generalterm">conditions générales</a>
           </label>
+        </div>
 
-          <p className="login-link">
-            Tu es déjà un habitué ? <a href="/login">Connecte toi ici</a>
-          </p>
+        <div className="login-link">
+          Tu es déjà un habitué ? <a href="/login">Connecte toi ici</a>
         </div>
 
         {error && <p className="error">{error}</p>}

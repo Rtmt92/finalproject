@@ -27,9 +27,10 @@ class Client {
     public function create(array $data) {
         try {
             $sql = "INSERT INTO client
-                      (nom, prenom, email, numero_telephone, mot_de_passe, role, photo_profil, description)
+                    (nom, prenom, email, numero_telephone, mot_de_passe, role, photo_profil, description)
                     VALUES
-                      (:nom, :prenom, :email, :numero_telephone, :mot_de_passe, :role, :photo_profil, :description)";
+                    (:nom, :prenom, :email, :numero_telephone, :mot_de_passe, :role, :photo_profil, :description)";
+            
             $stmt = $this->db->prepare($sql);
             $stmt->bindValue(':nom',              $data['nom']);
             $stmt->bindValue(':prenom',           $data['prenom']);
@@ -40,6 +41,7 @@ class Client {
             $stmt->bindValue(':photo_profil',     $data['photo_profil'] ?? null, PDO::PARAM_STR);
             $stmt->bindValue(':description',      $data['description']  ?? null, PDO::PARAM_STR);
             $stmt->execute();
+
             return (int)$this->db->lastInsertId();
         } catch (PDOException $e) {
             return 'SQL_ERROR: ' . $e->getMessage();
@@ -56,12 +58,15 @@ class Client {
         ];
 
         foreach ($allowed as $key) {
-            if (array_key_exists($key, $data)) {
-                $fields[] = "$key = :$key";
-                $params[":$key"] = $key === 'mot_de_passe'
-                    ? password_hash($data[$key], PASSWORD_DEFAULT)
-                    : $data[$key];
+            if (!array_key_exists($key, $data)) continue;
+
+            // Ne hash le mot de passe que s'il ne l'est pas déjà
+            if ($key === 'mot_de_passe' && !password_get_info($data[$key])['algo']) {
+                $data[$key] = password_hash($data[$key], PASSWORD_DEFAULT);
             }
+
+            $fields[] = "$key = :$key";
+            $params[":$key"] = $data[$key];
         }
 
         if (empty($fields)) return false;
@@ -79,18 +84,14 @@ class Client {
         }
     }
 
-    public function delete(int $id): bool
-    {
+    public function delete(int $id): bool {
         $stmt = $this->db->prepare("DELETE FROM client WHERE id_client = ?");
         return $stmt->execute([$id]);
     }
-
 
     public function findByEmail(string $email): ?array {
         $stmt = $this->db->prepare("SELECT * FROM client WHERE email = :email");
         $stmt->execute([':email' => $email]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
-
-    
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "../styles/EditProduct.css";
+import "../styles/adminCategorie.css";
 
 const AdminCategorie = () => {
   const [nom, setNom] = useState("");

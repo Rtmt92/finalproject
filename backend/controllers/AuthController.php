@@ -6,7 +6,6 @@ use Config\JwtConfig;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
-
 class AuthController {
     private Client $clientModel;
 
@@ -36,6 +35,8 @@ class AuthController {
             return;
         }
 
+        // 🔐 HASHAGE DU MOT DE PASSE
+        $data['mot_de_passe'] = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
 
         $id = $this->clientModel->create([
             'nom'              => $data['nom'],
@@ -62,6 +63,7 @@ class AuthController {
             'iat'   => time(),
             'exp'   => time() + 3600,
         ];
+
         $token = JWT::encode($payload, JwtConfig::SECRET_KEY, 'HS256');
 
         setcookie('token', $token, [
@@ -87,7 +89,14 @@ class AuthController {
         }
 
         $user = $this->clientModel->findByEmail($data['email']);
-        if (!$user || !password_verify($data['mot_de_passe'], $user['mot_de_passe'])) {
+        if (!$user) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Identifiants invalides']);
+            return;
+        }
+
+        // ✅ Vérification du mot de passe hashé
+        if (!password_verify($data['mot_de_passe'], $user['mot_de_passe'])) {
             http_response_code(401);
             echo json_encode(['error' => 'Identifiants invalides']);
             return;
@@ -101,6 +110,7 @@ class AuthController {
             'iat'   => time(),
             'exp'   => time() + 3600,
         ];
+
         $token = JWT::encode($payload, JwtConfig::SECRET_KEY, 'HS256');
 
         setcookie('token', $token, [

@@ -1,63 +1,105 @@
 .form {
   background: #000;
-  color: #ccc;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  max-width: 500px;
+  color: #fff;
+  font-family: 'Arial', sans-serif;
+  max-width: 600px;
   margin: 0 auto;
   padding: 40px 20px;
-  border-radius: 8px;
-  font-family: sans-serif;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.full-input {
-  background-color: #4A555F;
-  border: none;
-  border-radius: 10px;
-  color: #ccc;
-  padding: 10px;
-  font-size: 14px;
+.full-input,
+.half-input,
+.textarea,
+select {
   width: 100%;
-}
-
-.half-input {
-  background-color: #4A555F;
+  padding: 12px 16px;
+  font-size: 15px;
   border: none;
   border-radius: 10px;
-  color: #ccc;
-  padding: 10px;
-  font-size: 14px;
-  width: 48%;
-}
-
-.textarea {
-  background-color: #4A555F;
-  border: none;
-  border-radius: 10px;
-  color: #ccc;
-  padding: 10px;
-  font-size: 14px;
-  width: 100%;
-  resize: none;
-}
-
-.button {
-  background-color: #4A555F;
-  border: none;
-  border-radius: 10px;
-  color: #ccc;
-  padding: 10px 20px;
-  font-size: 14px;
-  cursor: pointer;
-  width: 40%;
+  background-color: #4a555f;
+  color: white;
 }
 
 .row {
   display: flex;
-  justify-content: space-between;
+  gap: 20px;
+}
+
+.row .half-input {
+  flex: 1;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.image-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.image-previews div {
+  position: relative;
+}
+
+.image-previews img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #fff;
+}
+
+.image-previews button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #dc4b4b;
+  border: none;
+  color: white;
+  font-size: 16px;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.button {
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: bold;
+  border: none;
+  border-radius: 30px;
+  background-color: #4a555f;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
   width: 100%;
-  gap: 4%;
+}
+
+.button:hover {
+  background-color: #5c6670;
+}
+
+.button.delete {
+  background-color: #dc4b4b;
+}
+
+.button.delete:hover {
+  background-color: #c13a3a;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 6px;
+  display: block;
 }

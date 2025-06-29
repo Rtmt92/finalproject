@@ -1,0 +1,80 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  color: white;
+  font-family: 'Arial', sans-serif;
+}
+
+.edit-product-page {
+  width: 70%;
+  padding: 2rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.client-edit-title {
+  background-color: #4a555f;
+  padding: 0.8rem 1.2rem;
+  border-radius: 6px;
+  font-style: italic;
+  font-size: 1rem;
+  font-weight: 400;
+  width: fit-content;
+}
+
+.edit-product-page input,
+.edit-product-page select,
+.edit-product-page textarea {
+  background-color: #4a555f;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 1rem;
+  font-style: italic;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.edit-product-page textarea {
+  resize: none;
+  min-height: 100px;
+}
+
+.edit-product-page button {
+  background-color: #4a555f;
+  color: white;
+  border: none;
+  padding: 14px;
+  font-size: 1rem;
+  font-style: italic;
+  font-weight: 400;
+  border-radius: 30px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.3s ease;
+}
+
+.edit-product-page button:hover {
+  background-color: #5d6872;
+}
+
+.edit-product-page .delete-button {
+  background-color: #d62828;
+  font-style: italic;
+  font-weight: bold;
+  border-radius: 30px;
+}
+
+.edit-product-page .delete-button:hover {
+  background-color: #a91d1d;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #999;
+  margin: 2rem 0;
+}

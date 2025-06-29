@@ -10,6 +10,7 @@ const ClientBanner = ({
   photo,
   email,
   numero_telephone,
+  onDelete,
   mode = "admin",
 }) => {
   const navigate = useNavigate();
@@ -32,7 +33,9 @@ const ClientBanner = ({
     nouveau: '',
     confirmation: ''
   });
+
   const [messagePwd, setMessagePwd] = useState('');
+  const initials = `${prenom?.charAt(0) || ""}${nom?.charAt(0) || ""}`.toUpperCase();
 
   useEffect(() => {
     if (!idFromProps) {
@@ -71,174 +74,138 @@ const ClientBanner = ({
     }
   };
 
-    const handleSave = async () => {
-  if (!id) return alert("ID utilisateur manquant");
-  setLoading(true);
+  const handleSave = async () => {
+    if (!id) return alert("ID utilisateur manquant");
+    setLoading(true);
 
-  try {
-    // ⚙️ 1. Mise à jour des infos de profil
-    const resInfo = await fetch(`http://localhost:3000/client/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(form),
-    });
-
-    if (!resInfo.ok) {
-      const err = await resInfo.json();
-      alert(err.error || "Erreur lors de la mise à jour des infos");
-      setLoading(false);
-      return;
-    }
-
-    // 🔐 2. Mise à jour du mot de passe SI les champs sont remplis
-    if (passwordForm.ancien || passwordForm.nouveau || passwordForm.confirmation) {
-      if (passwordForm.nouveau !== passwordForm.confirmation) {
-        alert("Les mots de passe ne correspondent pas.");
-        setLoading(false);
-        return;
-      }
-
-      const resPwd = await fetch(`http://localhost:3000/client/${id}/password`, {
+    try {
+      const resInfo = await fetch(`http://localhost:3000/client/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(passwordForm),
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(form),
       });
 
-      const body = await resPwd.json();
-      if (!resPwd.ok) {
-        alert(body.error || "Erreur lors du changement de mot de passe");
+      if (!resInfo.ok) {
+        const err = await resInfo.json();
+        alert(err.error || "Erreur lors de la mise à jour des infos");
         setLoading(false);
         return;
       }
-    }
 
-    alert("Modifications enregistrées !");
-    setPasswordForm({ ancien: '', nouveau: '', confirmation: '' });
-    navigate(0);
+      if (passwordForm.ancien || passwordForm.nouveau || passwordForm.confirmation) {
+        if (passwordForm.nouveau !== passwordForm.confirmation) {
+          alert("Les mots de passe ne correspondent pas.");
+          setLoading(false);
+          return;
+        }
 
-  } catch (err) {
-    alert("Erreur réseau");
-  } finally {
-    setLoading(false);
-  }
-};
+        const resPwd = await fetch(`http://localhost:3000/client/${id}/password`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(passwordForm),
+        });
 
+        const body = await resPwd.json();
+        if (!resPwd.ok) {
+          alert(body.error || "Erreur lors du changement de mot de passe");
+          setLoading(false);
+          return;
+        }
+      }
 
-
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-    setMessagePwd('');
-
-    if (passwordForm.nouveau !== passwordForm.confirmation) {
-      return setMessagePwd("Les mots de passe ne correspondent pas.");
-    }
-
-    const res = await fetch(`http://localhost:3000/client/${id}/password`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(passwordForm)
-    });
-
-    const body = await res.json();
-    if (res.ok) {
-      setMessagePwd("Mot de passe mis à jour.");
+      alert("Modifications enregistrées !");
       setPasswordForm({ ancien: '', nouveau: '', confirmation: '' });
-    } else {
-      setMessagePwd(body.error || 'Erreur lors du changement de mot de passe');
+      navigate(0);
+
+    } catch (err) {
+      alert("Erreur réseau");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const defaultAvatar = "frontend/public/default-avatar.png";
+  if (mode === "edit") {
+    return (
+      <div className="client-banner">
+        <div className="client-info">
+          <img
+            src={form.photo_profil || "/default-avatar.png"}
+            alt={`client-${form.nom || "photo"}`}
+            className="client-avatar"
+          />
+          <input type="file" name="photo_profil" accept="image/*" onChange={handleChange} />
+
+          <label>Nom</label>
+          <input type="text" name="nom" value={form.nom} onChange={handleChange} />
+          <label>Prénom</label>
+          <input type="text" name="prenom" value={form.prenom} onChange={handleChange} />
+          <label>Email</label>
+          <input type="email" name="email" value={form.email} onChange={handleChange} />
+          <label>Téléphone</label>
+          <input type="text" name="numero_telephone" value={form.numero_telephone} onChange={handleChange} />
+          <label>Biographie</label>
+          <textarea name="description" value={form.description} onChange={handleChange} />
+
+          <div className="change-password">
+            <h4>Changer le mot de passe</h4>
+            <input
+              type="password"
+              placeholder="Ancien mot de passe"
+              value={passwordForm.ancien}
+              onChange={(e) => setPasswordForm({ ...passwordForm, ancien: e.target.value })}
+            />
+            <input
+              type="password"
+              placeholder="Nouveau mot de passe"
+              value={passwordForm.nouveau}
+              onChange={(e) => setPasswordForm({ ...passwordForm, nouveau: e.target.value })}
+            />
+            <input
+              type="password"
+              placeholder="Confirmer le mot de passe"
+              value={passwordForm.confirmation}
+              onChange={(e) => setPasswordForm({ ...passwordForm, confirmation: e.target.value })}
+            />
+            {messagePwd && <p className="message">{messagePwd}</p>}
+          </div>
+
+          <button onClick={handleSave} className="btn-valider" disabled={loading}>
+            Enregistrer
+          </button>
+
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="client-banner">
-      <div className="client-info">
-        <img
-          src={form.photo_profil || defaultAvatar}
-          alt={`client-${form.nom || "photo"}`}
-          className="client-avatar"
-        />
-        {mode === "edit" && (
-          <input
-            type="file"
-            name="photo_profil"
-            accept="image/*"
-            onChange={handleChange}
-          />
-        )}
-
-        <div className="client-text">
-          {mode === "edit" ? (
-            <>
-              <label>Nom</label>
-              <input type="text" name="nom" value={form.nom} onChange={handleChange} />
-              <label>Prénom</label>
-              <input type="text" name="prenom" value={form.prenom} onChange={handleChange} />
-              <label>Email</label>
-              <input type="email" name="email" value={form.email} onChange={handleChange} />
-              <label>Téléphone</label>
-              <input type="text" name="numero_telephone" value={form.numero_telephone} onChange={handleChange} />
-              <label>Biographie</label>
-              <textarea name="description" value={form.description} onChange={handleChange} />
-              <div className="change-password">
-                <h4>Changer le mot de passe</h4>
-                <form onSubmit={handleChangePassword}>
-                  <input
-                    type="password"
-                    placeholder="Ancien mot de passe"
-                    value={passwordForm.ancien}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, ancien: e.target.value })}
-                    required
-                  />
-                  <input
-                    type="password"
-                    placeholder="Nouveau mot de passe"
-                    value={passwordForm.nouveau}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, nouveau: e.target.value })}
-                    required
-                  />
-                  <input
-                    type="password"
-                    placeholder="Confirmer le mot de passe"
-                    value={passwordForm.confirmation}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmation: e.target.value })}
-                    required
-                  />
-                </form>
-              </div>
-              <button onClick={handleSave} className="btn-valider" disabled={loading}>
-                {loading ? "Enregistrement..." : "💾 Enregistrer"}
-              </button>
-
-            </>
-          ) : (
-            <>
-              <div className="client-header">
-                <h3>{prenom} {nom}</h3>
-                {mode === "admin" && (
-                  <button
-                    className="edit-icon"
-                    onClick={() => navigate(`/admin/client/edit/${id}`)}
-                    title="Modifier le client"
-                  >
-                    ✏️
-                  </button>
-                )}
-              </div>
-              <p><strong>Email :</strong> {email}</p>
-              <p><strong>Téléphone :</strong> {numero_telephone}</p>
-              <p><strong>Biographie :</strong> {description}</p>
-            </>
-          )}
-        </div>
+      <div className="client-avatar">
+        {photo ? <img src={photo} alt="profil" /> : <span>{initials}</span>}
       </div>
+
+      <div className="client-info">
+        <div className="client-header">
+          <h3>profil {prenom?.toLowerCase()}</h3>
+          <button
+            className="edit-button"
+            onClick={() => navigate(`/admin/client/edit/${id}`)}
+            title="Modifier"
+          >
+            🖉
+          </button>
+        </div>
+
+        <p className="client-subtitle">Biographie</p>
+        <p className="client-description">
+          {description?.trim() || "Aucune biographie fournie."}
+        </p>
+      </div>
+
     </div>
   );
 };

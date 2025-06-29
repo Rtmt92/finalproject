@@ -1,162 +1,41 @@
 body {
-    margin: 0;
-    background-color: #000;
-    font-family: Arial, sans-serif;
-  }
-  
-  .main-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: calc(100vh - 100px);
-    padding: 20px 0;
-  }
-  
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem; /* Espacement uniforme comme dans la première image */
-    padding: 0 10px;
-    width: 100%;
-    max-width: 600px; /* Ajusté pour une largeur plus proche de la première image */
-  }
-  
-  h1 {
-    color: #fff;
-    font-size: 1.25rem;
-    font-weight: normal;
-    background-color: #47545B;
-    padding: 0.5rem 2rem;
-    border-radius: 0.25rem;
-    width: 70%; /* Largeur similaire à la première image */
-    text-align: center;
-  }
-  
-  /* Appliqué uniquement aux inputs du formulaire Register */
-  .register-form input {
-    width: 100%;
-    padding: 0.75rem;
-    background-color: #47545B;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 1rem;
-  }
-
-  
-  input::placeholder {
-    color: #9CA3AF;
-  }
-  
-  input:focus {
-    outline: none;
-  }
-  
-  a {
-    color: #fff;
-    font-size: 0.75rem;
-    text-decoration: none;
-  }
-  
-  a:hover {
-    text-decoration: underline;
-  }
-  
-  button {
-    padding: 0.75rem 2.5rem; /* Ajusté pour une largeur plus large comme dans la première image */
-    border-radius: 9999px; /* Bords très arrondis comme dans la première image */
-    background-color: #47545B;
-    color: #fff;
-    border: none;
-    font-size: 0.875rem;
-    cursor: pointer;
-    width: 40%; /* Largeur relative pour correspondre à la première image */
-    min-width: 150px; /* Minimum pour éviter qu'il ne soit trop petit */
-  }
-  
-  button:hover {
-    background-color: #6B7280;
-  }
-
-  /* Spécifique à la page Register uniquement */
-
-.register-extra {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 1rem;
-  font-size: 0.875rem;
-  color: #ccc;
-  width: 70%;
+  margin: 0;
+  background-color: #000;
+  font-family: "Arial", sans-serif;
 }
 
-.register-extra label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: #ccc;
-}
-
-.register-extra input[type="checkbox"] {
-  accent-color: #47545B;
-  transform: scale(1.2);
-}
-
-.register-extra a {
-  color: #00aaff;
-  text-decoration: underline;
-  font-size: 0.85rem;
-}
-
-.register-extra a:hover {
-  text-decoration: none;
-}
-
-.login-link {
-  margin-top: 1rem;
-  font-size: 0.85rem;
-  color: #bbb;
-}
-
-.login-link a {
-  color: #00aaff;
-  text-decoration: underline;
-}
-
-.register-wrapper {
+/* Wrapper principal centré */
+.login-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
 }
 
-.register-form {
+/* Le formulaire */
+.login-form {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: transparent;
-  gap: 1rem;
+  gap: 1.5rem;
   width: 90%;
-  max-width: 400px;
+  max-width: 500px;
 }
 
-.register-form h1 {
+/* Titre */
+.login-form h1 {
   color: white;
-  font-size: 1.5rem;
   background-color: #47545B;
   padding: 0.6rem 2rem;
   border-radius: 5px;
   text-align: center;
+  font-style: italic;
+  font-weight: 500;
   width: 100%;
 }
 
-.register-form input[type="text"],
-.register-form input[type="email"],
-.register-form input[type="password"],
-.register-form input[name="numero_telephone"] {
+/* Champs de formulaire */
+.login-form input {
   width: 100%;
   padding: 0.75rem;
   background-color: #47545B;
@@ -164,35 +43,65 @@ body {
   border: none;
   border-radius: 5px;
   font-size: 1rem;
+  font-style: italic;
 }
 
-.register-form input::placeholder {
+.login-form input::placeholder {
   color: #c9c9c9;
 }
 
-.register-form input:focus {
-  outline: none;
+/* Erreur */
+.login-error {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: -1rem;
+  text-align: center;
 }
 
-.register-form button {
-  font-size: 1.25rem;     /* augmente la taille */
-  font-style: italic;     /* met en italique */
-  font-weight: 300;       /* texte plus fin */
+/* Bouton */
+.login-form button {
+  padding: 0.75rem 2.5rem;
+  border-radius: 9999px;
+  background-color: #47545B;
+  color: white;
+  border: none;
+  font-size: 1.25rem;
+  font-style: italic;
+  font-weight: 300;
+  cursor: pointer;
+  width: 60%;
+  min-width: 150px;
 }
 
-
-.register-form button:hover {
+.login-form button:hover {
   background-color: #6B7280;
+}
+
+/* Lien vers inscription */
+.login-link {
+  font-size: 1.25rem;
+  font-style: italic;
+  color: #ccc;
+  text-align: center;
+}
+
+.login-link a {
+  color: white;
+  text-decoration: underline;
 }
 
 .register-extra {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.8rem;
+  align-items: center; /* 👈 Centre horizontalement */
+  gap: 0.75rem;
+  width: 100%;
   font-size: 0.9rem;
-  width: 110%;
+  margin-top: 0.5rem;
+  color: #ccc;
+  text-align: center; /* 👈 Centre le texte aussi */
 }
+
 
 .register-extra label {
   display: flex;
@@ -200,6 +109,7 @@ body {
   gap: 0.5rem;
   flex-wrap: wrap;
   color: white;
+  font-size: 0.9rem;
 }
 
 .register-extra input[type="checkbox"] {
@@ -214,9 +124,28 @@ body {
   text-decoration: underline;
 }
 
+.register-extra a:hover {
+  text-decoration: none;
+}
+
 .login-link {
+  font-size: 1.25rem;
+  font-style: italic;
+  color: #ccc;
+  margin-top: 1rem;
   text-align: center;
   width: 100%;
-  color: white;
-  font-size: 0.9rem;
 }
+
+.login-link a {
+  color: white;
+  text-decoration: underline;
+}
+
+.error {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+

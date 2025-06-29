@@ -91,13 +91,6 @@ const EditClient = () => {
         value={form.email}
         onChange={handleChange}
       />
-      <input
-        type="password"
-        name="mot_de_passe"
-        placeholder="Mot de passe"
-        value={form.mot_de_passe}
-        onChange={handleChange}
-      />
 
       <select name="role" value={form.role} onChange={handleChange}>
         <option value="client">Client</option>
