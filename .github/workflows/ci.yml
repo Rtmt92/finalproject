@@ -11,6 +11,7 @@ jobs:
   backend:
     name: Tests PHP (Backend)
     runs-on: ubuntu-latest
+
     services:
       mysql:
         image: mysql:8.0
@@ -22,7 +23,7 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost"
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
@@ -31,11 +32,24 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      # on purge vendor/ pour repartir sur un install "propre"
+      - name: Supprimer tout vendor/ commis par erreur
+        run: rm -rf ./backend/vendor
+
       - name: Setup PHP & extensions
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: mbstring, pdo_mysql, mysqli
+
+      # Caching de Composer pour accélérer les prochaines exécutions
+      - name: Cache Composer packages
+        uses: actions/cache@v3
+        with:
+          path: backend/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
 
       - name: Install Composer dependencies
         working-directory: backend

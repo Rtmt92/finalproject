@@ -6,6 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Tests\\' => array($baseDir . '/tests'),
     'Stripe\\' => array($vendorDir . '/stripe/stripe-php/lib'),
     'Src\\Models\\' => array($baseDir . '/src/Models'),
     'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),

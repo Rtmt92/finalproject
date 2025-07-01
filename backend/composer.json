@@ -1,25 +1,44 @@
 {
-    "name": "rayan/backend",
-    "autoload": {
-    "psr-4": {
-        "Core\\": "core/",
-        "Config\\": "config/",
-        "Controllers\\": "controllers/",
-        "Src\\Models\\": "src/Models/"
-    }
-    },
+  "name": "rayan/backend",
+  "description": "Backend du projet final",
+  "type": "project",
+  "license": "MIT",
 
-    "authors": [
-        {
-            "name": "Rtmt92",
-            "email": "rayantoumert.rt@gmail.com"
-        }
-    ],
-    "require": {
-        "firebase/php-jwt": "^6.11",
-        "stripe/stripe-php": "^17.3"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^11.5"
+  "autoload": {
+    "psr-4": {
+      "Core\\":      "core/",
+      "Config\\":    "config/",
+      "Controllers\\": "controllers/",
+      "Src\\Models\\": "src/Models/"
     }
+  },
+
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+
+  "require": {
+    "firebase/php-jwt": "^6.11",
+    "stripe/stripe-php": "^17.3"
+  },
+
+  "require-dev": {
+    "phpunit/phpunit": "^11.5"
+  },
+
+  "scripts": {
+    "test": "phpunit --colors=always"
+  },
+
+  "authors": [
+    {
+      "name":  "Rtmt92",
+      "email": "rayantoumert.rt@gmail.com"
+    }
+  ],
+
+  "minimum-stability": "stable",
+  "prefer-stable": true
 }
