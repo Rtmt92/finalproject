@@ -5,11 +5,12 @@ declare(strict_types=1);
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
-// --- Chargement de la config DB ---
 $possiblePaths = [
-    __DIR__ . '/config/DatabaseConfig.php',
-    __DIR__ . '/src/Core/Database.php'
+    __DIR__ . '/core/Database.php',             // ✅ ajoute ce chemin
+    __DIR__ . '/config/DatabaseConfig.php',     // <- tu peux garder si utilisé ailleurs
+    __DIR__ . '/src/Core/Database.php',         // facultatif
 ];
+
 $loaded = false;
 foreach ($possiblePaths as $dbPath) {
     if (file_exists($dbPath)) {
@@ -111,8 +112,6 @@ dispatch('#^/api/register$#', ['POST'], fn()=> (new AuthController())->register(
 dispatch('#^/api/login$#',    ['POST'], fn()=> (new AuthController())->login());
 dispatch('#^/api/me$#', ['GET'], fn() => (new \Controllers\AuthController())->me());
 
-
-
 // --- CRUD CLIENT ---
 dispatch('#^/client$#',         ['GET'],         fn()=> (new ClientController())->index());
 dispatch('#^/client$#',         ['POST'],        fn()=> (new ClientController())->store());
@@ -120,7 +119,6 @@ dispatch('#^/client/(\d+)$#',    ['GET'],         fn($i)=>(new ClientController(
 dispatch('#^/client/(\d+)$#',    ['PUT','PATCH'], fn($i)=>(new ClientController())->update((int)$i));
 dispatch('#^/client/(\d+)$#',    ['DELETE'],      fn($i)=>(new ClientController())->destroy((int)$i));
 dispatch('#^/upload-photo$#', ['POST'], fn() => require __DIR__ . '/uploads/upload-photo.php');
-
 
 // --- CRUD MESSAGE ---
 dispatch('#^/message$#',         ['GET'],         fn()=> (new MessageController())->index());
@@ -145,7 +143,6 @@ dispatch('#^/api/produit/(\d+)$#',   ['PUT','PATCH'], fn($i)=>(new ProduitContro
 dispatch('#^/api/produit/(\d+)$#',   ['DELETE'], fn($i)=>(new ProduitController())->destroy((int)$i));
 dispatch('#^/api/produit/(\d+)/image/(\d+)$#', ['DELETE'], fn($pid, $iid) => (new ProduitController())->deleteImage((int)$pid, (int)$iid));
 dispatch('#^/api/produit/(\d+)/image$#', ['POST'], fn($id) => (new ProduitController())->uploadImage((int)$id));
-
 
 // --- ENDPOINT PRODUIT RANDOM ---
 dispatch('#^/api/produit/random$#',['GET'], fn()=> (new ProduitController())->random());
@@ -173,7 +170,6 @@ dispatch('#^/panier/(\d+)$#',     ['DELETE'],      fn($i)=>(new PanierController
 dispatch('#^/panier$#', ['GET'], fn() => (new \Controllers\PanierController())->showUserPanier());
 dispatch('#^/panier$#', ['GET'], fn() => (new PanierController())->getMyPanier());
 dispatch('#^/panier/(\d+)/vider$#', ['DELETE'], fn($id) => (new PanierController())->vider((int)$id));
-
 
 // --- CRUD TRANSACTION ---
 dispatch('#^/transaction$#',      ['GET'],         fn()=> (new TransactionController())->index());
@@ -218,10 +214,6 @@ dispatch('#^/api/upload-images$#', ['POST'], fn() => (new UploadImageController(
 dispatch('#^/client/(\d+)/password$#', ['POST'], function($id) {
     (new \Controllers\ClientController())->updatePassword((int)$id);
 });
-
-
-
-
 
 // 404 par défaut
 http_response_code(404);

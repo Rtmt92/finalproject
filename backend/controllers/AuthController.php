@@ -66,14 +66,6 @@ class AuthController {
 
         $token = JWT::encode($payload, JwtConfig::SECRET_KEY, 'HS256');
 
-        setcookie('token', $token, [
-            'expires' => time() + 3600,
-            'path' => '/',
-            'secure' => false,
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
-
         http_response_code(201);
         echo json_encode(['message' => 'Inscription réussie', 'token' => $token]);
     }
@@ -112,42 +104,37 @@ class AuthController {
         ];
 
         $token = JWT::encode($payload, JwtConfig::SECRET_KEY, 'HS256');
-
-        setcookie('token', $token, [
-            'expires' => time() + 3600,
-            'path' => '/',
-            'secure' => false,
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
-
         echo json_encode(['token' => $token, 'role' => $user['role']]);
     }
 
     public function me(): void {
-        header('Content-Type: application/json; charset=utf-8');
+    header('Content-Type: application/json; charset=utf-8');
 
-        if (!isset($_COOKIE['token'])) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Token manquant']);
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+
+    if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Token manquant']);
+        return;
+    }
+
+    try {
+        $decoded = JWT::decode($matches[1], new Key(JwtConfig::SECRET_KEY, 'HS256'));
+        $user = $this->clientModel->getById((int)$decoded->sub);
+
+        if (!$user) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Utilisateur non trouvé']);
             return;
         }
 
-        try {
-            $decoded = JWT::decode($_COOKIE['token'], new Key(JwtConfig::SECRET_KEY, 'HS256'));
-            $user = $this->clientModel->getById((int)$decoded->sub);
+        unset($user['mot_de_passe']);
+        echo json_encode($user);
 
-            if (!$user) {
-                http_response_code(404);
-                echo json_encode(['error' => 'Utilisateur non trouvé']);
-                return;
-            }
-
-            unset($user['mot_de_passe']);
-            echo json_encode($user);
-        } catch (\Exception $e) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Token invalide ou expiré']);
-        }
+    } catch (\Exception $e) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Token invalide ou expiré']);
     }
+}
+
 }

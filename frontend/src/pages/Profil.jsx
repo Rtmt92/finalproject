@@ -14,10 +14,20 @@ export default function Profil() {
   const getImageUrl = (lien) => lien ? `http://localhost:8000/${lien}` : null;
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/me', { credentials: 'include' })
-      .then(res => res.json())
+    if (!token) return;
+
+    fetch('http://localhost:8000/api/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Unauthorized");
+        return res.json();
+      })
       .then(data => setClient(data))
-      .catch(err => console.error('Erreur profil:', err));
+      .catch(err => {
+        console.error('Erreur profil:', err);
+        navigate('/login');
+      });
   }, []);
 
   useEffect(() => {
@@ -25,23 +35,22 @@ export default function Profil() {
   }, [client]);
 
   const refreshPanier = () => {
-    fetch('http://localhost:3000/panier', {
-      method: 'GET',
+    fetch('http://localhost:8000/panier', {
       headers: { 'Authorization': `Bearer ${token}` },
     })
-    .then(res => res.json())
-    .then(data => {
-      if (!data?.id_panier) return;
-      setIdPanier(data.id_panier);
-      setPrixTotal(data.prix_total);
-      setPanierProduits(data.produits);
-    })
-    .catch(err => console.error('Erreur panier:', err));
+      .then(res => res.json())
+      .then(data => {
+        if (!data?.id_panier) return;
+        setIdPanier(data.id_panier);
+        setPrixTotal(data.prix_total);
+        setPanierProduits(data.produits);
+      })
+      .catch(err => console.error('Erreur panier:', err));
   };
 
   const handleDeleteFromPanier = async (idProduit) => {
     if (!idPanier) return;
-    const res = await fetch(`http://localhost:3000/panier_produit/${idPanier}/${idProduit}`, {
+    const res = await fetch(`http://localhost:8000/panier_produit/${idPanier}/${idProduit}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -51,9 +60,9 @@ export default function Profil() {
 
   const handleDeleteAccount = async () => {
     if (!window.confirm("Supprimer votre compte ?")) return;
-    const res = await fetch(`http://localhost:3000/client/${client.id_client}`, {
+    const res = await fetch(`http://localhost:8000/client/${client.id_client}`, {
       method: 'DELETE',
-      credentials: 'include',
+      headers: { 'Authorization': `Bearer ${token}` },
     });
     if (res.ok) navigate('/login');
     else alert("Erreur lors de la suppression.");
@@ -76,13 +85,12 @@ export default function Profil() {
         ) : (
           produitsUniques.map((prod, index) => {
             const firstImage = getImageUrl(prod.images?.[0]?.lien);
-
             return (
               <div key={index} className="panier-item">
                 <div className="banner">
                   <div className="banner-image">
                     {firstImage ? (
-                      <img src={firstImage} alt={prod.titre || "Produit"} />
+                      <img src={firstImage} alt="Produit" />
                     ) : (
                       <div className="no-image">Image</div>
                     )}

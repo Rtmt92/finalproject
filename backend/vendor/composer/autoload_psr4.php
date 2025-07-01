@@ -8,7 +8,9 @@ $baseDir = dirname($vendorDir);
 return array(
     'Stripe\\' => array($vendorDir . '/stripe/stripe-php/lib'),
     'Src\\Models\\' => array($baseDir . '/src/Models'),
+    'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),
     'Firebase\\JWT\\' => array($vendorDir . '/firebase/php-jwt/src'),
+    'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
     'Core\\' => array($baseDir . '/core'),
     'Controllers\\' => array($baseDir . '/controllers'),
     'Config\\' => array($baseDir . '/config'),

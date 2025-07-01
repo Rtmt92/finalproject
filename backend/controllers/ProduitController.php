@@ -12,12 +12,18 @@ class ProduitController {
     private Image $imageModel;
     private \PDO $db;
 
-    public function __construct() {
-        $this->produitModel   = new Produit();
-        $this->prodImageModel = new ProduitImage();
-        $this->imageModel     = new Image();
-        $this->db             = Database::getConnection();
+    
+    public function __construct(
+        ?Produit $produitModel = null,
+        ?ProduitImage $produitImageModel = null,
+        ?Image $imageModel = null
+    ) {
+        $this->produitModel = $produitModel ?? new Produit();
+        $this->prodImageModel = $produitImageModel ?? new ProduitImage();
+        $this->imageModel = $imageModel ?? new Image();
+        $this->db = \Core\Database::getConnection();
     }
+
     /**
      * GET /produit
      */

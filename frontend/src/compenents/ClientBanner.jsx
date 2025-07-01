@@ -38,8 +38,10 @@ const ClientBanner = ({
   const initials = `${prenom?.charAt(0) || ""}${nom?.charAt(0) || ""}`.toUpperCase();
 
   useEffect(() => {
-    if (!idFromProps) {
-      fetch("http://localhost:3000/api/me", { credentials: "include" })
+    if (!idFromProps && token) {
+      fetch("http://localhost:8000/api/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      })
         .then((res) => res.json())
         .then((data) => {
           if (data?.id_client) setId(data.id_client);
@@ -56,7 +58,7 @@ const ClientBanner = ({
       formData.append("photo", files[0]);
 
       try {
-        const res = await fetch("http://localhost:3000/upload-photo", {
+        const res = await fetch("http://localhost:8000/upload-photo", {
           method: "POST",
           body: formData,
         });
@@ -79,10 +81,12 @@ const ClientBanner = ({
     setLoading(true);
 
     try {
-      const resInfo = await fetch(`http://localhost:3000/client/${id}`, {
+      const resInfo = await fetch(`http://localhost:8000/client/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(form),
       });
 
@@ -100,7 +104,7 @@ const ClientBanner = ({
           return;
         }
 
-        const resPwd = await fetch(`http://localhost:3000/client/${id}/password`, {
+        const resPwd = await fetch(`http://localhost:8000/client/${id}/password`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -176,7 +180,6 @@ const ClientBanner = ({
           <button onClick={handleSave} className="btn-valider" disabled={loading}>
             Enregistrer
           </button>
-
         </div>
       </div>
     );
@@ -187,7 +190,6 @@ const ClientBanner = ({
       <div className="client-avatar">
         {photo ? <img src={photo} alt="profil" /> : <span>{initials}</span>}
       </div>
-
       <div className="client-info">
         <div className="client-header">
           <h3>profil {prenom?.toLowerCase()}</h3>
@@ -199,13 +201,11 @@ const ClientBanner = ({
             🖉
           </button>
         </div>
-
         <p className="client-subtitle">Biographie</p>
         <p className="client-description">
           {description?.trim() || "Aucune biographie fournie."}
         </p>
       </div>
-
     </div>
   );
 };
