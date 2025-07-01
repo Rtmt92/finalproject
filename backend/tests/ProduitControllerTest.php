@@ -8,7 +8,6 @@ use Src\Models\Image;
 class ProduitControllerTest extends TestCase
 {
     public function testGetProduitByIdReturnsProduit(){
-        // Arrange
         $produitMock = $this->createMock(\Src\Models\Produit::class);
         $produitMock->method('getById')->willReturn([
             'id_produit'   => 1,
@@ -28,7 +27,6 @@ class ProduitControllerTest extends TestCase
             'lien'     => 'http://localhost/test.jpg'
         ]);
 
-        // Injecter les mocks dans le contrôleur
         $controller = new \Controllers\ProduitController();
         $this->setPrivateProperty($controller, 'produitModel', $produitMock);
         $this->setPrivateProperty($controller, 'prodImageModel', $prodImageMock);
@@ -38,7 +36,6 @@ class ProduitControllerTest extends TestCase
         $controller->show(1);
         $output = ob_get_clean();
 
-        // Assert avec json_decode
         $data = json_decode($output, true);
 
         $this->assertIsArray($data);
@@ -46,7 +43,6 @@ class ProduitControllerTest extends TestCase
         $this->assertEquals('http://localhost/test.jpg', $data['images'][0]['lien']);
     }
 
-    // Helper pour accéder aux propriétés privées
     private function setPrivateProperty($object, string $propertyName, $value): void
     {
         $reflection = new \ReflectionClass($object);

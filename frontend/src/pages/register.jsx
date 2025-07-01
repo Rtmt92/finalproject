@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/log.css';
+import { isValidPassword } from '../utils/passwordValidator';
+
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -27,6 +29,11 @@ export default function Register() {
 
     if (form.mot_de_passe !== form.confirmation) {
       setError("Les mots de passe ne sont pas identiques.");
+      return;
+    }
+
+    if (!isValidPassword(form.mot_de_passe)) {
+      setError("Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial.");
       return;
     }
 

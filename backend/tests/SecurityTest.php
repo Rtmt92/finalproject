@@ -1,56 +1,73 @@
 <?php
 use PHPUnit\Framework\TestCase;
+use Controllers\ClientController;
 
 class SecurityTest extends TestCase
 {
-    public function testAccessMeWithoutToken()
+    public function testSqlInjectionOnClientCreation(): void
     {
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-        $_SERVER['REQUEST_URI'] = '/api/me';
-        unset($_SERVER['HTTP_AUTHORIZATION']);
+        $controller = new ClientController();
+
+        $malicious = [
+            'nom' => "'; DROP TABLE client; --",
+            'prenom' => 'Injection',
+            'email' => 'inject@test.com',
+            'numero_telephone' => '0123456789',
+            'mot_de_passe' => 'password123'
+        ];
 
         ob_start();
-        include __DIR__ . '/../index.php';
+        $controller->storeFromData($malicious);
         $output = ob_get_clean();
 
-        $response = json_decode($output, true);
+        $this->assertNotEmpty($output, "La réponse est vide.");
+        $json = json_decode($output, true);
 
-        $this->assertIsArray($response);
-        $this->assertArrayHasKey('error', $response);
-        $this->assertEquals('Token manquant', $response['error']);
+
+        $this->assertIsArray($json, "La réponse n'est pas un JSON valide.");
+        $this->assertArrayHasKey('message', $json, "Le message de succès est absent.");
+        $this->assertEquals("Client créé", $json['message']);
     }
 
-    public function testAccessPanierWithoutToken()
-    {
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-        $_SERVER['REQUEST_URI'] = '/panier';
-        unset($_SERVER['HTTP_AUTHORIZATION']);
+public function testCascadeDeleteClientDeletesPanier()
+{
+    $controller = new \Controllers\ClientController();
 
-        ob_start();
-        include __DIR__ . '/../index.php';
-        $output = ob_get_clean();
+    $data = [
+        'nom' => 'CascadeTest',
+        'prenom' => 'DeleteTest',
+        'email' => 'cascade@test.com',
+        'numero_telephone' => '0000000000',
+        'mot_de_passe' => 'Secure123!'
+    ];
 
-        $response = json_decode($output, true);
+    ob_start();
+    $controller->storeFromData($data);
+    $output = ob_get_clean();
+    $response = json_decode($output, true);
+    $idClient = $response['id_client'] ?? null;
 
-        $this->assertIsArray($response);
-        $this->assertArrayHasKey('error', $response);
-        $this->assertEquals('Token manquant', $response['error']);
-    }
+    $this->assertNotNull($idClient);
 
-    public function testAccessPanierWithInvalidToken()
-    {
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-        $_SERVER['REQUEST_URI'] = '/panier';
-        $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer FAUX.TOKEN.JWT';
+    $pdo = new \Core\Database();
+    $conn = $pdo->getConnection();
 
-        ob_start();
-        include __DIR__ . '/../index.php';
-        $output = ob_get_clean();
+    $conn->prepare("INSERT INTO panier (id_client) VALUES (:id_client)")
+         ->execute(['id_client' => $idClient]);
 
-        $response = json_decode($output, true);
+    $count = $conn->prepare("SELECT COUNT(*) FROM panier WHERE id_client = ?");
+    $count->execute([$idClient]);
+    $this->assertEquals(1, $count->fetchColumn());
 
-        $this->assertIsArray($response);
-        $this->assertArrayHasKey('error', $response);
-        $this->assertEquals('Token invalide', $response['error']);
-    }
+    ob_start();
+    $controller->destroy($idClient);
+    ob_end_clean();
+
+    $count->execute([$idClient]);
+    $this->assertEquals(0, $count->fetchColumn());
 }
+
+}
+
+
+

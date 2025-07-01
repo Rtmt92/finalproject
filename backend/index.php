@@ -66,6 +66,8 @@ if ($uri !== '/' && file_exists($file)) {
 }
 
 
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
@@ -162,13 +164,12 @@ dispatch('#^/categorie/(\d+)$#',  ['PUT','PATCH'], fn($i)=>(new CategorieControl
 dispatch('#^/categorie/(\d+)$#',  ['DELETE'],      fn($i)=>(new CategorieController())->destroy((int)$i));
 
 // --- CRUD PANIER ---
-dispatch('#^/panier/?$#', ['GET'], fn() => (new PanierController())->getMyPanier());
-dispatch('#^/panier$#',          ['POST'],        fn()=> (new PanierController())->store());
+dispatch('#^/panier/?$#', ['GET'], fn() => (
+    authenticate() && (new PanierController())->getMyPanier()
+));
 dispatch('#^/panier/(\d+)$#',     ['GET'],         fn($i)=>(new PanierController())->show((int)$i));
 dispatch('#^/panier/(\d+)$#',     ['PUT','PATCH'], fn($i)=>(new PanierController())->update((int)$i));
 dispatch('#^/panier/(\d+)$#',     ['DELETE'],      fn($i)=>(new PanierController())->destroy((int)$i));
-dispatch('#^/panier$#', ['GET'], fn() => (new \Controllers\PanierController())->showUserPanier());
-dispatch('#^/panier$#', ['GET'], fn() => (new PanierController())->getMyPanier());
 dispatch('#^/panier/(\d+)/vider$#', ['DELETE'], fn($id) => (new PanierController())->vider((int)$id));
 
 // --- CRUD TRANSACTION ---
@@ -215,6 +216,3 @@ dispatch('#^/client/(\d+)/password$#', ['POST'], function($id) {
     (new \Controllers\ClientController())->updatePassword((int)$id);
 });
 
-// 404 par défaut
-http_response_code(404);
-echo json_encode(['error' => 'Route non trouvée']);

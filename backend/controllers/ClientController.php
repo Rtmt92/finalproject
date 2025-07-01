@@ -15,25 +15,7 @@ class ClientController {
         $this->clientModel = new Client();
     }
 
-    public function index(): void {
-        $clients = $this->clientModel->getAll();
-        header('Content-Type: application/json');
-        echo json_encode($clients);
-    }
-
-    public function show(int $id): void {
-        $client = $this->clientModel->getById($id);
-        if (!$client) {
-            http_response_code(404);
-            echo json_encode(['error' => 'Client non trouvé']);
-            return;
-        }
-        echo json_encode($client);
-    }
-
-    public function store(): void {
-        $data = json_decode(file_get_contents('php://input'), true);
-
+    public function storeFromData(array $data): void {
         if (
             empty($data['nom']) ||
             empty($data['prenom']) ||
@@ -45,8 +27,6 @@ class ClientController {
             echo json_encode(['error' => 'Champs obligatoires manquants']);
             return;
         }
-
-        
 
         $data['mot_de_passe'] = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
 
@@ -69,6 +49,29 @@ class ClientController {
             echo json_encode(['error' => is_string($result) ? $result : 'Erreur lors de la création']);
         }
     }
+
+
+    public function index(): void {
+        $clients = $this->clientModel->getAll();
+        header('Content-Type: application/json');
+        echo json_encode($clients);
+    }
+
+    public function show(int $id): void {
+        $client = $this->clientModel->getById($id);
+        if (!$client) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Client non trouvé']);
+            return;
+        }
+        echo json_encode($client);
+    }
+
+    public function store(): void {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $this->storeFromData($data);
+    }
+
 
         private function authenticate(): object {
         if (!isset($_COOKIE['token'])) {
@@ -105,6 +108,7 @@ class ClientController {
             echo json_encode(['error' => 'Données invalides']);
             return;
         }
+        
 
         // Si mot de passe est présent ET non vide, il sera hashé dans le modèle
         $ok = $this->clientModel->update($id, $data);
