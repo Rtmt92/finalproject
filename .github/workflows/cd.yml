@@ -2,65 +2,32 @@ name: CD
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   deploy:
-    name: 🚀 Déploiement
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Récupérer le code
-      - name: Checkout du dépôt
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # 2. Installer PHP & Composer pour le back
       - name: Setup PHP & Composer
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: pdo_mysql
 
-      - name: Installer les dépendances backend
+      - name: Install backend deps
         run: |
           cd backend
           composer install --no-dev --optimize-autoloader
 
-      # 3. Installer Node.js pour le front
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      # 4. Installer & builder le frontend
-      - name: Installer & builder le frontend
+      - name: Install & build frontend
         run: |
           cd frontend
           npm ci
-          # override CI à false pour ne pas traiter les warnings ESLint en erreurs
-          CI=false npm run build
+          npm run build
 
-      # 5. Déployer via SSH
-      - name: Déployer sur le serveur
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          port: ${{ secrets.SSH_PORT }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            # Arrêt d’Apache (si déjà lancé)
-            sudo systemctl stop apache2 || true
-
-            # Synchronisation du backend
-            rsync -av --delete ./backend/ $REMOTE_APP_PATH/backend/
-
-            # Synchronisation du build frontend
-            rsync -av --delete ./frontend/build/ $REMOTE_APP_PATH/frontend/
-
-            # Ajustement des permissions
-            sudo chown -R www-data:www-data $REMOTE_APP_PATH
-
-            # Redémarrage d’Apache
-            sudo systemctl start apache2
