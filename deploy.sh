@@ -7,7 +7,6 @@ set -euo pipefail
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-# Chemin vers votre clé privée (sur GitHub Actions, vous aurez mis la clé dans ~/.ssh/id_rsa)
 KEY="$HOME/.ssh/id_rsa"
 
 echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
@@ -41,7 +40,7 @@ if ! command -v mysql >/dev/null 2>&1; then
   DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
 fi
 
-# 2) Démarrer MySQL
+# 2) Démarrer et activer MySQL
 systemctl enable --now mysql
 
 # 3) (Re)création de la BDD et de l’utilisateur
@@ -53,7 +52,7 @@ GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';
 FLUSH PRIVILEGES;
 SQL
 
-# 4) Import SQL
+# 4) Import du dump SQL
 SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
 if [ -z "\$SQL_FILE" ]; then
   echo "❌ Aucun .sql trouvé dans \$DEST" >&2
