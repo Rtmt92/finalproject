@@ -1,102 +1,95 @@
 .client-banner {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: #47545B;
-  padding: 2rem;
-  border-radius: 12px;
-  color: #fff;
-  max-width: 500px;
-  margin: 2rem auto;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  align-items: flex-start;         /* ✅ Aligne le haut des éléments */
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 40px auto;
+  position: relative;
 }
 
 .client-avatar {
-  width: 130px;
-  height: 130px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
+  background-color: #d3d3d3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: bold;
+  flex-shrink: 0;
   overflow: hidden;
-  margin-bottom: 1rem;
-  border: 4px solid white;
-  background: white;
 }
 
 .client-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 50%;
 }
 
 .client-info {
-  width: 100%;
+  background-color: #4a555f;
+  padding: 20px;
+  border-radius: 8px;
+  color: #fff;
+  min-width: 280px;
+  max-width: 600px;
+  flex: 1;
+}
+
+.client-header {
   display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.client-info label {
-  font-weight: bold;
-  margin-top: 0.5rem;
-}
-
-.client-info input,
-.client-info textarea {
-  background-color: #ffffff;
-  color: #47545B;
-  border: none;
-  border-radius: 6px;
-  padding: 0.6rem;
-  font-size: 0.95rem;
-  width: 100%;
-  resize: none;
-}
-
-.client-info input[type="file"] {
-  background: none;
-  padding: 0;
-  color: #eee;
-}
-
-.client-info input:focus,
-.client-info textarea:focus {
-  outline: 2px solid #7abaff;
-}
-
-.change-password {
-  margin-top: 1.5rem;
-}
-
-.change-password h4 {
-  margin-bottom: 0.5rem;
-}
-
-.change-password input {
-  margin-bottom: 0.5rem;
-}
-
-.btn-valider {
-  background-color: #6ea8fe;
-  color: white;
-  border: none;
-  border-radius: 9999px;
-  padding: 0.75rem 2rem;
-  font-size: 1rem;
-  font-style: italic;
-  font-weight: 500;
-  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 1.2rem;
+}
+
+.client-header h3 {
+  font-style: italic;
+  font-size: 22px;
+  margin: 0;
+}
+
+.edit-button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: white;
   cursor: pointer;
-  transition: background 0.3s ease;
+  margin-left: 10px;
 }
 
-.btn-valider:hover {
-  background-color: #5495e7;
+.client-subtitle {
+  font-style: italic;
+  margin-top: 10px;
 }
 
-.message {
-  color: #ffd369;
-  font-size: 0.9rem;
-  margin-top: 0.3rem;
+.client-description {
+  font-style: italic;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.client-delete-container {
+  position: absolute;
+  top: 180px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.delete-button {
+  margin-top: 20px;
+  padding: 12px 40px;
+  border-radius: 25px;
+  background-color: #dc4b4b;
+  color: white;
+  font-weight: bold;
+  font-style: italic;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
 }
