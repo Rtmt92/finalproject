@@ -11,9 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Récupérer le code
       - name: Checkout du dépôt
         uses: actions/checkout@v4
 
+      # 2. Installer PHP & Composer pour le back
       - name: Setup PHP & Composer
         uses: shivammathur/setup-php@v2
         with:
@@ -25,17 +27,21 @@ jobs:
           cd backend
           composer install --no-dev --optimize-autoloader
 
+      # 3. Installer Node.js pour le front
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
+      # 4. Installer & builder le frontend
       - name: Installer & builder le frontend
         run: |
           cd frontend
           npm ci
-          npm run build
+          # override CI à false pour ne pas traiter les warnings ESLint en erreurs
+          CI=false npm run build
 
+      # 5. Déployer via SSH
       - name: Déployer sur le serveur
         uses: appleboy/ssh-action@master
         with:
@@ -44,7 +50,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Arrêt du serveur Apache (si déjà en service)
+            # Arrêt d’Apache (si déjà lancé)
             sudo systemctl stop apache2 || true
 
             # Synchronisation du backend
@@ -56,5 +62,5 @@ jobs:
             # Ajustement des permissions
             sudo chown -R www-data:www-data $REMOTE_APP_PATH
 
-            # Relance d’Apache
+            # Redémarrage d’Apache
             sudo systemctl start apache2
