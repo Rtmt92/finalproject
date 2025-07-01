@@ -11,33 +11,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1) Récupère votre code
       - name: Checkout du dépôt
         uses: actions/checkout@v4
 
+      # 2) Installe PHP & Composer, puis les dépendances backend
       - name: Setup PHP & Composer
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: pdo_mysql
-
       - name: Installer les dépendances backend
         run: |
           cd backend
           composer install --no-dev --optimize-autoloader
 
+      # 3) Installe Node.js, puis build du frontend
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-
       - name: Installer & builder le frontend
         env:
-          CI: false        # Désactive le traitement des warnings comme erreurs
+          CI: false     # <--- Important : désactive l’échec sur warnings ESLint
         run: |
           cd frontend
           npm ci
           npm run build
 
+      # 4) Déploiement SSH vers votre serveur
       - name: Déployer sur le serveur
         uses: appleboy/ssh-action@v0.1.12
         with:
@@ -46,15 +47,15 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Arrêt d’Apache (s’il tourne déjà)
+            # stoppe Apache s’il tourne déjà
             sudo systemctl stop apache2 || true
 
-            # Synchronisation du backend
-            rsync -av --delete ./backend/ $REMOTE_APP_PATH/backend/
+            # synchronise le backend
+            rsync -av --delete backend/ $REMOTE_APP_PATH/backend/
 
-            # Synchronisation du build frontend
-            rsync -av --delete ./frontend/build/ $REMOTE_APP_PATH/frontend/
+            # synchronise le build React
+            rsync -av --delete frontend/build/ $REMOTE_APP_PATH/frontend/
 
-            # Droits et redémarrage
+            # ajuste les droits et redémarre Apache
             sudo chown -R www-data:www-data $REMOTE_APP_PATH
             sudo systemctl start apache2
