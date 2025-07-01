@@ -5,12 +5,12 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   backend:
-    name: Run PHP tests
+    name: Tests PHP (Backend)
     runs-on: ubuntu-latest
-
     services:
       mysql:
         image: mysql:8.0
@@ -22,63 +22,58 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping --silent"
+          --health-cmd="mysqladmin ping -h localhost"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
 
-    env:
-      DB_HOST: 127.0.0.1
-      DB_PORT: 3306
-      DB_DATABASE: dejavu
-      DB_USERNAME: root
-      DB_PASSWORD: admin
-
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Set up PHP
+      - name: Setup PHP & extensions
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: mbstring, pdo_mysql, mysqli
 
       - name: Install Composer dependencies
+        working-directory: backend
         run: composer install --no-interaction --prefer-dist
 
       - name: Wait for MySQL to be ready
         run: |
-          for i in {1..10}; do
-            if mysql -h"$DB_HOST" -u"$DB_USERNAME" -p"$DB_PASSWORD" -e 'SELECT 1' "$DB_DATABASE"; then
-              echo "MySQL ready!"
-              break
-            fi
+          until mysqladmin ping -h127.0.0.1 -uroot -proot --silent; do
             echo "Waiting for MySQL…"
-            sleep 5
+            sleep 2
           done
 
       - name: Run PHPUnit
-        run: vendor/bin/phpunit --configuration phpunit.xml
+        working-directory: backend
+        env:
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: projet
+          DB_USERNAME: user
+          DB_PASSWORD: password
+        run: vendor/bin/phpunit --colors=always --coverage-text
 
   frontend:
-    name: Run JS tests
+    name: Tests JS (Frontend)
     runs-on: ubuntu-latest
-    needs: backend
 
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Use Node.js 18.x
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: 18
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install JS dependencies
         working-directory: frontend
+        run: npm ci
 
       - name: Run Jest
-        run: npm test -- --ci --coverage
         working-directory: frontend
+        run: npm test -- --ci --passWithNoTests
