@@ -1,33 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-########################
-# 1) CONFIGURATION
-########################
-USER="azureuser"                           # Nom d’utilisateur SSH
-HOST="4.233.136.179"                       # IP publique de la VM
-DEST="/var/www/dejavu"                     # Chemin du projet sur la VM
-KEY="$HOME/.ssh/id_rsa"                    # Votre clé privée SSH
+USER="azureuser"
+HOST="4.233.136.179"
+DEST="/var/www/dejavu"
+KEY="$HOME/.ssh/id_rsa"
 
-# Paramètres MySQL (depuis .env global – ou passed via GitHub Actions)
-DB_HOST="${DB_HOST:-127.0.0.1}"
-DB_NAME="${DB_DATABASE:-dejavu}"
-DB_USER="${DB_USERNAME:-root}"
-DB_PASS="${DB_PASSWORD:-admin}"
+DB_NAME="dejavu"
 
-echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
+echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
 
-########################
-# 2) CRÉER LE DOSSIER DISTANT
-########################
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST << EOF
+# 1) Création du dossier distant
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST <<EOF
   sudo mkdir -p "$DEST"
   sudo chown -R "$USER":"$USER" "$DEST"
 EOF
 
-########################
-# 3) SYNCHRONISATION DU CODE
-########################
+# 2) Synchronisation du code
 rsync -az --delete \
   --exclude 'node_modules' \
   --exclude 'vendor' \
@@ -36,54 +25,52 @@ rsync -az --delete \
   -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
   ./ $USER@$HOST:"$DEST"
 
-########################
-# 4) DÉPLOIEMENT SUR LA VM
-########################
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << EOF
+# 3) Sur la VM : installation MySQL, création/import DB, déploiement app
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash <<EOF
   set -euo pipefail
 
-  echo "• Installation de MySQL si besoin"
+  echo "• Installer MySQL si nécessaire"
   if ! command -v mysql &> /dev/null; then
     sudo apt-get update
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
   fi
 
-  echo "• Activation et démarrage de MySQL"
+  echo "• Démarrer MySQL"
   sudo systemctl enable mysql
   sudo systemctl start mysql
 
-  echo "• Configuration de root@localhost avec mot de passe"
-  sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$DB_PASS'; FLUSH PRIVILEGES;"
-
-  echo "• Création de la base '$DB_NAME'"
-  sudo mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" -e "CREATE DATABASE IF NOT EXISTS \\\`$DB_NAME\\\`;"
-
-  SQL_FILE=\$(ls "$DEST"/*.sql 2>/dev/null | head -n1)
+  # Trouver le dump SQL
+  SQL_FILE=\$(ls "$DEST"/*.sql | head -n1)
   if [ -z "\$SQL_FILE" ]; then
-    echo "❌ Aucune dump SQL trouvée dans $DEST" >&2
+    echo "❌ Aucun .sql trouvé dans $DEST" >&2
     exit 1
   fi
-  echo "• Import de la base depuis \$SQL_FILE"
-  sudo mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" < "\$SQL_FILE"
 
-  echo "• Installation des dépendances PHP"
+  echo "• Création et import de la base '$DB_NAME'"
+  sudo mysql <<SQL
+CREATE DATABASE IF NOT EXISTS \\\`${DB_NAME}\\\`;
+USE \\\`${DB_NAME}\\\`;
+SOURCE \$SQL_FILE;
+SQL
+
+  echo "• Installer les dépendances PHP"
   cd "$DEST/backend"
   composer install --no-dev --optimize-autoloader
 
-  echo "• Build du frontend React"
+  echo "• Builder le frontend React"
   cd "$DEST/frontend"
   npm ci
   npm run build
 
-  echo "• Déploiement des assets statiques"
+  echo "• Déployer les assets statiques"
   sudo rm -rf /var/www/html/*
   sudo cp -r build/* /var/www/html/
 
-  echo "• Ajustement des permissions"
+  echo "• Ajuster les permissions"
   sudo chown -R www-data:www-data /var/www/html
   sudo chmod -R 755 /var/www/html
 
-  echo "• Redémarrage du serveur web"
+  echo "• Redémarrer le serveur web"
   sudo systemctl restart apache2 || sudo systemctl restart nginx
 
   echo "✅ Déploiement terminé !"
