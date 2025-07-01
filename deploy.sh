@@ -7,14 +7,17 @@ set -euo pipefail
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-KEY="$HOME/.ssh/id_rsa"
+KEY="$HOME/Downloads/DejaVu_key.pem"    # ← Mettez ici le chemin vers votre clé PEM
+DB_NAME="dejavu"
+DB_USER="dejavu"
+DB_PASS="admin"
 
-echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
+echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
 
 ########################
 # 2) RSYNC DU PROJET
 ########################
-rsync -az \
+rsync -az --delete \
   --exclude 'node_modules' \
   --exclude 'vendor' \
   --exclude '.env' \
@@ -24,9 +27,11 @@ rsync -az \
   ./ "$USER@$HOST:$DEST"
 
 ########################
-# 3) DÉPLOIEMENT DISTANT
+# 3) CRÉATION DU SCRIPT DISTANT
 ########################
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST sudo bash -s << 'EOF'
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << 'EOF'
+cat > /tmp/deploy_remote.sh << 'SCRIPT'
+#!/usr/bin/env bash
 set -euo pipefail
 
 DEST="/var/www/dejavu"
@@ -35,20 +40,20 @@ DB_USER="dejavu"
 DB_PASS="admin"
 
 # 1) Installer MySQL si besoin
-if ! command -v mysql >/dev/null 2>&1; then
-  apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
+if ! command -v mysql &> /dev/null; then
+  sudo apt-get update
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
 fi
 
 # 2) Démarrer et activer MySQL
-systemctl enable --now mysql
+sudo systemctl enable --now mysql
 
-# 3) (Re)création de la BDD et de l’utilisateur
-mysql <<SQL
-DROP DATABASE IF EXISTS \`$DB_NAME\`;
-CREATE DATABASE \`$DB_NAME\`;
+# 3) (Re)création de la base et de l’utilisateur
+sudo mysql <<SQL
+DROP DATABASE IF EXISTS \\\`$DB_NAME\\\`;
+CREATE DATABASE \\\`$DB_NAME\\\`;
 CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED WITH mysql_native_password BY '$DB_PASS';
-GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';
+GRANT ALL PRIVILEGES ON \\\`$DB_NAME\\\`.* TO '$DB_USER'@'localhost';
 FLUSH PRIVILEGES;
 SQL
 
@@ -58,36 +63,47 @@ if [ -z "\$SQL_FILE" ]; then
   echo "❌ Aucun .sql trouvé dans \$DEST" >&2
   exit 1
 fi
-mysql "\$DB_NAME" < "\$SQL_FILE"
+sudo mysql "\$DB_NAME" < "\$SQL_FILE"
 
 # 5) Installer Composer si besoin
-if ! command -v composer >/dev/null 2>&1; then
-  apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y composer
+if ! command -v composer &> /dev/null; then
+  sudo apt-get update
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y composer
 fi
 
 # 6) Installer Node.js + npm si besoin
-if ! command -v npm >/dev/null 2>&1; then
-  apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
+if ! command -v npm &> /dev/null; then
+  sudo apt-get update
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
 fi
 
-# 7) Backend PHP
-cd "\$DEST/backend"
+# 7) Installer les dépendances back-end
+cd "$DEST/backend"
 composer install --no-dev --optimize-autoloader
 
-# 8) Frontend React
-cd "\$DEST/frontend"
+# 8) Builder le front-end React
+cd "$DEST/frontend"
 npm ci
 npm run build
 
-# 9) Assets statiques
-mkdir -p /var/www/html
-rm -rf /var/www/html/*
-cp -r build/* /var/www/html/
+# 9) Déployer les assets statiques
+sudo mkdir -p /var/www/html
+sudo rm -rf /var/www/html/*
+sudo cp -r build/* /var/www/html/
 
-# 10) Redémarrer Nginx
-systemctl restart nginx
+# 10) Ajuster les droits et redémarrer nginx
+sudo chown -R www-data:www-data /var/www/html
+sudo chmod -R 755 /var/www/html
+sudo systemctl restart nginx
 
 echo "✅ Déploiement terminé !"
+SCRIPT
+
+# rendre exécutable
+sudo chmod +x /tmp/deploy_remote.sh
 EOF
+
+########################
+# 4) EXÉCUTION DU SCRIPT DISTANT
+########################
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST sudo bash /tmp/deploy_remote.sh
