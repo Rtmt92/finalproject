@@ -9,7 +9,7 @@ HOST="4.233.136.179"
 DEST="/var/www/dejavu"
 KEY="$HOME/.ssh/id_rsa"
 
-# Ces variables seront injectées par GitHub Actions (ou valeurs par défaut pour test local)
+# Injectées par GitHub Actions, ou valeurs par défaut
 MYSQL_ROOT_PWD="${MYSQL_ROOT_PWD:-admin}"
 DB_NAME="${DB_NAME:-dejavu}"
 
@@ -35,10 +35,14 @@ rsync -avz \
   ./ $USER@$HOST:"$DEST"
 
 ########################
-# 4) COMMANDES SUR LA VM
+# 4) SCRIPT DISTANT (avec injection des vars)
 ########################
 ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << EOF
   set -euo pipefail
+
+  #--- importer les variables
+  MYSQL_ROOT_PWD="${MYSQL_ROOT_PWD}"
+  DB_NAME="${DB_NAME}"
 
   echo "• Installation de MySQL si manquant"
   if ! command -v mysql &> /dev/null; then
@@ -56,9 +60,9 @@ ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '\$MYSQL_
 FLUSH PRIVILEGES;
 SQL
 
-  echo "• Création et import de la base '$DB_NAME'"
-  sudo mysql -u root -p"\$MYSQL_ROOT_PWD" -e "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;"
-  sudo mysql -u root -p"\$MYSQL_ROOT_PWD" "$DB_NAME" < "$DEST/dejavu.sql"
+  echo "• Création et import de la base '\$DB_NAME'"
+  sudo mysql -u root -p"\$MYSQL_ROOT_PWD" -e "CREATE DATABASE IF NOT EXISTS \\\`\$DB_NAME\\\`;"
+  sudo mysql -u root -p"\$MYSQL_ROOT_PWD" "\$DB_NAME" < "$DEST/dejavu.sql"
 
   echo "• Installation du backend PHP"
   cd "$DEST/backend"
