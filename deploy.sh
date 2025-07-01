@@ -4,12 +4,12 @@ set -euo pipefail
 ########################
 # 1) CONFIGURATION
 ########################
-USER="azureuser"                            # Nom d'utilisateur SSH
-HOST="4.233.136.179"                        # IP publique de la VM
-DEST="/var/www/dejavu"                      # Racine de votre projet sur la VM
-KEY="$HOME/.ssh/id_rsa"                     # Chemin vers votre clé privée
+USER="azureuser"
+HOST="4.233.136.179"
+DEST="/var/www/dejavu"
+KEY="$HOME/.ssh/id_rsa"
 
-# Credentials MySQL (passés depuis GitHub Actions via env)
+# Passés depuis GitHub Actions via env ou valeurs par défaut :
 MYSQL_ROOT_PWD="${MYSQL_ROOT_PWD:-Thibault0709}"
 DB_NAME="${DB_NAME:-dejavu}"
 
@@ -18,7 +18,7 @@ echo "🚀 Début du déploiement sur $USER@$HOST:$DEST …"
 ########################
 # 2) PRÉPARER LE DISTANT
 ########################
-echo "📂 Création du répertoire distant et mise en place des permissions…"
+echo "📂 Création du répertoire distant et réglage des permissions…"
 ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST << EOF
   sudo mkdir -p "$DEST"
   sudo chown -R "$USER":"$USER" "$DEST"
@@ -40,11 +40,18 @@ rsync -avz \
 # 4) COMMANDES DISTANTES
 ########################
 echo "🔧 Exécution des commandes sur la VM distante…"
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << 'EOF'
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << EOF
   set -euo pipefail
 
-  echo "• Démarrage de MySQL"
-  sudo systemctl start mysql
+  echo "• Installation de MySQL si nécessaire"
+  if ! command -v mysql >/dev/null 2>&1; then
+    sudo apt-get update
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
+  fi
+
+  echo "• Activation et démarrage du service"
+  sudo systemctl enable mysql || sudo systemctl enable mariadb || true
+  sudo systemctl start mysql 2>/dev/null || sudo systemctl start mariadb
 
   echo "• Création et import de la base de données"
   mysql -u root -p"$MYSQL_ROOT_PWD" -e "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;"
