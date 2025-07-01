@@ -1,22 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+########################
+# 1) CONFIGURATION
+########################
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
 KEY="$HOME/.ssh/id_rsa"
 
-DB_NAME="dejavu"
+echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
 
-echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
-
-# 1) Création du dossier distant
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST <<EOF
-  sudo mkdir -p "$DEST"
-  sudo chown -R "$USER":"$USER" "$DEST"
-EOF
-
-# 2) Synchronisation du code
+########################
+# 2) RSYNC DU PROJET
+# (le dossier /var/www/dejavu existe déjà)
+########################
 rsync -az --delete \
   --exclude 'node_modules' \
   --exclude 'vendor' \
@@ -25,8 +23,10 @@ rsync -az --delete \
   -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
   ./ $USER@$HOST:"$DEST"
 
-# 3) Sur la VM : installation MySQL, création/import DB, déploiement app
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash <<EOF
+########################
+# 3) DÉPLOIEMENT SUR LA VM
+########################
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << 'EOF'
   set -euo pipefail
 
   echo "• Installer MySQL si nécessaire"
@@ -36,22 +36,23 @@ ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash <<EOF
   fi
 
   echo "• Démarrer MySQL"
-  sudo systemctl enable mysql
-  sudo systemctl start mysql
+  sudo systemctl enable --now mysql
 
-  # Trouver le dump SQL
-  SQL_FILE=\$(ls "$DEST"/*.sql | head -n1)
+  # Choix automatique du dump SQL
+  SQL_FILE=\$(ls "$DEST"/*.sql 2>/dev/null | head -n1)
   if [ -z "\$SQL_FILE" ]; then
     echo "❌ Aucun .sql trouvé dans $DEST" >&2
     exit 1
   fi
+  echo "• Import de la base depuis \$SQL_FILE"
 
-  echo "• Création et import de la base '$DB_NAME'"
+  # Créer la base (socket auth)
   sudo mysql <<SQL
-CREATE DATABASE IF NOT EXISTS \\\`${DB_NAME}\\\`;
-USE \\\`${DB_NAME}\\\`;
-SOURCE \$SQL_FILE;
+CREATE DATABASE IF NOT EXISTS dejavu;
 SQL
+
+  # Importer les données
+  sudo mysql dejavu < "\$SQL_FILE"
 
   echo "• Installer les dépendances PHP"
   cd "$DEST/backend"
