@@ -6,56 +6,55 @@ on:
       - main
 
 jobs:
-  deploy:
-    name: 🚀 Déploiement
+  build:
+    name: 🚧 Build & Publish Artifacts
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Récupère votre code
+      # 1) Récup du code
       - name: Checkout du dépôt
         uses: actions/checkout@v4
 
-      # 2) Installe PHP & Composer, puis les dépendances backend
+      # 2) Build backend (composer install + zip)
       - name: Setup PHP & Composer
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-      - name: Installer les dépendances backend
+      - name: Installer les dépendances Backend
         run: |
           cd backend
           composer install --no-dev --optimize-autoloader
+      - name: Archiver le Backend
+        run: |
+          cd backend
+          zip -r ../backend-artifact.zip ./*
+      - name: Publier l’artefact Backend
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-build
+          path: backend-artifact.zip
 
-      # 3) Installe Node.js, puis build du frontend
+      # 3) Build frontend (npm ci + build + zip)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-      - name: Installer & builder le frontend
-        env:
-          CI: false     # <--- Important : désactive l’échec sur warnings ESLint
+      - name: Installer les dépendances Frontend
         run: |
           cd frontend
           npm ci
+      - name: Builder le Frontend
+        env:
+          CI: false
+        run: |
+          cd frontend
           npm run build
-
-      # 4) Déploiement SSH vers votre serveur
-      - name: Déployer sur le serveur
-        uses: appleboy/ssh-action@v0.1.12
+      - name: Archiver le Build Frontend
+        run: |
+          cd frontend
+          zip -r ../frontend-artifact.zip build
+      - name: Publier l’artefact Frontend
+        uses: actions/upload-artifact@v3
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          port: ${{ secrets.SSH_PORT }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            # stoppe Apache s’il tourne déjà
-            sudo systemctl stop apache2 || true
-
-            # synchronise le backend
-            rsync -av --delete backend/ $REMOTE_APP_PATH/backend/
-
-            # synchronise le build React
-            rsync -av --delete frontend/build/ $REMOTE_APP_PATH/frontend/
-
-            # ajuste les droits et redémarre Apache
-            sudo chown -R www-data:www-data $REMOTE_APP_PATH
-            sudo systemctl start apache2
+          name: frontend-build
+          path: frontend-artifact.zip
