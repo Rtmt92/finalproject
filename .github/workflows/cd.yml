@@ -2,20 +2,25 @@ name: CD
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   deploy:
+    name: 🚀 Déploiement
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout du dépôt
+        uses: actions/checkout@v4
 
       - name: Setup PHP & Composer
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: pdo_mysql
 
-      - name: Install backend deps
+      - name: Installer les dépendances backend
         run: |
           cd backend
           composer install --no-dev --optimize-autoloader
@@ -25,9 +30,31 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install & build frontend
+      - name: Installer & builder le frontend
+        env:
+          CI: false        # Désactive le traitement des warnings comme erreurs
         run: |
           cd frontend
           npm ci
           npm run build
 
+      - name: Déployer sur le serveur
+        uses: appleboy/ssh-action@v0.1.12
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Arrêt d’Apache (s’il tourne déjà)
+            sudo systemctl stop apache2 || true
+
+            # Synchronisation du backend
+            rsync -av --delete ./backend/ $REMOTE_APP_PATH/backend/
+
+            # Synchronisation du build frontend
+            rsync -av --delete ./frontend/build/ $REMOTE_APP_PATH/frontend/
+
+            # Droits et redémarrage
+            sudo chown -R www-data:www-data $REMOTE_APP_PATH
+            sudo systemctl start apache2
