@@ -7,36 +7,7 @@ set -euo pipefail
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-# Mettez ici le chemin réel vers votre clé privée
-KEY="$HOME/Downloads/DejaVu_key.pem"
-
-echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
-
-########################
-# 2) RSYNC DU PROJET
-########################
-rsync -az \
-  --exclude 'node_modules' \
-  --exclude 'vendor' \
-  --exclude '.env' \
-  --exclude 'frontend/build' \
-  --exclude "$(basename "$KEY")" \
-  -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
-  ./ "$USER@$HOST:$DEST"
-
-########################
-# 3) DÉPLOIEMENT DISTANT
-########################
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST sudo bash -s << 'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-
-########################
-# 1) CONFIGURATION LOCALE
-########################
-USER="azureuser"
-HOST="4.233.136.179"
-DEST="/var/www/dejavu"
+# Chemin vers votre clé privée (sur GitHub Actions, vous aurez mis la clé dans ~/.ssh/id_rsa)
 KEY="$HOME/.ssh/id_rsa"
 
 echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
@@ -121,4 +92,3 @@ systemctl restart nginx
 
 echo "✅ Déploiement terminé !"
 EOF
-
