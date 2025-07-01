@@ -10,7 +10,7 @@ DEST="/var/www/dejavu"
 KEY="$HOME/.ssh/id_rsa"
 
 # Passés depuis GitHub Actions via env ou valeurs par défaut :
-MYSQL_ROOT_PWD="${MYSQL_ROOT_PWD:-Thibault0709}"
+MYSQL_ROOT_PWD="${MYSQL_ROOT_PWD:-admin}"
 DB_NAME="${DB_NAME:-dejavu}"
 
 echo "🚀 Début du déploiement sur $USER@$HOST:$DEST …"
