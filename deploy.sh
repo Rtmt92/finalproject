@@ -1,23 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+########################
+# 1) CONFIGURATION
+########################
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
 KEY="$HOME/.ssh/id_rsa"
 
+# Injectées par GitHub Actions ou valeurs par défaut
 MYSQL_ROOT_PWD="${MYSQL_ROOT_PWD:-admin}"
 DB_NAME="${DB_NAME:-dejavu}"
 
 echo "🚀 Deployment sur $USER@$HOST:$DEST …"
 
-# 1) Créer le dossier sur la VM
+########################
+# 2) CRÉER LE DOSSIER DISTANT
+########################
 ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST << EOF
   sudo mkdir -p "$DEST"
   sudo chown -R "$USER":"$USER" "$DEST"
 EOF
 
-# 2) Rsync
+########################
+# 3) RSYNC DU PROJET
+########################
 rsync -avz \
   --exclude 'node_modules' \
   --exclude 'vendor' \
@@ -26,8 +34,10 @@ rsync -avz \
   -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
   ./ $USER@$HOST:"$DEST"
 
-# 3) Déploiement sur la VM
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << 'EOF'
+########################
+# 4) SCRIPT DISTANT (avec injection des variables)
+########################
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST << EOF
   set -euo pipefail
 
   echo "• Installation de MySQL si manquant"
@@ -49,9 +59,10 @@ SQL
   echo "• Création de la base '${DB_NAME}'"
   sudo mysql -u root -p"${MYSQL_ROOT_PWD}" -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
 
+  # On détecte automatiquement le fichier .sql
   SQL_FILE=\$(ls "$DEST"/*.sql | head -n1)
   if [ -z "\$SQL_FILE" ]; then
-    echo "❌ Aucun fichier .sql trouvé dans $DEST" >&2
+    echo "❌ Aucun .sql trouvé dans $DEST" >&2
     exit 1
   fi
   echo "• Import de la base depuis \$SQL_FILE"
