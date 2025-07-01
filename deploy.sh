@@ -9,7 +9,6 @@ HOST="4.233.136.179"
 DEST="/var/www/dejavu"
 KEY="$HOME/.ssh/id_rsa"
 
-# Injectées par GitHub Actions, ou valeurs par défaut
 MYSQL_ROOT_PWD="${MYSQL_ROOT_PWD:-admin}"
 DB_NAME="${DB_NAME:-dejavu}"
 
@@ -35,14 +34,10 @@ rsync -avz \
   ./ $USER@$HOST:"$DEST"
 
 ########################
-# 4) SCRIPT DISTANT (avec injection des vars)
+# 4) SCRIPT DISTANT
 ########################
 ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << EOF
   set -euo pipefail
-
-  #--- importer les variables
-  MYSQL_ROOT_PWD="${MYSQL_ROOT_PWD}"
-  DB_NAME="${DB_NAME}"
 
   echo "• Installation de MySQL si manquant"
   if ! command -v mysql &> /dev/null; then
@@ -50,19 +45,24 @@ ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << EOF
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
   fi
 
-  echo "• Démarrage et activation de MySQL"
+  echo "• Activation et démarrage de MySQL"
   sudo systemctl enable mysql
   sudo systemctl start mysql
 
-  echo "• Configuration de root pour utiliser un mot de passe"
-  sudo mysql << SQL
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '\$MYSQL_ROOT_PWD';
-FLUSH PRIVILEGES;
-SQL
+  echo "• Import SQL : configuration root + création BDD + import"
+  SQL_FILE=\$(ls "$DEST"/*.sql | head -n1)
+  if [ -z "\$SQL_FILE" ]; then
+    echo "❌ Aucun fichier .sql trouvé dans $DEST" >&2
+    exit 1
+  fi
 
-  echo "• Création et import de la base '\$DB_NAME'"
-  sudo mysql -u root -p"\$MYSQL_ROOT_PWD" -e "CREATE DATABASE IF NOT EXISTS \\\`\$DB_NAME\\\`;"
-  sudo mysql -u root -p"\$MYSQL_ROOT_PWD" "\$DB_NAME" < "$DEST/dejavu.sql"
+  sudo mysql << SQL
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PWD}';
+FLUSH PRIVILEGES;
+CREATE DATABASE IF NOT EXISTS \\\`${DB_NAME}\\\`;
+USE \\\`${DB_NAME}\\\`;
+SOURCE \$SQL_FILE;
+SQL
 
   echo "• Installation du backend PHP"
   cd "$DEST/backend"
@@ -73,7 +73,7 @@ SQL
   npm install
   npm run build
 
-  echo "• Déploiement du build"
+  echo "• Déploiement des assets statiques"
   sudo rm -rf /var/www/html/*
   sudo cp -r build/* /var/www/html/
 
