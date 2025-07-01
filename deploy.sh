@@ -27,6 +27,35 @@ rsync -az \
 # 3) DÉPLOIEMENT DISTANT
 ########################
 ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST sudo bash -s << 'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+########################
+# 1) CONFIGURATION LOCALE
+########################
+USER="azureuser"
+HOST="4.233.136.179"
+DEST="/var/www/dejavu"
+KEY="$HOME/.ssh/id_rsa"
+
+echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
+
+########################
+# 2) RSYNC DU PROJET
+########################
+rsync -az \
+  --exclude 'node_modules' \
+  --exclude 'vendor' \
+  --exclude '.env' \
+  --exclude 'frontend/build' \
+  --exclude "$(basename "$KEY")" \
+  -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
+  ./ "$USER@$HOST:$DEST"
+
+########################
+# 3) DÉPLOIEMENT DISTANT
+########################
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST sudo bash -s << 'EOF'
 set -euo pipefail
 
 DEST="/var/www/dejavu"
@@ -35,7 +64,7 @@ DB_USER="dejavu"
 DB_PASS="admin"
 
 # 1) Installer MySQL si besoin
-if ! command -v mysql &> /dev/null; then
+if ! command -v mysql >/dev/null 2>&1; then
   apt-get update
   DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
 fi
@@ -61,13 +90,13 @@ fi
 mysql "\$DB_NAME" < "\$SQL_FILE"
 
 # 5) Installer Composer si besoin
-if ! command -v composer &> /dev/null; then
+if ! command -v composer >/dev/null 2>&1; then
   apt-get update
   DEBIAN_FRONTEND=noninteractive apt-get install -y composer
 fi
 
 # 6) Installer Node.js + npm si besoin
-if ! command -v npm &> /dev/null; then
+if ! command -v npm >/dev/null 2>&1; then
   apt-get update
   DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
 fi
@@ -91,3 +120,4 @@ systemctl restart nginx
 
 echo "✅ Déploiement terminé !"
 EOF
+
