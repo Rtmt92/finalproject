@@ -1,0 +1,56 @@
+name: CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: 🚀 Déploiement
+    runs-on: ubuntu-latest
+    needs: [ ci ]
+    steps:
+      - uses: actions/checkout@v4
+
+      # on installe PHP & Composer
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql
+
+      - name: Install backend deps
+        run: |
+          cd backend
+          composer install --no-dev --optimize-autoloader
+
+      # on construit le frontend
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install & build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      # on déploie tout via SSH
+      - name: Déployer sur le serveur
+        uses: appleboy/ssh-action@v0.1.11
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # arrête le serveur web s’il tourne
+            sudo systemctl stop apache2 || true
+            # copie le backend
+            rsync -av --delete ./backend/ $REMOTE_APP_PATH/backend/
+            # copie le build frontend
+            rsync -av --delete ./frontend/build/ $REMOTE_APP_PATH/frontend/
+            # donne les droits
+            sudo chown -R www-data:www-data $REMOTE_APP_PATH
+            # redémarre Apache
+            sudo systemctl start apache2

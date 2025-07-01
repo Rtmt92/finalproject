@@ -1,5 +1,18 @@
 FROM php:8.2-apache
 
-COPY . /var/www/html/
+WORKDIR /var/www/html
 
-RUN docker-php-ext-install mysqli pdo pdo_mysql
+# copie tout le code
+COPY . .
+
+# installe PDO + MySQL
+RUN docker-php-ext-install pdo pdo_mysql
+
+# active mod_rewrite si besoin
+RUN a2enmod rewrite
+
+# s’assure que les logs s’affichent
+ENV APACHE_LOG_DIR /var/log/apache2
+
+# démarrage par défaut
+CMD ["apache2-foreground"]
