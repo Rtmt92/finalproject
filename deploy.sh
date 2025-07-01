@@ -7,7 +7,8 @@ set -euo pipefail
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-KEY="$HOME/.ssh/id_rsa"
+# Mettez ici le chemin réel vers votre clé privée
+KEY="$HOME/Downloads/DejaVu_key.pem"
 
 echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
 
