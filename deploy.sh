@@ -10,7 +10,6 @@ DEST="/var/www/dejavu"
 KEY="$HOME/.ssh/id_rsa"
 DB_NAME="dejavu"
 
-echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
 
 ########################
 # 2) RSYNC DU PROJET
