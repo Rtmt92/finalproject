@@ -9,6 +9,8 @@ HOST="4.233.136.179"
 DEST="/var/www/dejavu"
 KEY="$HOME/.ssh/id_rsa"
 DB_NAME="dejavu"
+DB_USER="dejavu"
+DB_PASS="admin"
 
 echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
 
@@ -24,65 +26,70 @@ rsync -az --delete \
   ./ "$USER@$HOST:$DEST"
 
 ########################
-# 3) GÉNÉRATION DU SCRIPT DISTANT
+# 3) GÉNÉRATION ET EXÉCUTION DU SCRIPT DISTANT
 ########################
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << 'EOF'
-cat > /tmp/deploy_remote.sh << 'SCRIPT'
-#!/usr/bin/env bash
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST sudo bash -s << 'EOF'
 set -euo pipefail
 
 DEST="/var/www/dejavu"
 DB_NAME="dejavu"
+DB_USER="dejavu"
+DB_PASS="admin"
 
 # 1) Installer MySQL si besoin
 if ! command -v mysql &> /dev/null; then
-  sudo apt-get update
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
 fi
 
 # 2) Démarrer MySQL
-sudo systemctl enable --now mysql
+systemctl enable --now mysql
 
-# 3) Trouver le dump SQL
+# 3) Supprimer et recréer la BDD + user
+mysql <<SQL
+DROP DATABASE IF EXISTS \`$DB_NAME\`;
+CREATE DATABASE \`$DB_NAME\`;
+CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED WITH mysql_native_password BY '$DB_PASS';
+GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';
+FLUSH PRIVILEGES;
+SQL
+
+# 4) Importer le dump SQL
 SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
 if [ -z "\$SQL_FILE" ]; then
   echo "❌ Aucun .sql trouvé dans \$DEST" >&2
   exit 1
 fi
+mysql "\$DB_NAME" < "\$SQL_FILE"
 
-# 4) Création + import DB via socket (Option A)
-sudo mysql <<SQL
-CREATE DATABASE IF NOT EXISTS \\\`\$DB_NAME\\\`;
-USE \\\`\$DB_NAME\\\`;
-SOURCE \$SQL_FILE;
-SQL
+# 5) Installer Composer si besoin
+if ! command -v composer &> /dev/null; then
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y composer
+fi
 
-# 5) Installer le backend PHP
+# 6) Installer Node.js + npm si besoin
+if ! command -v npm &> /dev/null; then
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
+fi
+
+# 7) Backend PHP
 cd "\$DEST/backend"
 composer install --no-dev --optimize-autoloader
 
-# 6) Builder le frontend React
+# 8) Frontend React
 cd "\$DEST/frontend"
 npm ci
 npm run build
 
-# 7) Déployer les assets statiques
-sudo rm -rf /var/www/html/*
-sudo cp -r build/* /var/www/html/
+# 9) Assets statiques
+mkdir -p /var/www/html
+rm -rf /var/www/html/*
+cp -r build/* /var/www/html/
 
-# 8) Permissions & restart
-sudo chown -R www-data:www-data /var/www/html
-sudo chmod -R 755 /var/www/html
-sudo systemctl restart apache2 || sudo systemctl restart nginx
+# 10) Redémarrer Nginx
+systemctl restart nginx
 
 echo "✅ Déploiement terminé !"
-SCRIPT
-
-# Rendre exécutable
-sudo chmod +x /tmp/deploy_remote.sh
 EOF
-
-########################
-# 4) EXÉCUTION DU SCRIPT DISTANT
-########################
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST sudo bash /tmp/deploy_remote.sh
