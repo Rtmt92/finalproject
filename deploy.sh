@@ -8,25 +8,23 @@ USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
 KEY="$HOME/.ssh/id_rsa"
-DB_NAME="dejavu"
-DB_USER="dejavu"
-DB_PASS="admin"
 
 echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
 
 ########################
 # 2) RSYNC DU PROJET
 ########################
-rsync -az --delete \
+rsync -az \
   --exclude 'node_modules' \
   --exclude 'vendor' \
   --exclude '.env' \
+  --exclude 'frontend/build' \        # ← on exclut le build React
   --exclude "$(basename "$KEY")" \
   -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
   ./ "$USER@$HOST:$DEST"
 
 ########################
-# 3) GÉNÉRATION ET EXÉCUTION DU SCRIPT DISTANT
+# 3) DÉPLOIEMENT DISTANT
 ########################
 ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST sudo bash -s << 'EOF'
 set -euo pipefail
@@ -45,7 +43,7 @@ fi
 # 2) Démarrer MySQL
 systemctl enable --now mysql
 
-# 3) Supprimer et recréer la BDD + user
+# 3) (Re)création de la BDD et de l’utilisateur
 mysql <<SQL
 DROP DATABASE IF EXISTS \`$DB_NAME\`;
 CREATE DATABASE \`$DB_NAME\`;
@@ -54,7 +52,7 @@ GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';
 FLUSH PRIVILEGES;
 SQL
 
-# 4) Importer le dump SQL
+# 4) Import SQL
 SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
 if [ -z "\$SQL_FILE" ]; then
   echo "❌ Aucun .sql trouvé dans \$DEST" >&2
