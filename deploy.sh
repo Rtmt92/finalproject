@@ -16,48 +16,58 @@ DB_NAME="${DB_NAME:-dejavu}"
 echo "🚀 Début du déploiement sur $USER@$HOST:$DEST …"
 
 ########################
-# 2) RSYNC DU PROJET
+# 2) PRÉPARER LE DISTANT
 ########################
+echo "📂 Création du répertoire distant et mise en place des permissions…"
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST << EOF
+  sudo mkdir -p "$DEST"
+  sudo chown -R "$USER":"$USER" "$DEST"
+EOF
+
+########################
+# 3) RSYNC DU PROJET
+########################
+echo "🔄 Synchronisation des fichiers avec rsync…"
 rsync -avz \
   --exclude 'node_modules' \
   --exclude 'vendor' \
   --exclude '.env' \
-  --exclude "$(basename $KEY)" \
+  --exclude "$(basename "$KEY")" \
   -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
-  ./ $USER@$HOST:$DEST
+  ./ $USER@$HOST:"$DEST"
 
 ########################
-# 3) COMMANDES DISTANTES
+# 4) COMMANDES DISTANTES
 ########################
+echo "🔧 Exécution des commandes sur la VM distante…"
 ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << 'EOF'
   set -euo pipefail
-  echo "🔧 Configuration sur la VM distante…"
 
-  # 3.1 Démarrer MySQL
+  echo "• Démarrage de MySQL"
   sudo systemctl start mysql
 
-  # 3.2 Importer / créer la BDD
-  sudo mysql -u root -p"$MYSQL_ROOT_PWD" -e "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;"
-  sudo mysql -u root -p"$MYSQL_ROOT_PWD" "$DB_NAME" < "$DEST/dejavu.sql"
+  echo "• Création et import de la base de données"
+  mysql -u root -p"$MYSQL_ROOT_PWD" -e "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;"
+  mysql -u root -p"$MYSQL_ROOT_PWD" "$DB_NAME" < "$DEST/dejavu.sql"
 
-  # 3.3 Backend PHP
+  echo "• Installation du backend PHP"
   cd "$DEST/backend"
   composer install --no-dev --optimize-autoloader
 
-  # 3.4 Frontend React
+  echo "• Construction du frontend React"
   cd "$DEST/frontend"
   npm install
   npm run build
 
-  # 3.5 Déployer le build statique
+  echo "• Déploiement des fichiers statiques"
   sudo rm -rf /var/www/html/*
   sudo cp -r build/* /var/www/html/
 
-  # 3.6 Permissions
+  echo "• Ajustement des permissions"
   sudo chown -R www-data:www-data /var/www/html
   sudo chmod -R 755 /var/www/html
 
-  # 3.7 Redémarrer le serveur web
+  echo "• Redémarrage du serveur web"
   sudo systemctl restart apache2 || sudo systemctl restart nginx
 
   echo "✅ Déploiement terminé sur la VM !"
