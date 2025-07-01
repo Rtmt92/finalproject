@@ -18,7 +18,7 @@ rsync -az \
   --exclude 'node_modules' \
   --exclude 'vendor' \
   --exclude '.env' \
-  --exclude 'frontend/build' \        # ← on exclut le build React
+  --exclude 'frontend/build' \
   --exclude "$(basename "$KEY")" \
   -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
   ./ "$USER@$HOST:$DEST"
