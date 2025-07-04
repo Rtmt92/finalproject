@@ -7,7 +7,7 @@ set -euo pipefail
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-KEY="$HOME/Downloads/DejaVu_key.pem"    # ← Chemin vers votre clé PEM
+KEY="$HOME/.ssh/id_rsa"            # ← Passage sur ~/.ssh/id_rsa
 
 echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
 
@@ -37,10 +37,9 @@ echo "→ (Re)création de la BDD"
 sudo mysql -e "DROP DATABASE IF EXISTS $DB; CREATE DATABASE $DB;"
 
 echo "→ Import du dump"
-# backticks pour compatibilité POSIX
-SQL_FILE=\`ls "\$DEST"/*.sql 2>/dev/null | head -n1 || true\`
+SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
 if [ -n "\$SQL_FILE" ]; then
-  sudo mysql "$DB" < "\$SQL_FILE"
+  sudo mysql "\$DB" < "\$SQL_FILE"
   echo "→ Import terminé depuis \$SQL_FILE"
 else
   echo "⚠️ Aucun .sql trouvé dans \$DEST"
