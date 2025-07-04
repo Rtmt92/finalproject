@@ -36,7 +36,7 @@ set -euo pipefail
 
 DEST="/var/www/dejavu"
 DB_NAME="dejavu"
-DB_USER="dejavu"
+DB_USER="root"
 DB_PASS="admin"
 
 # 1) Installer MySQL si besoin
