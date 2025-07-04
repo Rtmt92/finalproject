@@ -1,45 +1,25 @@
-import React, { useState, useEffect } from 'react';
+// frontend/src/compenents/ProductCard.jsx
+import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/ProductCard.css';
 
-export default function ProductCard() {
-  const [prod, setProd]       = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState('');
-
-  useEffect(() => {
-    fetch('/api/produit/random')
-      .then(res => {
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        setProd(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Erreur fetch produit random:', err);
-        setError('Impossible de charger le produit');
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) return <div className="product-card">Chargement…</div>;
-  if (error)   return <div className="product-card error">{error}</div>;
-  if (!prod)   return null;
-
+export default function ProductCard({
+  id,
+  titre,
+  image,
+  prix,
+  etat,
+  quantite
+}) {
   return (
-    <Link
-      to={`/product/${prod.id_produit}`}
-      className="product-card-link"
-    >
+    <Link to={`/product/${id}`} className="product-card-link">
       <div className="product-card">
-        <p className="product-title">{prod.nom_produit}</p>
+        <p className="product-title">{titre}</p>
 
-        {prod.image_url ? (
+        {image ? (
           <img
-            src={prod.image_url}
-            alt={prod.nom_produit}
+            src={image.startsWith('http') ? image : `http://localhost:8000/${image}`}
+            alt={titre}
             className="product-img"
           />
         ) : (
@@ -47,9 +27,9 @@ export default function ProductCard() {
         )}
 
         <div className="product-info">
-          <p className="product-price">Prix : {prod.prix}€</p>
-          <p className="product-etat">État : {prod.etat || 'N/A'}</p>
-          <p className="product-quantite">Quantité : {prod.quantite ?? 'N/A'}</p>
+          <p className="product-price">Prix : {prix} €</p>
+          <p className="product-etat">État : {etat || 'N/A'}</p>
+          <p className="product-quantite">Quantité : {quantite ?? 'N/A'}</p>
         </div>
       </div>
     </Link>

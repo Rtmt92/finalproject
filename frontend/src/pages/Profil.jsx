@@ -103,6 +103,7 @@ export default function Profil() {
               etat={prod.etat}
               quantite={prod.quantite}
               image={prod.image}              // <-- on passe directement `prod.image`
+              clickable={false}
             />
           ))
         )}

@@ -1,13 +1,13 @@
 // frontend/src/pages/SearchResults.jsx
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import ProductBanner from "../compenents/ProductBanner";
+import { useLocation, useNavigate }    from "react-router-dom";
+import ProductBanner                    from "../compenents/ProductBanner";
+import ProductCard from "../compenents/ProductCard";
 
-const SearchResults = () => {
+export default function SearchResults() {
   const location = useLocation();
   const navigate = useNavigate();
-  const query = new URLSearchParams(location.search).get("q") || "";
-
+  const query    = new URLSearchParams(location.search).get("q") || "";
   const [annonces, setAnnonces] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCat, setSelectedCat] = useState("");
@@ -20,23 +20,22 @@ const SearchResults = () => {
       navigate("/login", { state: { from: location }, replace: true });
       return;
     }
-
     fetchCategories();
     fetchAnnonces();
   }, [query, selectedCat, selectedEtat]);
 
   const fetchAnnonces = async () => {
-    let url = `http://localhost:3000/api/produit?q=${encodeURIComponent(query)}`;
-    if (selectedCat) url += `&categorie=${selectedCat}`;
+    let url = `http://localhost:8000/api/produit?q=${encodeURIComponent(query)}`;
+    if (selectedCat)  url += `&categorie=${selectedCat}`;
     if (selectedEtat) url += `&etat=${encodeURIComponent(selectedEtat)}`;
 
-    const res = await fetch(url);
+    const res  = await fetch(url);
     const data = await res.json();
     setAnnonces(data);
   };
 
   const fetchCategories = async () => {
-    const res = await fetch("http://localhost:3000/categorie");
+    const res  = await fetch("http://localhost:8000/api/categorie");
     const data = await res.json();
     setCategories(data);
   };
@@ -47,14 +46,14 @@ const SearchResults = () => {
 
       <div className="admin-layout">
         <div className="admin-sidebar">
-          <select value={selectedCat} onChange={(e) => setSelectedCat(e.target.value)}>
+          <select value={selectedCat} onChange={e => setSelectedCat(e.target.value)}>
             <option value="">Toutes les catégories</option>
-            {categories.map((c) => (
+            {categories.map(c =>
               <option key={c.id_categorie} value={c.id_categorie}>{c.nom}</option>
-            ))}
+            )}
           </select>
 
-          <select value={selectedEtat} onChange={(e) => setSelectedEtat(e.target.value)}>
+          <select value={selectedEtat} onChange={e => setSelectedEtat(e.target.value)}>
             <option value="">Tous les états</option>
             <option value="parfait état">Parfait état</option>
             <option value="très bon état">Très bon état</option>
@@ -63,15 +62,13 @@ const SearchResults = () => {
         </div>
 
         <div className="admin-content">
-          {annonces.length > 0 ? annonces.map((a, i) => (
-            <ProductBanner key={i} {...a} />
-          )) : (
+          {annonces.length > 0 ? annonces.map((a,i) =>
+            <ProductCard key={i} {...a} />
+          ) : (
             <p>Aucun produit trouvé.</p>
           )}
         </div>
       </div>
     </div>
   );
-};
-
-export default SearchResults;
+}

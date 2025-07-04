@@ -8,66 +8,64 @@ import {
   Gavel,
   PlusCircle,
   FolderKanban,
+  LogIn,
+  ShoppingCart
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import '../styles/Header.css';
 import '../styles/Global.css';
 
-const Header = () => {
+export default function Header() {
   const navigate  = useNavigate();
   const location  = useLocation();
+  const token     = localStorage.getItem('token');
   const role      = localStorage.getItem('role');
   const [search, setSearch] = useState("");
 
-  const handleSearch = (e) => {
+  const handleSearch = e => {
     if (e.key !== "Enter" || !search.trim()) return;
-    const query = encodeURIComponent(search.trim());
-
-    // On /admin/client → recherche de clients
+    const q = encodeURIComponent(search.trim());
     if (location.pathname.startsWith("/admin/client")) {
-      navigate(`/admin/client?search=${query}`);
-      return;
+      navigate(`/admin/client?search=${q}`);
+    } else if (location.pathname.startsWith("/admin")) {
+      navigate(`/admin?search=${q}`);
+    } else {
+      navigate(`/recherche?q=${q}`);
     }
-
-    // Sur toute autre page sous /admin → recherche de produits
-    if (location.pathname.startsWith("/admin")) {
-      navigate(`/admin?search=${query}`);
-      return;
-    }
-
-    // Par défaut (front) → recherche générale
-    navigate(`/recherche?q=${query}`);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
-    navigate('/login', { replace: true });
+    navigate('/login');
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
+  const handleCart = () => {
+    navigate('/panier');
   };
 
   const handleHomeClick = () => {
-    if (role === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/');
-    }
+    if (role === 'admin')      navigate('/admin');
+    else                        navigate('/');
   };
 
   return (
     <header className="header">
       <div className="header-content">
+        {/* Logo / Accueil */}
         <div
           className="header-left"
           onClick={handleHomeClick}
           style={{ cursor: 'pointer' }}
         >
-          <img
-            src="/dejaVuLogoWhite.png"
-            alt="Logo"
-            className="header-logo"
-          />
+          <img src="/dejaVuLogoWhite.png" alt="Logo" className="header-logo" />
         </div>
 
+        {/* Barre de recherche */}
         <div className="header-search">
           <Search size={16} className="search-icon" />
           <input
@@ -80,57 +78,50 @@ const Header = () => {
           />
         </div>
 
+        {/* Icônes de droite */}
         <div className="header-icons">
           {role === 'admin' ? (
             <>
-              <Gavel
-                size={24}
-                className="header-icon"
-                title="Modération"
-                onClick={() => navigate('/admin/client')}
-              />
-              <FolderKanban
-                size={24}
-                className="header-icon"
-                title="Catégories"
-                onClick={() => navigate('/admin/categorie')}
-              />
-              <PlusCircle
-                size={24}
-                className="header-icon"
-                title="Créer une annonce"
-                onClick={() => navigate('/admin/CreateAnnounce')}
-              />
+              <Gavel size={24} className="header-icon" title="Modération" onClick={() => navigate('/admin/client')} />
+              <FolderKanban size={24} className="header-icon" title="Catégories" onClick={() => navigate('/admin/categorie')} />
+              <PlusCircle size={24} className="header-icon" title="Créer une annonce" onClick={() => navigate('/admin/CreateAnnounce')} />
+            </>
+          ) : token ? (
+            <>
+              <MessageCircle size={24} className="header-icon" title="Messages" onClick={() => navigate('/messages')} />
+              <User size={24} className="header-icon" title="Profil" onClick={() => navigate('/profil')} />
             </>
           ) : (
             <>
-              <MessageCircle
+              {/* Visiteur : accès au panier et à la connexion */}
+              <ShoppingCart
                 size={24}
                 className="header-icon"
-                title="Messages"
-                onClick={() => navigate('/messages')}
-              />
-              <User
-                size={24}
-                className="header-icon"
-                title="Profil"
-                onClick={() => navigate('/profil')}
+                title="Voir mon panier"
+                onClick={handleCart}
               />
             </>
           )}
 
-          <Power
-            size={24}
-            onClick={handleLogout}
-            className="header-icon logout-icon"
-            title="Se déconnecter"
-          />
+          {/* Bouton connexion / déconnexion */}
+          {token ? (
+            <Power
+              size={24}
+              onClick={handleLogout}
+              className="header-icon logout-icon"
+              title="Se déconnecter"
+            />
+          ) : (
+            <LogIn
+              size={24}
+              onClick={handleLogin}
+              className="header-icon login-icon"
+              title="Se connecter"
+            />
+          )}
         </div>
       </div>
-
       <div className="header-line" />
     </header>
   );
-};
-
-export default Header;
+}

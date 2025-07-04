@@ -1,0 +1,65 @@
+/* Container principal */
+.all-products-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  color: #fff;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Titre en haut à gauche */
+.all-products-page > h1 {
+  font-size: 2rem;
+  font-weight: 300;
+  margin-bottom: 1.5rem;
+}
+
+/* Barre de filtres alignée à droite */
+.filters {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filters select {
+  background: #3b3f46;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.filters select:hover {
+  background: #4a4f57;
+}
+
+/* Grille de produits : 4 colonnes */
+.products-grid-all {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Au mobile, passe en 1 colonne */
+@media (max-width: 600px) {
+  .products-grid-all {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Message “aucun produit” */
+.all-products-page p {
+  text-align: center;
+  font-size: 1.1rem;
+  margin-top: 2rem;
+}
+
+/* Pour centrer verticalement la page si vide */
+.all-products-page:empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
