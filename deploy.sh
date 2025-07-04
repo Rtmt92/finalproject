@@ -7,7 +7,7 @@ set -euo pipefail
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-KEY="$HOME/Downloads/DejaVu_key.pem"    # ← Mettez ici le chemin vers votre clé PEM
+KEY="$HOME/Downloads/DejaVu_key.pem"
 DB_NAME="dejavu"
 DB_USER="dejavu"
 DB_PASS="admin"
@@ -29,8 +29,8 @@ rsync -az --delete \
 ########################
 # 3) CRÉATION DU SCRIPT DISTANT
 ########################
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << 'EOF'
-cat > /tmp/deploy_remote.sh << 'SCRIPT'
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << 'EOF_REMOTE'
+cat > /tmp/deploy_remote.sh << 'EOF_SCRIPT'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -50,10 +50,10 @@ sudo systemctl enable --now mysql
 
 # 3) (Re)création de la base et de l’utilisateur
 sudo mysql <<SQL
-DROP DATABASE IF EXISTS \\\`$DB_NAME\\\`;
-CREATE DATABASE \\\`$DB_NAME\\\`;
-CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED WITH mysql_native_password BY '$DB_PASS';
-GRANT ALL PRIVILEGES ON \\\`$DB_NAME\\\`.* TO '$DB_USER'@'localhost';
+DROP DATABASE IF EXISTS \`dejavu\`;
+CREATE DATABASE \`dejavu\`;
+CREATE USER IF NOT EXISTS 'dejavu'@'localhost' IDENTIFIED WITH mysql_native_password BY 'admin';
+GRANT ALL PRIVILEGES ON \`dejavu\`.* TO 'dejavu'@'localhost';
 FLUSH PRIVILEGES;
 SQL
 
@@ -78,11 +78,11 @@ if ! command -v npm &> /dev/null; then
 fi
 
 # 7) Installer les dépendances back-end
-cd "$DEST/backend"
+cd "\$DEST/backend"
 composer install --no-dev --optimize-autoloader
 
 # 8) Builder le front-end React
-cd "$DEST/frontend"
+cd "\$DEST/frontend"
 npm ci
 npm run build
 
@@ -97,13 +97,9 @@ sudo chmod -R 755 /var/www/html
 sudo systemctl restart nginx
 
 echo "✅ Déploiement terminé !"
-SCRIPT
+EOF_SCRIPT
 
-# rendre exécutable
+# rendre exécutable et exécuter
 sudo chmod +x /tmp/deploy_remote.sh
-EOF
-
-########################
-# 4) EXÉCUTION DU SCRIPT DISTANT
-########################
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST sudo bash /tmp/deploy_remote.sh
+sudo bash /tmp/deploy_remote.sh
+EOF_REMOTE
