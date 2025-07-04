@@ -7,7 +7,7 @@ set -euo pipefail
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-KEY="$HOME/Downloads/DejaVu_key.pem"    # ← chemin vers votre PEM
+KEY="$HOME/Downloads/DejaVu_key.pem"    # ← Vérifiez bien ce chemin
 DB_NAME="dejavu"
 DB_USER="root"
 DB_PASS="admin"
@@ -56,9 +56,10 @@ CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED WITH mysql_native_
 GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';
 FLUSH PRIVILEGES;
 "
-# here-doc protégé pour injector SQL_CMD
-sudo mysql << 'SQL'
-${SQL_CMD}
+
+# **ATTENTION** here-doc non protégé pour expansion de $SQL_CMD
+sudo mysql <<SQL
+$SQL_CMD
 SQL
 
 # 4) Import du dump SQL
@@ -81,16 +82,16 @@ if ! command -v npm &>/dev/null; then
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
 fi
 
-# 7) Dépendances back-end
+# 7) Back-end PHP
 cd "\$DEST/backend"
 composer install --no-dev --optimize-autoloader
 
-# 8) Build front-end
+# 8) Front-end React
 cd "\$DEST/frontend"
 npm ci
 npm run build
 
-# 9) Déployer les assets statiques
+# 9) Assets statiques
 sudo mkdir -p /var/www/html
 sudo rm -rf /var/www/html/*
 sudo cp -r build/* /var/www/html/
