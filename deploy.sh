@@ -7,10 +7,8 @@ set -euo pipefail
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-KEY="$HOME/Downloads/DejaVu_key.pem"    # ← Chemin vers ta clé PEM
+KEY="$HOME/Downloads/DejaVu_key.pem"
 DB_NAME="dejavu"
-DB_USER="dejavu"
-DB_PASS="admin"
 
 echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
 
@@ -27,72 +25,65 @@ rsync -az --delete \
   ./ "$USER@$HOST:$DEST"
 
 ########################
-# 3) GÉNÉRATION DU SCRIPT DISTANT + EXÉCUTION
+# 3) SCRIPT DISTANT
 ########################
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST sudo bash -s << 'EOF'
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << 'EOF'
 set -euo pipefail
 
 DEST="/var/www/dejavu"
 DB_NAME="dejavu"
-DB_USER="dejavu"
-DB_PASS="admin"
 
-# --- 1) Installer MySQL si besoin ---
-if ! command -v mysql &>/dev/null; then
-  apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
+# a) Vérifier si la DB existe déjà
+DB_EXISTS=$(sudo mysql -sNe "SHOW DATABASES LIKE '$DB_NAME';")
+if [ -z "$DB_EXISTS" ]; then
+  echo "• Base '$DB_NAME' absente : import complet"
+  # créer la base et importer
+  sudo mysql <<SQL
+CREATE DATABASE \`$DB_NAME\`;
+SQL
+  SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
+  [ -z "\$SQL_FILE" ] && { echo "❌ Aucun .sql trouvé dans \$DEST"; exit 1; }
+  sudo mysql "$DB_NAME" < "\$SQL_FILE"
+else
+  echo "• Base '$DB_NAME' déjà présente, on ne modifie pas le schéma"
+  # optionnel : ré-import partiel ou skip
+  SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
+  if [ -n "\$SQL_FILE" ]; then
+    echo "→ Import des données (tables existantes seront écrasées si définies en dump)…"
+    sudo mysql "$DB_NAME" < "\$SQL_FILE"
+  fi
 fi
 
-# --- 2) Démarrer et activer MySQL ---
-systemctl enable --now mysql
-
-# --- 3) (Re)création de la BDD et de l’utilisateur ---
-mysql -e "
-DROP DATABASE IF EXISTS \\\`${DB_NAME}\\\`;
-CREATE DATABASE \\\`${DB_NAME}\\\`;
-CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED WITH mysql_native_password BY '$DB_PASS';
-GRANT ALL PRIVILEGES ON \\\`${DB_NAME}\\\`.* TO '$DB_USER'@'localhost';
-FLUSH PRIVILEGES;
-"
-
-# --- 4) Import du dump SQL ---
-SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
-if [ -z "\$SQL_FILE" ]; then
-  echo "❌ Aucun .sql trouvé dans \$DEST" >&2
-  exit 1
-fi
-mysql "\$DB_NAME" < "\$SQL_FILE"
-
-# --- 5) Installer Composer si besoin ---
-if ! command -v composer &>/dev/null; then
-  apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y composer
+# b) Installer les dépendances PHP
+if ! command -v composer &> /dev/null; then
+  sudo apt-get update
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y composer
 fi
 
-# --- 6) Installer Node.js + npm si besoin ---
-if ! command -v npm &>/dev/null; then
-  apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
+# c) Installer Node.js + npm si besoin
+if ! command -v npm &> /dev/null; then
+  sudo apt-get update
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
 fi
 
-# --- 7) Backend PHP ---
-cd "\$DEST/backend"
+# d) Back-end PHP
+cd "$DEST/backend"
 composer install --no-dev --optimize-autoloader
 
-# --- 8) Frontend React ---
-cd "\$DEST/frontend"
+# e) Front-end React
+cd "$DEST/frontend"
 npm ci
 npm run build
 
-# --- 9) Déployer les assets statiques ---
-mkdir -p /var/www/html
-rm -rf /var/www/html/*
-cp -r build/* /var/www/html/
+# f) Déployer les assets statiques
+sudo mkdir -p /var/www/html
+sudo rm -rf /var/www/html/*
+sudo cp -r build/* /var/www/html/
 
-# --- 10) Ajuster les droits et redémarrer nginx ---
-chown -R www-data:www-data /var/www/html
-chmod -R 755 /var/www/html
-systemctl restart nginx
+# g) Permissions & restart
+sudo chown -R www-data:www-data /var/www/html
+sudo chmod -R 755 /var/www/html
+sudo systemctl restart nginx
 
 echo "✅ Déploiement terminé !"
 EOF
