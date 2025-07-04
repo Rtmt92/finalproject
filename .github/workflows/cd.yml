@@ -1,6 +1,5 @@
 name: CD
 name: Déploiement DejaVu sur Azure
-
 on:
   push:
     branches:
