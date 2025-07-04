@@ -5,21 +5,21 @@ set -euo pipefail
 # 1) CONFIGURATION – A ADAPTER SELON TON ENV
 #################################################
 USER="azureuser"
-HOST="${HOST:-4.233.136.179}"      # on pourra surcharger en CI via $HOST
+HOST="${HOST:-4.233.136.179}"      # on peut surcharger via env en CI
 DEST="/var/www/dejavu"
-KEY="$HOME/.ssh/id_rsa"            # <— on passe sur id_rsa, pas DejaVu_key.pem
+KEY="$HOME/.ssh/id_rsa"            # on écrit la clé dans ~/.ssh/id_rsa en CI
 DB="dejavu"
+
+echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
 
 #################################################
 # 2) RSYNC DES FICHIERS
 #################################################
-echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
 rsync -az --delete \
   --exclude 'node_modules' \
   --exclude 'vendor' \
   --exclude '.env' \
   --exclude 'frontend/build' \
-  --exclude "$(basename "$KEY")" \
   -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
   ./ "$USER@$HOST:$DEST"
 
@@ -34,14 +34,15 @@ DEST="/var/www/dejavu"
 DB="dejavu"
 
 echo "→ (Re)création de la base '$DB'"
-mysql -e "DROP DATABASE IF EXISTS \\\`${DB}\\\`; CREATE DATABASE \\\`${DB}\\\`;"
+# on passe la SQL dans des quotes simples pour éviter toute interprétation shell
+mysql -e 'DROP DATABASE IF EXISTS `'"$DB"'`; CREATE DATABASE `'"$DB"'`;'
 
 SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1 || true)
 if [ -n "\$SQL_FILE" ]; then
-  echo "→ Import \$SQL_FILE"
+  echo "→ Import du dump \$SQL_FILE"
   mysql "\$DB" < "\$SQL_FILE"
 else
-  echo "⚠️ Pas de dump SQL trouvé, j'ignore l'import"
+  echo "⚠️ Aucun dump SQL trouvé, j'ignore l'import"
 fi
 
 echo "→ Composer (backend)"
