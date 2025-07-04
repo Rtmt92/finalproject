@@ -125,8 +125,59 @@ class Panier {
         ];
     }
 
+    public function getWithFirstImagesByClientId(int $idClient): ?array {
+        // 1 seule requête : on joint panier, produits et on extrait
+        // la première image via une sous-requête.
+        $sql = "
+            SELECT
+                pa.id_panier,
+                pa.prix_total,
+                pr.id_produit,
+                pr.nom_produit  AS titre,
+                pr.description,
+                pr.prix,
+                pr.etat,
+                pp.quantite,
+                (
+                  SELECT i.lien
+                  FROM produit_image pi
+                  JOIN image i ON pi.id_image = i.id_image
+                  WHERE pi.id_produit = pr.id_produit
+                  ORDER BY pi.id_produit_image ASC
+                  LIMIT 1
+                ) AS image
+            FROM panier pa
+            JOIN panier_produit pp ON pa.id_panier = pp.id_panier
+            JOIN produit pr         ON pp.id_produit = pr.id_produit
+            WHERE pa.id_client = :idClient
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['idClient' => $idClient]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        if (empty($rows)) {
+            return null;
+        }
 
-
-
+        // On regroupe le tout dans la structure attendue par le controller
+        $panier = [
+          'id_panier'  => $rows[0]['id_panier'],
+          'prix_total' => $rows[0]['prix_total'],
+          'produits'   => []
+        ];
+        foreach ($rows as $r) {
+            $panier['produits'][] = [
+                'id_produit' => $r['id_produit'],
+                'titre'      => $r['titre'],
+                'description'=> $r['description'],
+                'prix'       => $r['prix'],
+                'etat'       => $r['etat'],
+                'quantite'   => $r['quantite'],
+                'image'      => $r['image'],   // <-- lien direct de la 1re image
+            ];
+        }
+        return $panier;
+    }
 }
+
+

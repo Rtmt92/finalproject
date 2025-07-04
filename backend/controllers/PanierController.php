@@ -115,18 +115,19 @@ class PanierController {
         }
     }
 
+    // src/Controllers/PanierController.php
     public function showUserPanier(): void {
         $idClient = $this->getClientIdFromToken();
-        $result = $this->panierModel->getPanierWithProduitsByClientId($idClient);
+        $result   = $this->panierModel->getWithFirstImagesByClientId($idClient);
 
+        header('Content-Type: application/json; charset=utf-8');
         if (!$result) {
-            echo json_encode(['id_panier' => null, 'prix_total' => 0, 'produits' => []]);
-            return;
+            echo json_encode(['id_panier'=>null,'prix_total'=>0,'produits'=>[]]);
+        } else {
+            echo json_encode($result);
         }
-
-        header('Content-Type: application/json');
-        echo json_encode($result);
     }
+
 
     public function getMyPanier() {
         $idClient = $this->getClientIdFromToken();
@@ -152,4 +153,8 @@ class PanierController {
 
         echo json_encode(['message' => 'Panier vidé avec succès']);
     }
+
+    // src/Controllers/PanierController.php
+
+
 }

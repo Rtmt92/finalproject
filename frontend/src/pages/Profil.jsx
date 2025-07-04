@@ -1,6 +1,8 @@
+// src/pages/Profil.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ClientBanner from '../compenents/ClientBanner';
+import ProductBanner from '../compenents/ProductBanner';
 import '../styles/Profil.css';
 
 export default function Profil() {
@@ -8,14 +10,13 @@ export default function Profil() {
   const [panierProduits, setPanierProduits] = useState([]);
   const [prixTotal, setPrixTotal] = useState(0);
   const [idPanier, setIdPanier] = useState(null);
+
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  const getImageUrl = (lien) => lien ? `http://localhost:8000/${lien}` : null;
-
+  // Récupère les infos du client
   useEffect(() => {
     if (!token) return;
-
     fetch('http://localhost:8000/api/me', {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -24,19 +25,19 @@ export default function Profil() {
         return res.json();
       })
       .then(data => setClient(data))
-      .catch(err => {
-        console.error('Erreur profil:', err);
-        navigate('/login');
-      });
-  }, []);
+      .catch(() => navigate('/login'));
+  }, [token, navigate]);
 
+  // Dès qu'on a le client, on refresh le panier
   useEffect(() => {
-    if (client) refreshPanier();
+    if (!client) return;
+    refreshPanier();
   }, [client]);
 
+  // Va chercher le panier (avec champ `image` pour chaque produit)
   const refreshPanier = () => {
     fetch('http://localhost:8000/panier', {
-      headers: { 'Authorization': `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
       .then(data => {
@@ -48,30 +49,39 @@ export default function Profil() {
       .catch(err => console.error('Erreur panier:', err));
   };
 
+  // Supprimer un produit du panier
   const handleDeleteFromPanier = async (idProduit) => {
     if (!idPanier) return;
-    const res = await fetch(`http://localhost:8000/panier_produit/${idPanier}/${idProduit}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const res = await fetch(
+      `http://localhost:8000/panier_produit/${idPanier}/${idProduit}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
     if (res.ok) refreshPanier();
     else alert("Erreur lors de la suppression.");
   };
 
+  // Supprimer le compte
   const handleDeleteAccount = async () => {
     if (!window.confirm("Supprimer votre compte ?")) return;
-    const res = await fetch(`http://localhost:8000/client/${client.id_client}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
+    const res = await fetch(
+      `http://localhost:8000/client/${client.id_client}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
     if (res.ok) navigate('/login');
     else alert("Erreur lors de la suppression.");
   };
 
   if (!client) return <div>Chargement...</div>;
 
+  // Éventuellement dédupliquer si plusieurs lignes pour même produit
   const produitsUniques = panierProduits.filter(
-    (prod, index, self) => index === self.findIndex(p => p.id_produit === prod.id_produit)
+    (prod, idx, arr) => idx === arr.findIndex(p => p.id_produit === prod.id_produit)
   );
 
   return (
@@ -83,40 +93,38 @@ export default function Profil() {
         {produitsUniques.length === 0 ? (
           <p>Votre panier est vide.</p>
         ) : (
-          produitsUniques.map((prod, index) => {
-            const firstImage = getImageUrl(prod.images?.[0]?.lien);
-            return (
-              <div key={index} className="panier-item">
-                <div className="banner">
-                  <div className="banner-image">
-                    {firstImage ? (
-                      <img src={firstImage} alt="Produit" />
-                    ) : (
-                      <div className="no-image">Image</div>
-                    )}
-                  </div>
-                  <div className="banner-details">
-                    <h3>{prod.titre || "Produit"}</h3>
-                    <p>{prod.description || "Pas de description"}</p>
-                    <p><strong>État :</strong> {prod.etat || 'Non spécifié'}</p>
-                    <p><strong>Quantité :</strong> {prod.quantite ?? 'NC'}</p>
-                  </div>
-                  <div className="banner-price">
-                    <p className="prix">{parseFloat(prod.prix || prod.price || 0).toFixed(2)} €</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })
+          produitsUniques.map(prod => (
+            <ProductBanner
+              key={prod.id_produit}
+              id={prod.id_produit}
+              titre={prod.titre}
+              description={prod.description}
+              prix={prod.prix}
+              etat={prod.etat}
+              quantite={prod.quantite}
+              image={prod.image}              // <-- on passe directement `prod.image`
+            />
+          ))
         )}
+
         <div className="panier-total">
           <strong>Total : {Number(prixTotal).toFixed(2)} €</strong>
         </div>
       </div>
 
       <div className="profil-actions">
-        <button className="btn-valider" onClick={() => navigate('/pay')}>Valider mon panier</button>
-        <button onClick={handleDeleteAccount} className="btn-danger">SUPPRIMER MON COMPTE</button>
+        <button
+          className="btn-valider"
+          onClick={() => navigate('/pay')}
+        >
+          Valider mon panier
+        </button>
+        <button
+          className="btn-danger"
+          onClick={handleDeleteAccount}
+        >
+          SUPPRIMER MON COMPTE
+        </button>
       </div>
     </div>
   );

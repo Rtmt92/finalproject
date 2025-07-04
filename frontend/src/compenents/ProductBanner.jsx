@@ -3,15 +3,30 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/ProductBanner.css";
 
-const ProductBanner = ({ titre, description, prix, image, id, etat, quantite }) => {
+const ProductBanner = ({
+  titre,
+  description,
+  prix,
+  image,
+  id,
+  etat,
+  quantite,
+  clickable = true, // activé par défaut
+}) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/admin/edit-product/${id}`);
+    if (clickable) {
+      navigate(`/admin/edit-product/${id}`);
+    }
   };
 
   return (
-    <div className="banner" onClick={handleClick}>
+    <div
+      className="banner"
+      onClick={clickable ? handleClick : undefined}
+      style={{ cursor: clickable ? "pointer" : "default" }}
+    >
       <div className="banner-image">
         {image ? (
           <img src={`http://localhost:8000/${image}`} alt={titre} />

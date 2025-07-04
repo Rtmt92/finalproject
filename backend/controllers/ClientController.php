@@ -52,8 +52,18 @@ class ClientController {
 
 
     public function index(): void {
-        $clients = $this->clientModel->getAll();
-        header('Content-Type: application/json');
+        // on lit le paramètre search
+        $q = $_GET['search'] ?? '';
+
+        if ($q !== '') {
+            // si search non vide → filtrage
+            $clients = $this->clientModel->filterBySearch($q);
+        } else {
+            // sinon tous les clients
+            $clients = $this->clientModel->getAll();
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
         echo json_encode($clients);
     }
 

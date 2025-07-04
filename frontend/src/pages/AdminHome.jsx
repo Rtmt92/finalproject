@@ -1,51 +1,43 @@
-// src/pages/AdminHome.jsx
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import ProductBanner from "../compenents/ProductBanner";
 import "../styles/AdminHome.css";
 
-const AdminHome = () => {
-  const [annonces, setAnnonces] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [selectedCat, setSelectedCat] = useState('');
-  const [selectedEtat, setSelectedEtat] = useState('');
+const API_BASE = "http://localhost:8000";
 
+export default function AdminHome() {
+  const [annonces, setAnnonces]     = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCat,  setSelectedCat]  = useState("");
+  const [selectedEtat, setSelectedEtat] = useState("");
+  const { search: locationSearch }  = useLocation();
+
+  // On lit ?search=… dans l'URL
+  const query = new URLSearchParams(locationSearch).get("search") || "";
+
+  // Charger les catégories au montage
   useEffect(() => {
-    fetchCategories();
+    fetch(`${API_BASE}/categorie`)
+      .then(res => res.json())
+      .then(setCategories)
+      .catch(err => console.error("Erreur chargement catégories :", err));
   }, []);
 
+  // Dès que selectedCat, selectedEtat ou query change → re-fetch
   useEffect(() => {
-    fetchAnnonces(selectedCat, selectedEtat);
-  }, [selectedCat, selectedEtat]);
+    const params = new URLSearchParams();
 
-  const fetchAnnonces = async (categoryId = '', etat = '') => {
-    try {
-      let url = "http://localhost:3000/api/produit";
-      const params = [];
+    if (selectedCat)  params.set("categorie", selectedCat);
+    if (selectedEtat) params.set("etat", selectedEtat);
+    if (query)        params.set("q", query);
 
-      if (categoryId) params.push(`categorie=${categoryId}`);
-      if (etat)       params.push(`etat=${encodeURIComponent(etat)}`);
+    const url = `${API_BASE}/api/produit?${params.toString()}`;
 
-      if (params.length > 0) {
-        url += '?' + params.join('&');
-      }
-
-      const res = await fetch(url);
-      const data = await res.json();
-      setAnnonces(data);
-    } catch (err) {
-      console.error("Erreur lors du chargement des produits :", err);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch("http://localhost:3000/categorie");
-      const data = await res.json();
-      setCategories(data);
-    } catch (err) {
-      console.error("Erreur lors du chargement des catégories :", err);
-    }
-  };
+    fetch(url)
+      .then(res => res.json())
+      .then(setAnnonces)
+      .catch(err => console.error("Erreur chargement produits :", err));
+  }, [selectedCat, selectedEtat, query]);
 
   return (
     <div className="admin-home">
@@ -53,14 +45,24 @@ const AdminHome = () => {
 
       <div className="admin-layout">
         <div className="admin-sidebar">
-          <select className="category-select" value={selectedCat} onChange={e => setSelectedCat(e.target.value)}>
+          <select
+            className="category-select"
+            value={selectedCat}
+            onChange={e => setSelectedCat(e.target.value)}
+          >
             <option value="">Toutes les catégories</option>
-            {Array.isArray(categories) && categories.map(cat => (
-              <option key={cat.id_categorie} value={cat.id_categorie}>{cat.nom}</option>
+            {categories.map(cat => (
+              <option key={cat.id_categorie} value={cat.id_categorie}>
+                {cat.nom}
+              </option>
             ))}
           </select>
 
-          <select className="etat-select" value={selectedEtat} onChange={e => setSelectedEtat(e.target.value)}>
+          <select
+            className="etat-select"
+            value={selectedEtat}
+            onChange={e => setSelectedEtat(e.target.value)}
+          >
             <option value="">Tous les états</option>
             <option value="parfait état">Parfait état</option>
             <option value="très bon état">Très bon état</option>
@@ -69,23 +71,20 @@ const AdminHome = () => {
         </div>
 
         <div className="admin-content">
-          {Array.isArray(annonces) && annonces.map((a, i) => (
+          {annonces.map(a => (
             <ProductBanner
-            key={i}
-            id={a.id}
-            titre={a.titre}
-            description={a.description}
-            prix={a.prix}
-            image={a.image}
-            etat={a.etat}
-            quantite={a.quantite}
+              key={a.id}
+              id={a.id}
+              titre={a.titre}
+              description={a.description}
+              prix={a.prix}
+              image={a.image}
+              etat={a.etat}
+              quantite={a.quantite}
             />
-
           ))}
         </div>
       </div>
     </div>
   );
-};
-
-export default AdminHome;
+}

@@ -1,4 +1,4 @@
-name: Déploiement DejaVu sur Azure
+name: CD
 
 on:
   push:

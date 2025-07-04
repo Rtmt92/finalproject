@@ -12,8 +12,23 @@ class Client {
         $this->db = Database::getConnection();
     }
 
+        /** Récupère tous les clients sans filtre */
     public function getAll(): array {
         $stmt = $this->db->query("SELECT * FROM client");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Récupère les clients dont nom OU prénom contient $q (insensible à la casse).
+     */
+    public function filterBySearch(string $q): array {
+        $like = "%$q%";
+        $stmt = $this->db->prepare("
+            SELECT * FROM client
+            WHERE nom    LIKE :q
+               OR prenom LIKE :q
+        ");
+        $stmt->execute(['q' => $like]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

@@ -10,14 +10,12 @@ class CategorieController {
         $this->categorieModel = new Categorie();
     }
 
-    /** GET /categorie */
     public function index(): void {
         $cats = $this->categorieModel->getAll();
         header('Content-Type: application/json');
         echo json_encode($cats);
     }
 
-    /** GET /categorie/{id} */
     public function show(int $id): void {
         $cat = $this->categorieModel->getById($id);
         if (!$cat) {
@@ -29,7 +27,6 @@ class CategorieController {
         echo json_encode($cat);
     }
 
-    /** POST /categorie */
     public function store(): void {
         $data = json_decode(file_get_contents('php://input'), true);
         if (empty($data['nom'])) {
