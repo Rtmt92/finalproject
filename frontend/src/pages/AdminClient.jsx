@@ -51,7 +51,7 @@ const AdminClient = () => {
 
   return (
     <div className="admin-client-page">
-      <h2 className="page-title">Tous les clients</h2>
+      <h2 className="page-title">Tous les clients </h2>
       {clients.map((client) => (
         <ClientBanner
           key={client.id_client}
