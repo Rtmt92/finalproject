@@ -11,7 +11,7 @@ const ProductBanner = ({
   id,
   etat,
   quantite,
-  clickable = true, // activé par défaut
+  clickable = true, 
 }) => {
   const navigate = useNavigate();
 

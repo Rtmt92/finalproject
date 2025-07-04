@@ -7,7 +7,7 @@ set -euo pipefail
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-KEY="$HOME/.ssh/id_rsa"   # ← Assurez-vous que c’est bien votre clé privée
+KEY="$HOME/.ssh/id_rsa"   # ← votre clé SSH locale
 
 echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
 
@@ -25,49 +25,44 @@ rsync -az --delete \
 ########################
 # 3) GÉNÉRATION + EXÉCUTION DU SCRIPT À DISTANCE
 ########################
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash -s << 'EOF'
-cat > /tmp/deploy_full.sh << 'SCRIPT'
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash -s << 'EOF_REMOTE'
 #!/usr/bin/env bash
 set -euo pipefail
 
 DEST="/var/www/dejavu"
 DB="dejavu"
 
-echo "-> Recreate database"
-sudo mysql -e "DROP DATABASE IF EXISTS $DB; CREATE DATABASE $DB;"
+echo "-> Recréation de la base $DB"
+sudo mysql -e "DROP DATABASE IF EXISTS \`$DB\`; CREATE DATABASE \`$DB\`;"
 
-echo "-> Import SQL dump"
-SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
-if [ -f "\$SQL_FILE" ]; then
+echo "-> Import du dump SQL"
+SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1 || true)
+if [ -n "\$SQL_FILE" ]; then
   sudo mysql "\$DB" < "\$SQL_FILE"
 else
-  echo "⚠️ No SQL dump found in \$DEST"
+  echo "⚠️ Aucun dump trouvé dans \$DEST"
 fi
 
-echo "-> Install PHP dependencies"
+echo "-> Installation des dépendances PHP"
 cd "\$DEST/backend"
 sudo composer install --no-dev --optimize-autoloader
 
-echo "-> Build frontend"
+echo "-> Build du front-end"
 cd "\$DEST/frontend"
 sudo npm ci
 sudo npm run build
 
-echo "-> Deploy static files"
+echo "-> Déploiement des fichiers statiques"
 sudo mkdir -p /var/www/html
 sudo rm -rf /var/www/html/*
 sudo cp -r build/* /var/www/html/
 
-echo "-> Set permissions"
+echo "-> Ajustement des permissions"
 sudo chown -R www-data:www-data /var/www/html
 sudo chmod -R 755 /var/www/html
 
-echo "-> Restart nginx"
+echo "-> Redémarrage de Nginx"
 sudo systemctl restart nginx
 
-echo "✅ Deployment complete!"
-SCRIPT
-
-chmod +x /tmp/deploy_full.sh
-sudo /tmp/deploy_full.sh
-EOF
+echo "✅ Déploiement terminé !"
+EOF_REMOTE
