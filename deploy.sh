@@ -1,20 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-########################
-# 1) CONFIGURATION
-########################
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-KEY="$HOME/Downloads/DejaVu_key.pem"   # ← Chemin vers ta clé PEM
-DB_NAME="dejavu"
+KEY="$HOME/Downloads/DejaVu_key.pem"
 
-echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
+echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
 
-########################
-# 2) RSYNC DU PROJET
-########################
+# 1) Rsync
 rsync -az --delete \
   --exclude 'node_modules' \
   --exclude 'vendor' \
@@ -24,58 +18,63 @@ rsync -az --delete \
   -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
   ./ "$USER@$HOST:$DEST"
 
-########################
-# 3) SCRIPT DISTANT
-########################
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash -s << 'REMOTE_EOF'
+# 2) Copie et exécution du script complet à distance
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << 'EOF'
+# Sauvegarde l'ancien script si présent
+sudo mv /tmp/deploy_full.sh /tmp/deploy_full.sh.bak 2>/dev/null || true
+
+# Écrit le nouveau script
+cat > /tmp/deploy_full.sh << 'SCRIPT'
+#!/usr/bin/env bash
 set -euo pipefail
 
 DEST="/var/www/dejavu"
 DB="dejavu"
 
-echo "→ (Re)création de la base '$DB'"
-sudo mysql -e "DROP DATABASE IF EXISTS \`${DB}\`; CREATE DATABASE \`${DB}\`;"
+echo "→ (Re)création de la BDD"
+/usr/bin/mysql -e "DROP DATABASE IF EXISTS \\\`${DB}\\\`; CREATE DATABASE \\\`${DB}\\\`;"
 
-# Import du dump
-if sql=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1); then
-  echo "→ Import depuis \$sql"
-  sudo mysql "\$DB" < "\$sql"
+SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
+if [ -f "\$SQL_FILE" ]; then
+  echo "→ Import du dump"
+/usr/bin/mysql "\$DB" < "\$SQL_FILE"
 else
-  echo "❌ Aucun .sql dans \$DEST"
+  echo "❌ Aucun .sql trouvé dans \$DEST"
 fi
 
-# Composer
+echo "→ Installation back-end (Composer)"
 if ! command -v composer &>/dev/null; then
-  echo "→ Installation de Composer"
   sudo apt-get update
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y composer
 fi
-
-# Node.js / npm
-if ! command -v npm &>/dev/null; then
-  echo "→ Installation Node.js & npm"
-  sudo apt-get update
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
-fi
-
-echo "→ Back-end PHP"
 cd "\$DEST/backend"
 composer install --no-dev --optimize-autoloader
 
-echo "→ Front-end React"
+echo "→ Build front-end (npm)"
+if ! command -v npm &>/dev/null; then
+  sudo apt-get update
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
+fi
 cd "\$DEST/frontend"
 npm ci
 npm run build
 
-echo "→ Déploiement statique sous /var/www/html"
+echo "→ Déploiement des fichiers statiques"
 sudo mkdir -p /var/www/html
 sudo rm -rf /var/www/html/*
 sudo cp -r build/* /var/www/html/
 
-echo "→ Permissions & reload nginx"
+echo "→ Permissions"
 sudo chown -R www-data:www-data /var/www/html
 sudo chmod -R 755 /var/www/html
+
+echo "→ Redémarrage de Nginx"
 sudo systemctl restart nginx
 
-echo "✅ Déploiement terminé !"
-REMOTE_EOF
+echo "✅ Déploiement complet terminé !"
+SCRIPT
+
+# Rendre exécutable et lancer
+sudo chmod +x /tmp/deploy_full.sh
+sudo /tmp/deploy_full.sh
+EOF
