@@ -1,4 +1,5 @@
 name: CD
+name: Déploiement DejaVu sur Azure
 
 on:
   push:
@@ -6,31 +7,73 @@ on:
       - main
 
 jobs:
+  build:
+    name: 🚧 Build & Publish Artifacts
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1) Récup du code
+      - name: Checkout du dépôt
+        uses: actions/checkout@v4
       - name: Cloner le dépôt
         uses: actions/checkout@v3
 
+      # 2) Build backend (composer install + zip)
+      - name: Setup PHP & Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Installer les dépendances Backend
       - name: Installer les dépendances SSH et rsync
         run: |
+          cd backend
+          composer install --no-dev --optimize-autoloader
+      - name: Archiver le Backend
           sudo apt-get update
           sudo apt-get install -y rsync openssh-client
 
       - name: Ajouter la clé SSH
         run: |
+          cd backend
+          zip -r ../backend-artifact.zip ./*
+      - name: Publier l’artefact Backend
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-build
+          path: backend-artifact.zip
           mkdir -p ~/.ssh
           echo "${{ secrets.AZURE_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
+      # 3) Build frontend (npm ci + build + zip)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Installer les dépendances Frontend
       - name: Ajouter l’hôte Azure à known_hosts
         run: |
+          cd frontend
+          npm ci
+      - name: Builder le Frontend
           ssh-keyscan -H "${{ secrets.AZURE_VM_IP }}" >> ~/.ssh/known_hosts
 
       - name: Lancer le script de déploiement
         env:
+          CI: false
+        run: |
+          cd frontend
+          npm run build
+      - name: Archiver le Build Frontend
           MYSQL_ROOT_PWD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: |
+          cd frontend
+          zip -r ../frontend-artifact.zip build
+      - name: Publier l’artefact Frontend
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build
+          path: frontend-artifact.zip
           bash deploy.sh
