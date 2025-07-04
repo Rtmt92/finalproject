@@ -7,7 +7,7 @@ set -euo pipefail
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-KEY="$HOME/Downloads/DejaVu_key.pem"    # ← Vérifiez bien ce chemin
+KEY="$HOME/Downloads/DejaVu_key.pem"    # ← Chemin vers votre PEM
 DB_NAME="dejavu"
 DB_USER="root"
 DB_PASS="admin"
@@ -39,7 +39,7 @@ DB_NAME="dejavu"
 DB_USER="root"
 DB_PASS="admin"
 
-# 1) Installer MySQL si nécessaire
+# 1) Installer MySQL si besoin
 if ! command -v mysql &>/dev/null; then
   sudo apt-get update
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
@@ -49,18 +49,14 @@ fi
 sudo systemctl enable --now mysql
 
 # 3) (Re)création de la base & de l’utilisateur
-SQL_CMD="
-DROP DATABASE IF EXISTS \`${DB_NAME}\`;
-CREATE DATABASE \`${DB_NAME}\`;
-CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED WITH mysql_native_password BY '${DB_PASS}';
-GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';
+sudo mysql <<EOF_SQL
+DROP DATABASE IF EXISTS \`$DB_NAME\`;
+CREATE DATABASE \`$DB_NAME\`;
+CREATE USER IF NOT EXISTS '$DB_USER'@'localhost'
+  IDENTIFIED WITH mysql_native_password BY '$DB_PASS';
+GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';
 FLUSH PRIVILEGES;
-"
-
-# **ATTENTION** here-doc non protégé pour expansion de $SQL_CMD
-sudo mysql <<SQL
-$SQL_CMD
-SQL
+EOF_SQL
 
 # 4) Import du dump SQL
 SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
@@ -104,7 +100,7 @@ sudo systemctl restart nginx
 echo "✅ Déploiement terminé !"
 SCRIPT
 
-# rendre le script exécutable
+# Rendre exécutable
 sudo chmod +x /tmp/deploy_remote.sh
 EOF
 
