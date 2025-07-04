@@ -7,7 +7,7 @@ set -euo pipefail
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-KEY="$HOME/Downloads/DejaVu_key.pem"
+KEY="$HOME/Downloads/DejaVu_key.pem"   # ← Chemin vers ta clé PEM
 DB_NAME="dejavu"
 
 echo "🚀 Déploiement vers $USER@$HOST:$DEST …"
@@ -25,65 +25,67 @@ rsync -az --delete \
   ./ "$USER@$HOST:$DEST"
 
 ########################
-# 3) SCRIPT DISTANT
+# 3) GÉNÉRATION + EXECUTION DU SCRIPT DISTANT
 ########################
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << 'EOF'
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash -s << 'REMOTE_EOF'
 set -euo pipefail
 
 DEST="/var/www/dejavu"
 DB_NAME="dejavu"
 
-# a) Vérifier si la DB existe déjà
-DB_EXISTS=$(sudo mysql -sNe "SHOW DATABASES LIKE '$DB_NAME';")
-if [ -z "$DB_EXISTS" ]; then
-  echo "• Base '$DB_NAME' absente : import complet"
-  # créer la base et importer
-  sudo mysql <<SQL
-CREATE DATABASE \`$DB_NAME\`;
-SQL
-  SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
-  [ -z "\$SQL_FILE" ] && { echo "❌ Aucun .sql trouvé dans \$DEST"; exit 1; }
-  sudo mysql "$DB_NAME" < "\$SQL_FILE"
+echo "→ Vérification de la base '$DB_NAME'…"
+# Vérifier si la base existe
+if sudo mysql -sNe "SHOW DATABASES LIKE '$DB_NAME';" | grep -q "^$DB_NAME\$"; then
+  echo "• Base existante, import des données seulement"
 else
-  echo "• Base '$DB_NAME' déjà présente, on ne modifie pas le schéma"
-  # optionnel : ré-import partiel ou skip
-  SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
-  if [ -n "\$SQL_FILE" ]; then
-    echo "→ Import des données (tables existantes seront écrasées si définies en dump)…"
-    sudo mysql "$DB_NAME" < "\$SQL_FILE"
-  fi
+  echo "• Base absente, création + import complet"
+  sudo mysql -e "CREATE DATABASE \`$DB_NAME\`;"
 fi
 
-# b) Installer les dépendances PHP
-if ! command -v composer &> /dev/null; then
+# Import du dump SQL si présent
+SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1 || true)
+if [ -n "\$SQL_FILE" ]; then
+  echo "→ Import depuis \$SQL_FILE"
+  sudo mysql "$DB_NAME" < "\$SQL_FILE"
+else
+  echo "❌ Aucun fichier .sql trouvé dans \$DEST"
+fi
+
+# Installer Composer si manquant
+if ! command -v composer >/dev/null 2>&1; then
+  echo "→ Installation de Composer"
   sudo apt-get update
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y composer
 fi
 
-# c) Installer Node.js + npm si besoin
-if ! command -v npm &> /dev/null; then
+# Installer Node.js & npm si manquant
+if ! command -v npm >/dev/null 2>&1; then
+  echo "→ Installation de Node.js et npm"
   sudo apt-get update
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
 fi
 
-# d) Back-end PHP
-cd "$DEST/backend"
+# Back-end : dépendances PHP
+echo "→ Installation back-end"
+cd "\$DEST/backend"
 composer install --no-dev --optimize-autoloader
 
-# e) Front-end React
-cd "$DEST/frontend"
+# Front-end : build React
+echo "→ Build front-end"
+cd "\$DEST/frontend"
 npm ci
 npm run build
 
-# f) Déployer les assets statiques
+# Déploiement statique
+echo "→ Déploiement sous /var/www/html"
 sudo mkdir -p /var/www/html
 sudo rm -rf /var/www/html/*
 sudo cp -r build/* /var/www/html/
 
-# g) Permissions & restart
+# Permissions et reload Nginx
 sudo chown -R www-data:www-data /var/www/html
 sudo chmod -R 755 /var/www/html
 sudo systemctl restart nginx
 
 echo "✅ Déploiement terminé !"
-EOF
+REMOTE_EOF
