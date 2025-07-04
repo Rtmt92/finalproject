@@ -9,7 +9,7 @@ HOST="4.233.136.179"
 DEST="/var/www/dejavu"
 KEY="$HOME/Downloads/DejaVu_key.pem"    # ← Mettez ici le chemin vers votre clé PEM
 DB_NAME="dejavu"
-DB_USER="dejavu"
+DB_USER="root"
 DB_PASS="admin"
 
 echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
@@ -38,12 +38,6 @@ DEST="/var/www/dejavu"
 DB_NAME="dejavu"
 DB_USER="root"
 DB_PASS="admin"
-
-# 1) Installer MySQL si besoin
-if ! command -v mysql &> /dev/null; then
-  sudo apt-get update
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
-fi
 
 # 2) Démarrer et activer MySQL
 sudo systemctl enable --now mysql
