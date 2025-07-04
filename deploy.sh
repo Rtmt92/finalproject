@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+#################################################
+# 1) CONFIGURATION – A ADAPTER SELON TON ENV
+#################################################
 USER="azureuser"
-HOST="4.233.136.179"
+HOST="${HOST:-4.233.136.179}"      # on pourra surcharger en CI via $HOST
 DEST="/var/www/dejavu"
-KEY="$HOME/Downloads/DejaVu_key.pem"
+KEY="$HOME/.ssh/id_rsa"            # <— on passe sur id_rsa, pas DejaVu_key.pem
+DB="dejavu"
 
+#################################################
+# 2) RSYNC DES FICHIERS
+#################################################
 echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
-
-# 1) Rsync
 rsync -az --delete \
   --exclude 'node_modules' \
   --exclude 'vendor' \
@@ -18,63 +23,53 @@ rsync -az --delete \
   -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
   ./ "$USER@$HOST:$DEST"
 
-# 2) Copie et exécution du script complet à distance
-ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << 'EOF'
-# Sauvegarde l'ancien script si présent
-sudo mv /tmp/deploy_full.sh /tmp/deploy_full.sh.bak 2>/dev/null || true
-
-# Écrit le nouveau script
-cat > /tmp/deploy_full.sh << 'SCRIPT'
-#!/usr/bin/env bash
+#################################################
+# 3) EXÉCUTION À DISTANCE
+#################################################
+ssh -i "$KEY" -o StrictHostKeyChecking=no \
+    "$USER@$HOST" sudo bash -s << 'EOF'
 set -euo pipefail
 
 DEST="/var/www/dejavu"
 DB="dejavu"
 
-echo "→ (Re)création de la BDD"
-/usr/bin/mysql -e "DROP DATABASE IF EXISTS \\\`${DB}\\\`; CREATE DATABASE \\\`${DB}\\\`;"
+echo "→ (Re)création de la base '$DB'"
+mysql -e "DROP DATABASE IF EXISTS \\\`${DB}\\\`; CREATE DATABASE \\\`${DB}\\\`;"
 
-SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1)
-if [ -f "\$SQL_FILE" ]; then
-  echo "→ Import du dump"
-/usr/bin/mysql "\$DB" < "\$SQL_FILE"
+SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1 || true)
+if [ -n "\$SQL_FILE" ]; then
+  echo "→ Import \$SQL_FILE"
+  mysql "\$DB" < "\$SQL_FILE"
 else
-  echo "❌ Aucun .sql trouvé dans \$DEST"
+  echo "⚠️ Pas de dump SQL trouvé, j'ignore l'import"
 fi
 
-echo "→ Installation back-end (Composer)"
+echo "→ Composer (backend)"
 if ! command -v composer &>/dev/null; then
-  sudo apt-get update
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y composer
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y composer
 fi
 cd "\$DEST/backend"
 composer install --no-dev --optimize-autoloader
 
-echo "→ Build front-end (npm)"
+echo "→ npm (frontend)"
 if ! command -v npm &>/dev/null; then
-  sudo apt-get update
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
 fi
 cd "\$DEST/frontend"
 npm ci
 npm run build
 
-echo "→ Déploiement des fichiers statiques"
-sudo mkdir -p /var/www/html
-sudo rm -rf /var/www/html/*
-sudo cp -r build/* /var/www/html/
+echo "→ Déploiement statique"
+mkdir -p /var/www/html
+rm -rf /var/www/html/*
+cp -r build/* /var/www/html/
 
-echo "→ Permissions"
-sudo chown -R www-data:www-data /var/www/html
-sudo chmod -R 755 /var/www/html
+echo "→ Permissions & reload"
+chown -R www-data:www-data /var/www/html
+chmod -R 755 /var/www/html
+systemctl restart nginx
 
-echo "→ Redémarrage de Nginx"
-sudo systemctl restart nginx
-
-echo "✅ Déploiement complet terminé !"
-SCRIPT
-
-# Rendre exécutable et lancer
-sudo chmod +x /tmp/deploy_full.sh
-sudo /tmp/deploy_full.sh
+echo "✅ Déploiement terminé !"
 EOF

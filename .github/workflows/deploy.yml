@@ -13,7 +13,7 @@ jobs:
       - name: Cloner le dépôt
         uses: actions/checkout@v3
 
-      - name: Installer les dépendances SSH et rsync
+      - name: Installer rsync & ssh
         run: |
           sudo apt-get update
           sudo apt-get install -y rsync openssh-client
@@ -25,12 +25,9 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
 
       - name: Ajouter l’hôte Azure à known_hosts
-        run: |
-          ssh-keyscan -H "${{ secrets.AZURE_VM_IP }}" >> ~/.ssh/known_hosts
+        run: ssh-keyscan -H "${{ secrets.AZURE_VM_IP }}" >> ~/.ssh/known_hosts
 
-      - name: Lancer le script de déploiement
+      - name: Déployer sur Azure
         env:
-          MYSQL_ROOT_PWD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-        run: |
-          bash deploy.sh
+          HOST: ${{ secrets.AZURE_VM_IP }}    # pour surcharger la valeur par défaut
+        run: bash deploy.sh
