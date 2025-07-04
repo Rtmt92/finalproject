@@ -25,64 +25,54 @@ rsync -az --delete \
   ./ "$USER@$HOST:$DEST"
 
 ########################
-# 3) GÉNÉRATION + EXECUTION DU SCRIPT DISTANT
+# 3) SCRIPT DISTANT
 ########################
 ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash -s << 'REMOTE_EOF'
 set -euo pipefail
 
 DEST="/var/www/dejavu"
-DB_NAME="dejavu"
+DB="dejavu"
 
-echo "→ Vérification de la base '$DB_NAME'…"
-# Vérifier si la base existe
-if sudo mysql -sNe "SHOW DATABASES LIKE '$DB_NAME';" | grep -q "^$DB_NAME\$"; then
-  echo "• Base existante, import des données seulement"
+echo "→ (Re)création de la base '$DB'"
+sudo mysql -e "DROP DATABASE IF EXISTS \`${DB}\`; CREATE DATABASE \`${DB}\`;"
+
+# Import du dump
+if sql=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1); then
+  echo "→ Import depuis \$sql"
+  sudo mysql "\$DB" < "\$sql"
 else
-  echo "• Base absente, création + import complet"
-  sudo mysql -e "CREATE DATABASE \`$DB_NAME\`;"
+  echo "❌ Aucun .sql dans \$DEST"
 fi
 
-# Import du dump SQL si présent
-SQL_FILE=\$(ls "\$DEST"/*.sql 2>/dev/null | head -n1 || true)
-if [ -n "\$SQL_FILE" ]; then
-  echo "→ Import depuis \$SQL_FILE"
-  sudo mysql "$DB_NAME" < "\$SQL_FILE"
-else
-  echo "❌ Aucun fichier .sql trouvé dans \$DEST"
-fi
-
-# Installer Composer si manquant
-if ! command -v composer >/dev/null 2>&1; then
+# Composer
+if ! command -v composer &>/dev/null; then
   echo "→ Installation de Composer"
   sudo apt-get update
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y composer
 fi
 
-# Installer Node.js & npm si manquant
-if ! command -v npm >/dev/null 2>&1; then
-  echo "→ Installation de Node.js et npm"
+# Node.js / npm
+if ! command -v npm &>/dev/null; then
+  echo "→ Installation Node.js & npm"
   sudo apt-get update
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs npm
 fi
 
-# Back-end : dépendances PHP
-echo "→ Installation back-end"
+echo "→ Back-end PHP"
 cd "\$DEST/backend"
 composer install --no-dev --optimize-autoloader
 
-# Front-end : build React
-echo "→ Build front-end"
+echo "→ Front-end React"
 cd "\$DEST/frontend"
 npm ci
 npm run build
 
-# Déploiement statique
-echo "→ Déploiement sous /var/www/html"
+echo "→ Déploiement statique sous /var/www/html"
 sudo mkdir -p /var/www/html
 sudo rm -rf /var/www/html/*
 sudo cp -r build/* /var/www/html/
 
-# Permissions et reload Nginx
+echo "→ Permissions & reload nginx"
 sudo chown -R www-data:www-data /var/www/html
 sudo chmod -R 755 /var/www/html
 sudo systemctl restart nginx
