@@ -9,7 +9,6 @@ export default function ProductCard({
   image,
   prix,
   etat,
-  quantite
 }) {
   return (
     <Link to={`/product/${id}`} className="product-card-link">
@@ -29,7 +28,6 @@ export default function ProductCard({
         <div className="product-info">
           <p className="product-price">Prix : {prix} €</p>
           <p className="product-etat">État : {etat || 'N/A'}</p>
-          <p className="product-quantite">Quantité : {quantite ?? 'N/A'}</p>
         </div>
       </div>
     </Link>

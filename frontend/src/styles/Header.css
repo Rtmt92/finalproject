@@ -77,4 +77,66 @@
     color: white;
     cursor: pointer;
   }
+
+/* Burger toggle (menu icon) */
+.burger-toggle {
+  display: none;
+  cursor: pointer;
+}
+
+/* Menu overlay */
+.burger-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 15, 15, 0.98);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  color: white;
+}
+
+.burger-menu-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.burger-menu-header svg {
+  cursor: pointer;
+  color: white;
+}
+
+.burger-menu-content {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.burger-menu-content svg {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.burger-menu-content svg:hover {
+  transform: scale(1.1);
+}
+
+/* Responsive rules */
+@media (max-width: 768px) {
+  .desktop-icons {
+    display: none;
+  }
+
+  .burger-toggle {
+    display: block;
+  }
+}
+
   
