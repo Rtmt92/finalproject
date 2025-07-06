@@ -1,31 +1,27 @@
 // src/pages/AdminClient.jsx
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import ClientBanner from "../compenents/ClientBanner"; // Vérifie bien le chemin
+import ClientBanner from "../compenents/ClientBanner";
 import "../styles/AdminClient.css";
-
-const API_BASE = "http://localhost:3000";
+import API_BASE_URL from "../config";
 
 const AdminClient = () => {
   const [clients, setClients] = useState([]);
   const { search: locationSearch } = useLocation();
 
-  // On extrait ?search=...
   const query = new URLSearchParams(locationSearch).get("search") || "";
 
   useEffect(() => {
     const params = new URLSearchParams();
     if (query) params.set("search", query);
 
-    fetch(`${API_BASE}/client?${params.toString()}`, {
+    fetch(`${API_BASE_URL}/client?${params.toString()}`, {
       headers: {
-        // Si votre API nécessite un token pour lister les clients :
         // "Authorization": `Bearer ${localStorage.getItem("token")}`
       }
     })
       .then((res) => res.json())
       .then((data) => {
-        // adapter si votre API renvoie { clients: [...] } ou un simple tableau
         setClients(Array.isArray(data) ? data : data.clients || []);
       })
       .catch((err) => console.error("Erreur fetch clients :", err));
@@ -34,10 +30,9 @@ const AdminClient = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Supprimer ce client ?")) return;
 
-    const res = await fetch(`${API_BASE}/client/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/client/${id}`, {
       method: "DELETE",
       headers: {
-        // idem, si nécessaire :
         // "Authorization": `Bearer ${localStorage.getItem("token")}`
       }
     });

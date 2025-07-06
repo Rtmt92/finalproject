@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import API_BASE_URL from '../config'; // 🔁 Import de l'URL dynamique
 import '../styles/log.css';
 
 export default function Login() {
@@ -7,16 +8,16 @@ export default function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     try {
-      const res = await fetch('/api/login', {
+      const res = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -30,7 +31,6 @@ export default function Login() {
 
       if (body.role === 'admin') navigate('/admin');
       else navigate('/home');
-
     } catch (err) {
       console.error('Erreur login :', err);
       setError(err.message);
@@ -45,7 +45,7 @@ export default function Login() {
         <input
           type="email"
           name="email"
-          placeholder="Nom"
+          placeholder="Email"
           value={form.email}
           onChange={handleChange}
           required
@@ -60,7 +60,7 @@ export default function Login() {
         />
 
         <div className="login-link">
-          Tu n’as pas encore de compte ? <Link to="/register">inscrit toi</Link>
+          Tu n’as pas encore de compte ? <Link to="/register">inscris-toi</Link>
         </div>
 
         {error && <div className="login-error">{error}</div>}

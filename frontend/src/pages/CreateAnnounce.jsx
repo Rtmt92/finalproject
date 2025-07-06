@@ -1,5 +1,7 @@
+// src/pages/CreateAnnounce.jsx
 import React, { useState, useEffect } from 'react';
 import '../styles/CreateAnnounce.css';
+import API_BASE_URL from '../config';
 
 const CreateAnnounce = () => {
   const [formData, setFormData] = useState({
@@ -12,33 +14,30 @@ const CreateAnnounce = () => {
     images: [],
   });
 
-  const [categories, setCategories] = useState([]); // ← catégories dynamiques
+  const [categories, setCategories] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const etatOptions = ['parfait état', 'très bon état', 'correct'];
 
-useEffect(() => {
-  fetch('http://localhost:8000/categorie')
-    .then(res => res.json())
-    .then(data => {
-      console.log("Données reçues:", data); // ← ajoute cette ligne
-
-      if (Array.isArray(data)) {
-        setCategories(data);
-      } else if (Array.isArray(data.categories)) {
-        setCategories(data.categories);
-      } else {
-        console.error("Données inattendues :", data);
-        setCategories([]); // fallback vide
-      }
-    })
-    .catch(err => {
-      console.error("Erreur lors du chargement des catégories", err);
-      setCategories([]); // fallback vide en cas d'erreur
-    });
-}, []);
-
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/categorie`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCategories(data);
+        } else if (Array.isArray(data.categories)) {
+          setCategories(data.categories);
+        } else {
+          console.error("Format de données inattendu :", data);
+          setCategories([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Erreur chargement catégories :", err);
+        setCategories([]);
+      });
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -69,8 +68,8 @@ useEffect(() => {
   };
 
   const handleRemoveImage = (indexToRemove) => {
-    const updatedPreviews = imagePreviews.filter((_, index) => index !== indexToRemove);
-    const updatedFiles = formData.images.filter((_, index) => index !== indexToRemove);
+    const updatedPreviews = imagePreviews.filter((_, i) => i !== indexToRemove);
+    const updatedFiles = formData.images.filter((_, i) => i !== indexToRemove);
 
     setImagePreviews(updatedPreviews);
     setFormData((prev) => ({ ...prev, images: updatedFiles }));
@@ -90,7 +89,7 @@ useEffect(() => {
     };
 
     try {
-      const res = await fetch('http://localhost:8000/api/produit', {
+      const res = await fetch(`${API_BASE_URL}/api/produit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -116,7 +115,7 @@ useEffect(() => {
         formImages.append('images[]', img);
       });
 
-      const resUpload = await fetch('http://localhost:8000/api/upload-images', {
+      const resUpload = await fetch(`${API_BASE_URL}/api/upload-images`, {
         method: 'POST',
         body: formImages,
       });

@@ -1,6 +1,8 @@
+// src/pages/EditClient.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import '../styles/EditClient.css'; 
+import API_BASE_URL from '../config'; // ← ajoute cette ligne
 
 const EditClient = () => {
   const { id } = useParams();
@@ -15,7 +17,7 @@ const EditClient = () => {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:3000/client/${id}`)
+    fetch(`${API_BASE_URL}/client/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setForm({
@@ -34,7 +36,7 @@ const EditClient = () => {
   };
 
   const handleSubmit = async () => {
-    const res = await fetch(`http://localhost:3000/client/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/client/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
@@ -52,7 +54,7 @@ const EditClient = () => {
     const confirmation = window.confirm("Supprimer définitivement ce client ?");
     if (!confirmation) return;
 
-    const res = await fetch(`http://localhost:3000/client/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/client/${id}`, {
       method: "DELETE",
     });
 

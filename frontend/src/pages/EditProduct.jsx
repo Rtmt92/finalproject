@@ -2,8 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../styles/EditProduct.css";
-
-const API_BASE = "http://localhost:8000";
+import API_BASE_URL from "../config"; // ← ajout pour adaptabilité local/déploiement
 
 export default function EditProduct() {
   const { id } = useParams();
@@ -14,7 +13,7 @@ export default function EditProduct() {
     nom_produit: "",
     prix: "",
     description: "",
-    id_categorie: "",     // catégorie sélectionnée (ou vide)
+    id_categorie: "",
     quantite: "",
     etat: "très bon état",
   });
@@ -25,12 +24,12 @@ export default function EditProduct() {
   const normalizeUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http")) return url;
-    return `${API_BASE}/${url.replace(/^\/+/, "")}`;
+    return `${API_BASE_URL}/${url.replace(/^\/+/, "")}`;
   };
 
   useEffect(() => {
-    // 1) Charger le produit et ses images
-    fetch(`${API_BASE}/api/produit/${id}`)
+    // Charger produit
+    fetch(`${API_BASE_URL}/api/produit/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setForm({
@@ -52,16 +51,16 @@ export default function EditProduct() {
       })
       .catch(console.error);
 
-    // 2) Charger les catégories
-    fetch(`${API_BASE}/categorie`)
+    // Charger catégories
+    fetch(`${API_BASE_URL}/categorie`)
       .then((res) => {
-        if (!res.ok) throw new Error("Impossible de charger les catégories");
+        if (!res.ok) throw new Error("Échec chargement catégories");
         return res.json();
       })
       .then((data) => setCategories(data))
       .catch((err) => {
         console.error(err);
-        alert("Échec du chargement des catégories");
+        alert("Impossible de charger les catégories");
       });
   }, [id]);
 
@@ -69,40 +68,34 @@ export default function EditProduct() {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleUpdate = async () => {
-    const res = await fetch(`${API_BASE}/api/produit/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/produit/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
-    if (!res.ok) {
-      alert("Erreur lors de la mise à jour");
-      return;
-    }
+    if (!res.ok) return alert("Erreur lors de la mise à jour");
+
     alert("Produit mis à jour !");
     navigate("/admin");
   };
 
   const handleDeleteImage = async (imageId) => {
-    const res = await fetch(
-      `${API_BASE}/api/produit/${id}/image/${imageId}`,
-      { method: "DELETE" }
-    );
-    if (!res.ok) {
-      alert("Erreur suppression image");
-      return;
-    }
+    const res = await fetch(`${API_BASE_URL}/api/produit/${id}/image/${imageId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) return alert("Erreur suppression image");
+
     setImages((prev) => prev.filter((img) => img.id_image !== imageId));
   };
 
   const handleDeleteProduct = async () => {
     if (!window.confirm("Supprimer ce produit ?")) return;
-    const res = await fetch(`${API_BASE}/api/produit/${id}`, {
+
+    const res = await fetch(`${API_BASE_URL}/api/produit/${id}`, {
       method: "DELETE",
     });
-    if (!res.ok) {
-      alert("Erreur lors de la suppression");
-      return;
-    }
+    if (!res.ok) return alert("Erreur suppression produit");
+
     alert("Produit supprimé !");
     navigate("/admin");
   };
@@ -118,7 +111,7 @@ export default function EditProduct() {
       const formData = new FormData();
       formData.append("image", file);
 
-      fetch(`${API_BASE}/api/produit/${id}/image`, {
+      fetch(`${API_BASE_URL}/api/produit/${id}/image`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -126,7 +119,9 @@ export default function EditProduct() {
         .then(async (res) => {
           const text = await res.text();
           let json = null;
-          try { json = JSON.parse(text); } catch {}
+          try {
+            json = JSON.parse(text);
+          } catch {}
           if (!res.ok) {
             throw new Error((json && json.error) || res.statusText);
           }
@@ -136,9 +131,7 @@ export default function EditProduct() {
         .then((url) => {
           const abs = normalizeUrl(url);
           setImages((prev) =>
-            prev
-              .filter((img) => !img.preview)
-              .concat([{ id_image: null, url: abs }])
+            prev.filter((img) => !img.preview).concat([{ id_image: null, url: abs }])
           );
         })
         .catch((err) => {
@@ -169,13 +162,11 @@ export default function EditProduct() {
             value={form.prix}
             onChange={handleChange}
           />
-
           <select
             name="id_categorie"
             value={form.id_categorie}
             onChange={handleChange}
           >
-            {/* Option “pas de catégorie” */}
             <option value="">Aucune catégorie</option>
             {categories.map((cat) => (
               <option key={cat.id_categorie} value={cat.id_categorie}>
@@ -244,18 +235,10 @@ export default function EditProduct() {
           onChange={handleFilesChange}
         />
 
-        <button
-          type="button"
-          className="submit-btn"
-          onClick={handleUpdate}
-        >
+        <button type="button" className="submit-btn" onClick={handleUpdate}>
           Valider
         </button>
-        <button
-          type="button"
-          className="delete-btn"
-          onClick={handleDeleteProduct}
-        >
+        <button type="button" className="delete-btn" onClick={handleDeleteProduct}>
           SUPPRIMER L'ANNONCE
         </button>
       </form>

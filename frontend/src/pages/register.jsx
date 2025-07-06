@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/log.css';
 import { isValidPassword } from '../utils/passwordValidator';
-
+import API_BASE_URL from '../config'; // ✅ base URL configurable
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -42,18 +42,25 @@ export default function Register() {
       return;
     }
 
-    const res = await fetch('/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
 
-    const body = await res.json();
-    if (res.ok) {
-      localStorage.setItem('token', body.token);
-      navigate('/');
-    } else {
-      setError(body.error || "Une erreur est survenue.");
+      const body = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('token', body.token);
+        localStorage.setItem('role', body.role || 'client');
+        navigate('/');
+      } else {
+        setError(body.error || "Une erreur est survenue.");
+      }
+    } catch (err) {
+      console.error("Erreur réseau :", err);
+      setError("Erreur réseau, impossible de joindre le serveur.");
     }
   };
 
@@ -77,7 +84,7 @@ export default function Register() {
         </div>
 
         <div className="login-link">
-          Tu es déjà un habitué ? <a href="/login">Connecte toi ici</a>
+          Tu es déjà un habitué ? <a href="/login">Connecte-toi ici</a>
         </div>
 
         {error && <p className="error">{error}</p>}

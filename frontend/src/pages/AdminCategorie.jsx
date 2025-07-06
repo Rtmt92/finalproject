@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../styles/adminCategorie.css";
+import API_BASE_URL from "../config";
 
 const AdminCategorie = () => {
   const [nom, setNom] = useState("");
@@ -8,7 +9,7 @@ const AdminCategorie = () => {
   const [modifNom, setModifNom] = useState("");
 
   const fetchCategories = () => {
-    fetch("http://localhost:3000/categorie")
+    fetch(`${API_BASE_URL}/categorie`)
       .then((res) => res.json())
       .then((data) => setCategories(data));
   };
@@ -19,7 +20,7 @@ const AdminCategorie = () => {
 
   const handleAdd = async () => {
     if (!nom.trim()) return;
-    const res = await fetch("http://localhost:3000/categorie", {
+    const res = await fetch(`${API_BASE_URL}/categorie`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nom }),
@@ -32,7 +33,7 @@ const AdminCategorie = () => {
 
   const handleUpdate = async () => {
     if (!selectedId || !modifNom.trim()) return;
-    const res = await fetch(`http://localhost:3000/categorie/${selectedId}`, {
+    const res = await fetch(`${API_BASE_URL}/categorie/${selectedId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nom: modifNom }),
@@ -46,7 +47,7 @@ const AdminCategorie = () => {
 
   const handleDelete = async () => {
     if (!selectedId) return;
-    const res = await fetch(`http://localhost:3000/categorie/${selectedId}`, {
+    const res = await fetch(`${API_BASE_URL}/categorie/${selectedId}`, {
       method: "DELETE",
     });
     if (res.ok) {

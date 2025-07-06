@@ -2,6 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/ProductBanner.css";
+import API_BASE_URL from "../config";
 
 const ProductBanner = ({
   titre,
@@ -11,7 +12,7 @@ const ProductBanner = ({
   id,
   etat,
   quantite,
-  clickable = true, 
+  clickable = true,
 }) => {
   const navigate = useNavigate();
 
@@ -29,7 +30,7 @@ const ProductBanner = ({
     >
       <div className="banner-image">
         {image ? (
-          <img src={`http://localhost:8000/${image}`} alt={titre} />
+          <img src={`${API_BASE_URL}/${image}`} alt={titre} />
         ) : (
           <div className="no-image">Image</div>
         )}

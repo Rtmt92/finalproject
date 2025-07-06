@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../config";
 
 const CheckoutForm = ({ amount, clientId, panierId }) => {
   const stripe = useStripe();
@@ -20,7 +21,7 @@ const CheckoutForm = ({ amount, clientId, panierId }) => {
 
     try {
       // 1. Demander à backend de créer le paiement
-      const res = await fetch("http://localhost:3000/payment-intent", {
+      const res = await fetch(`${API_BASE_URL}/payment-intent`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount }),
@@ -43,7 +44,7 @@ const CheckoutForm = ({ amount, clientId, panierId }) => {
         alert("Paiement réussi !");
 
         // 3. Enregistrer la transaction
-        const save = await fetch("http://localhost:3000/enregistrer-transaction", {
+        const save = await fetch(`${API_BASE_URL}/enregistrer-transaction`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -62,7 +63,7 @@ const CheckoutForm = ({ amount, clientId, panierId }) => {
         console.log("Transaction enregistrée :", response);
 
         // 4. Vider le panier (produits + total)
-        await fetch(`http://localhost:3000/panier/${panierId}/vider`, {
+        await fetch(`${API_BASE_URL}/panier/${panierId}/vider`, {
           method: "DELETE",
           credentials: "include",
         });

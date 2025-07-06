@@ -1,8 +1,8 @@
-// src/pages/Profil.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ClientBanner from '../compenents/ClientBanner';
 import ProductBanner from '../compenents/ProductBanner';
+import API_BASE_URL from '../config'; // ✅ URL API centralisée
 import '../styles/Profil.css';
 
 export default function Profil() {
@@ -17,7 +17,7 @@ export default function Profil() {
   // Récupère les infos du client
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/me', {
+    fetch(`${API_BASE_URL}/api/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
@@ -28,15 +28,14 @@ export default function Profil() {
       .catch(() => navigate('/login'));
   }, [token, navigate]);
 
-  // Dès qu'on a le client, on refresh le panier
+  // Charge le panier une fois le client chargé
   useEffect(() => {
-    if (!client) return;
-    refreshPanier();
+    if (client) refreshPanier();
   }, [client]);
 
-  // Va chercher le panier (avec champ `image` pour chaque produit)
+  // Récupère le panier
   const refreshPanier = () => {
-    fetch('http://localhost:8000/panier', {
+    fetch(`${API_BASE_URL}/panier`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
@@ -52,13 +51,15 @@ export default function Profil() {
   // Supprimer un produit du panier
   const handleDeleteFromPanier = async (idProduit) => {
     if (!idPanier) return;
+
     const res = await fetch(
-      `http://localhost:8000/panier_produit/${idPanier}/${idProduit}`,
+      `${API_BASE_URL}/panier_produit/${idPanier}/${idProduit}`,
       {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       }
     );
+
     if (res.ok) refreshPanier();
     else alert("Erreur lors de la suppression.");
   };
@@ -66,22 +67,25 @@ export default function Profil() {
   // Supprimer le compte
   const handleDeleteAccount = async () => {
     if (!window.confirm("Supprimer votre compte ?")) return;
+
     const res = await fetch(
-      `http://localhost:8000/client/${client.id_client}`,
+      `${API_BASE_URL}/client/${client.id_client}`,
       {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       }
     );
+
     if (res.ok) navigate('/login');
     else alert("Erreur lors de la suppression.");
   };
 
   if (!client) return <div>Chargement...</div>;
 
-  // Éventuellement dédupliquer si plusieurs lignes pour même produit
+  // Supprimer les doublons (si même produit plusieurs fois)
   const produitsUniques = panierProduits.filter(
-    (prod, idx, arr) => idx === arr.findIndex(p => p.id_produit === prod.id_produit)
+    (prod, idx, arr) =>
+      idx === arr.findIndex(p => p.id_produit === prod.id_produit)
   );
 
   return (
@@ -94,17 +98,24 @@ export default function Profil() {
           <p>Votre panier est vide.</p>
         ) : (
           produitsUniques.map(prod => (
-            <ProductBanner
-              key={prod.id_produit}
-              id={prod.id_produit}
-              titre={prod.titre}
-              description={prod.description}
-              prix={prod.prix}
-              etat={prod.etat}
-              quantite={prod.quantite}
-              image={prod.image}              // <-- on passe directement `prod.image`
-              clickable={false}
-            />
+            <div key={prod.id_produit} className="panier-item">
+              <ProductBanner
+                id={prod.id_produit}
+                titre={prod.titre}
+                description={prod.description}
+                prix={prod.prix}
+                etat={prod.etat}
+                quantite={prod.quantite}
+                image={prod.image}
+                clickable={false}
+              />
+              <button
+                className="btn-supprimer"
+                onClick={() => handleDeleteFromPanier(prod.id_produit)}
+              >
+                ×
+              </button>
+            </div>
           ))
         )}
 
@@ -120,6 +131,7 @@ export default function Profil() {
         >
           Valider mon panier
         </button>
+
         <button
           className="btn-danger"
           onClick={handleDeleteAccount}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../config";
 import "../styles/ClientBanner.css";
 
 const ClientBanner = ({
@@ -38,7 +39,7 @@ const ClientBanner = ({
 
   useEffect(() => {
     if (!idFromProps && token) {
-      fetch("http://localhost:8000/api/me", {
+      fetch(`${API_BASE_URL}/api/me`, {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then((res) => res.json())
@@ -57,7 +58,7 @@ const ClientBanner = ({
       formData.append("photo", files[0]);
 
       try {
-        const res = await fetch("http://localhost:8000/upload-photo", {
+        const res = await fetch(`${API_BASE_URL}/upload-photo`, {
           method: "POST",
           body: formData,
         });
@@ -80,10 +81,9 @@ const ClientBanner = ({
     setLoading(true);
 
     try {
-      // Ne pas inclure le champ mot_de_passe vide par erreur
       const { mot_de_passe, ...infosSansMotDePasse } = form;
 
-      const resInfo = await fetch(`http://localhost:8000/client/${id}`, {
+      const resInfo = await fetch(`${API_BASE_URL}/client/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -99,7 +99,6 @@ const ClientBanner = ({
         return;
       }
 
-      // Changement de mot de passe uniquement si rempli
       if (passwordForm.ancien || passwordForm.nouveau || passwordForm.confirmation) {
         if (passwordForm.nouveau !== passwordForm.confirmation) {
           alert("Les mots de passe ne correspondent pas.");
@@ -107,7 +106,7 @@ const ClientBanner = ({
           return;
         }
 
-        const resPwd = await fetch(`http://localhost:8000/client/${id}/password`, {
+        const resPwd = await fetch(`${API_BASE_URL}/client/${id}/password`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -222,8 +221,6 @@ const ClientBanner = ({
       </div>
     </div>
   );
-
-
 };
 
 export default ClientBanner;

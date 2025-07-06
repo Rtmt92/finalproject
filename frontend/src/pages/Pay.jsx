@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import CheckoutForm from "../compenents/CheckoutForm";
+import API_BASE_URL from "../config"; // 🔁 URL centralisée
 import '../styles/pay.css';
 
 const stripePromise = loadStripe(
@@ -24,8 +25,8 @@ export default function Pay() {
       return;
     }
 
-    // Récupérer les infos utilisateur
-    fetch("http://localhost:8000/api/me", {
+    // 🔁 Appel API utilisateur
+    fetch(`${API_BASE_URL}/api/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
@@ -39,8 +40,8 @@ export default function Pay() {
         setClientId(null);
       });
 
-    // Récupérer le panier
-    fetch("http://localhost:8000/panier", {
+    // 🔁 Appel API panier
+    fetch(`${API_BASE_URL}/panier`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
@@ -58,7 +59,6 @@ export default function Pay() {
       });
   }, [navigate]);
 
-  // Si clientId ou panierId manquant, on empêche le rendu du formulaire
   const readyToPay = clientId && panierId && total > 0;
 
   return (
@@ -81,7 +81,7 @@ export default function Pay() {
           </Elements>
         ) : (
           <p style={{ color: "#fcb040", textAlign: "center" }}>
-            Impossible de lancer le paiement.<br/>
+            Impossible de lancer le paiement.<br />
             Vérifiez que vous êtes connecté et que votre panier n’est pas vide.
           </p>
         )}

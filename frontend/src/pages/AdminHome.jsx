@@ -1,42 +1,39 @@
+// src/pages/AdminHome.jsx
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import ProductBanner from "../compenents/ProductBanner";
 import "../styles/AdminHome.css";
-
-const API_BASE = "http://localhost:8000";
+import API_BASE_URL from "../config";
 
 export default function AdminHome() {
-  const [annonces, setAnnonces]     = useState([]);
+  const [annonces, setAnnonces] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [selectedCat,  setSelectedCat]  = useState("");
+  const [selectedCat, setSelectedCat] = useState("");
   const [selectedEtat, setSelectedEtat] = useState("");
-  const { search: locationSearch }  = useLocation();
+  const { search: locationSearch } = useLocation();
 
-  // On lit ?search=… dans l'URL
   const query = new URLSearchParams(locationSearch).get("search") || "";
 
-  // Charger les catégories au montage
   useEffect(() => {
-    fetch(`${API_BASE}/categorie`)
-      .then(res => res.json())
+    fetch(`${API_BASE_URL}/categorie`)
+      .then((res) => res.json())
       .then(setCategories)
-      .catch(err => console.error("Erreur chargement catégories :", err));
+      .catch((err) => console.error("Erreur chargement catégories :", err));
   }, []);
 
-  // Dès que selectedCat, selectedEtat ou query change → re-fetch
   useEffect(() => {
     const params = new URLSearchParams();
 
-    if (selectedCat)  params.set("categorie", selectedCat);
+    if (selectedCat) params.set("categorie", selectedCat);
     if (selectedEtat) params.set("etat", selectedEtat);
-    if (query)        params.set("q", query);
+    if (query) params.set("q", query);
 
-    const url = `${API_BASE}/api/produit?${params.toString()}`;
+    const url = `${API_BASE_URL}/api/produit?${params.toString()}`;
 
     fetch(url)
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(setAnnonces)
-      .catch(err => console.error("Erreur chargement produits :", err));
+      .catch((err) => console.error("Erreur chargement produits :", err));
   }, [selectedCat, selectedEtat, query]);
 
   return (
@@ -48,10 +45,10 @@ export default function AdminHome() {
           <select
             className="category-select"
             value={selectedCat}
-            onChange={e => setSelectedCat(e.target.value)}
+            onChange={(e) => setSelectedCat(e.target.value)}
           >
             <option value="">Toutes les catégories</option>
-            {categories.map(cat => (
+            {categories.map((cat) => (
               <option key={cat.id_categorie} value={cat.id_categorie}>
                 {cat.nom}
               </option>
@@ -61,7 +58,7 @@ export default function AdminHome() {
           <select
             className="etat-select"
             value={selectedEtat}
-            onChange={e => setSelectedEtat(e.target.value)}
+            onChange={(e) => setSelectedEtat(e.target.value)}
           >
             <option value="">Tous les états</option>
             <option value="parfait état">Parfait état</option>
@@ -71,7 +68,7 @@ export default function AdminHome() {
         </div>
 
         <div className="admin-content">
-          {annonces.map(a => (
+          {annonces.map((a) => (
             <ProductBanner
               key={a.id}
               id={a.id}

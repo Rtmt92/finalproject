@@ -1,9 +1,9 @@
+// src/pages/AllProducts.jsx
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import ProductCard from "../compenents/ProductCard";
 import "../styles/AllProducts.css";
-
-const API_BASE = "http://localhost:8000";
+import API_BASE_URL from "../config";
 
 export default function AllProducts() {
   const [products, setProducts] = useState([]);
@@ -16,9 +16,9 @@ export default function AllProducts() {
 
   const query = new URLSearchParams(locationSearch).get("search") || "";
 
-  // Récupérer les catégories au chargement
+  // Charger les catégories une fois
   useEffect(() => {
-    fetch(`${API_BASE}/categorie`)
+    fetch(`${API_BASE_URL}/categorie`)
       .then((res) => res.json())
       .then(setCategories)
       .catch(() => setCategories([]));
@@ -32,7 +32,7 @@ export default function AllProducts() {
     if (selectedEtat) params.set("etat", selectedEtat);
     if (query) params.set("q", query);
 
-    const url = `${API_BASE}/api/produit?${params.toString()}`;
+    const url = `${API_BASE_URL}/api/produit?${params.toString()}`;
     setLoading(true);
 
     fetch(url)
@@ -57,7 +57,7 @@ export default function AllProducts() {
   return (
     <main className="all-products-page">
       <div className="all-products-header">
-        <h2>Tout nos produits:</h2>
+        <h2>Tout nos produits :</h2>
         <div className="filters">
           <select value={selectedCat} onChange={(e) => setSelectedCat(e.target.value)}>
             <option value="">Toutes les catégories</option>

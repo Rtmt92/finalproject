@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/ProductCard.css';
+import API_BASE_URL from '../config';
 
 export default function ProductCard({
   id,
@@ -17,7 +18,7 @@ export default function ProductCard({
 
         {image ? (
           <img
-            src={image.startsWith('http') ? image : `http://localhost:8000/${image}`}
+            src={image.startsWith('http') ? image : `${API_BASE_URL}/${image}`}
             alt={titre}
             className="product-img"
           />
