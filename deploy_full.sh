@@ -22,16 +22,13 @@ else
   echo "✅ Fichier .env trouvé."
 fi
 
-echo "→ Ajustement des permissions pour azureuser sur $DEST…"
-sudo chown -R azureuser:azureuser "$DEST"
-
 echo "→ Installation des dépendances PHP (Composer)…"
 cd "$DEST/backend"
+sudo chown -R azureuser:azureuser "$DEST/backend"
 composer install --no-dev --optimize-autoloader
 
 echo "→ Vérification et création du fichier .htaccess si nécessaire…"
 HTACCESS_PATH="$DEST/backend/public/.htaccess"
-
 if [ ! -f "$HTACCESS_PATH" ]; then
   cat <<EOF | sudo tee "$HTACCESS_PATH" > /dev/null
 <IfModule mod_rewrite.c>
@@ -47,8 +44,12 @@ else
   echo "ℹ️ .htaccess déjà présent, aucune action."
 fi
 
+echo "→ Ajustement des permissions backend (www-data)…"
+sudo chown -R www-data:www-data "$DEST/backend"
+
 echo "→ Préparation du front-end React…"
 cd "$DEST/frontend"
+sudo chown -R azureuser:azureuser "$DEST/frontend"
 npm ci
 npm run build
 
@@ -61,10 +62,7 @@ echo "→ Ajustement des permissions /var/www/html…"
 sudo chown -R www-data:www-data /var/www/html
 sudo chmod -R 755 /var/www/html
 
-echo "→ Redémarrage d'Apache…"
+echo "→ Redémarrage d'Apache (et non nginx)…"
 sudo systemctl restart apache2
-
-echo "→ Remise des droits à www-data pour le backend…"
-sudo chown -R www-data:www-data "$DEST/backend"
 
 echo "✅ Déploiement complet terminé avec succès !"
