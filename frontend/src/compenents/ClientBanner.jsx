@@ -195,28 +195,35 @@ const ClientBanner = ({
   }
 
   return (
-    <div className="client-banner">
-      <div className="client-avatar">
-        {photo ? <img src={photo} alt="profil" /> : <span>{initials}</span>}
-      </div>
-      <div className="client-info">
-        <div className="client-header">
-          <h3>profil {prenom?.toLowerCase()}</h3>
+    <div className="client-banner-wrapper">
+      <div className="client-banner-box">
+        <div className="client-avatar">
+          {photo ? <img src={photo} alt="profil" /> : <span>{initials}</span>}
+        </div>
+
+        <div className="client-info client-info--centered">
+          <h3 className="client-name">Profil {prenom?.toLowerCase()} {nom?.toLowerCase()}</h3>
+
           <button
             className="edit-button"
             onClick={() => navigate(`/admin/client/edit/${id}`)}
             title="Modifier"
           >
-            🖉
+            Modifier
           </button>
+
+          <div className="bio-block">
+            <p className="client-subtitle">Biographie</p>
+            <p className="client-description">
+              {description?.trim() || "Aucune biographie fournie."}
+            </p>
+          </div>
         </div>
-        <p className="client-subtitle">Biographie</p>
-        <p className="client-description">
-          {description?.trim() || "Aucune biographie fournie."}
-        </p>
       </div>
     </div>
   );
+
+
 };
 
 export default ClientBanner;

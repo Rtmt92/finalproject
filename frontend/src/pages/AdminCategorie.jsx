@@ -57,41 +57,43 @@ const AdminCategorie = () => {
   };
 
   return (
-    <div className="edit-product-page">
-      <h3 className="client-edit-title">Ajouter une categorie</h3>
-      <input
-        type="text"
-        placeholder="Nom de la categorie"
-        value={nom}
-        onChange={(e) => setNom(e.target.value)}
-      />
-      <button onClick={handleAdd}>Ajouter la categorie</button>
+    <div className="admin-page-wrapper">
+      <div className="edit-product-page">
+        <h3 className="client-edit-title">Ajouter une categorie</h3>
+        <input
+          type="text"
+          placeholder="Nom de la categorie"
+          value={nom}
+          onChange={(e) => setNom(e.target.value)}
+        />
+        <button onClick={handleAdd}>Ajouter la categorie</button>
 
-      <hr />
+        <hr />
 
-      <h3 className="client-edit-title">Modifier une categorie</h3>
-      <select
-        value={selectedId}
-        onChange={(e) => setSelectedId(e.target.value)}
-      >
-        <option value="">-- Choisir une categorie --</option>
-        {categories.map((cat) => (
-          <option key={cat.id_categorie} value={cat.id_categorie}>
-            {cat.nom}
-          </option>
-        ))}
-      </select>
+        <h3 className="client-edit-title">Modifier une categorie</h3>
+        <select
+          value={selectedId}
+          onChange={(e) => setSelectedId(e.target.value)}
+        >
+          <option value="">-- Choisir une categorie --</option>
+          {categories.map((cat) => (
+            <option key={cat.id_categorie} value={cat.id_categorie}>
+              {cat.nom}
+            </option>
+          ))}
+        </select>
 
-      <textarea
-        placeholder="Modifier le nom"
-        value={modifNom}
-        onChange={(e) => setModifNom(e.target.value)}
-      />
+        <textarea
+          placeholder="Modifier le nom"
+          value={modifNom}
+          onChange={(e) => setModifNom(e.target.value)}
+        />
 
-      <button onClick={handleUpdate}>MODIFIER LA CATEGORIE</button>
-      <button className="delete-button" onClick={handleDelete}>
-        SUPPRIMER LA CATEGORIE
-      </button>
+        <button onClick={handleUpdate}>MODIFIER LA CATEGORIE</button>
+        <button className="delete-button" onClick={handleDelete}>
+          SUPPRIMER LA CATEGORIE
+        </button>
+      </div>
     </div>
   );
 };

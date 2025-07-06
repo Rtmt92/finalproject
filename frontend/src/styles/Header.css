@@ -73,10 +73,13 @@
   }
 
   
-  .header-icon {
-    color: white;
-    cursor: pointer;
-  }
+.header-icon {
+  color: white;
+  cursor: pointer;
+  margin: 0 6px; /* Ajoute un petit espace autour de chaque icône */
+}
+
+
 
 /* Burger toggle (menu icon) */
 .burger-toggle {

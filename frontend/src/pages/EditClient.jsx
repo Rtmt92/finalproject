@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import '../styles/EditClient.css'; 
 
-
 const EditClient = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -12,7 +11,7 @@ const EditClient = () => {
     prenom: "",
     email: "",
     mot_de_passe: "",
-    role: "client", // valeur par défaut
+    role: "client",
   });
 
   useEffect(() => {
@@ -54,57 +53,57 @@ const EditClient = () => {
     if (!confirmation) return;
 
     const res = await fetch(`http://localhost:3000/client/${id}`, {
-        method: "DELETE",
+      method: "DELETE",
     });
 
     if (res.ok) {
-        alert("Client supprimé !");
-        navigate("/admin/client");
+      alert("Client supprimé !");
+      navigate("/admin/client");
     } else {
-        alert("Échec de la suppression");
+      alert("Échec de la suppression");
     }
-    };
-
+  };
 
   return (
-    <div className="edit-product-page">
-      <h2 className="client-edit-title">Modifier : {form.nom}</h2>
+    <div className="edit-wrapper">
+      <div className="edit-product-page">
+        <h2 className="client-edit-title">Modifier : {form.nom} {form.prenom}</h2>
 
-      <input
-        type="text"
-        name="nom"
-        placeholder="Nom"
-        value={form.nom}
-        onChange={handleChange}
-      />
-      <input
-        type="text"
-        name="prenom"
-        placeholder="Prenom"
-        value={form.prenom}
-        onChange={handleChange}
-      />
-      <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        value={form.email}
-        onChange={handleChange}
-      />
+        <input
+          type="text"
+          name="nom"
+          placeholder="Nom"
+          value={form.nom}
+          onChange={handleChange}
+        />
+        <input
+          type="text"
+          name="prenom"
+          placeholder="Prenom"
+          value={form.prenom}
+          onChange={handleChange}
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+        />
 
-      <select name="role" value={form.role} onChange={handleChange}>
-        <option value="client">Client</option>
-        <option value="admin">Admin</option>
-      </select>
+        <select name="role" value={form.role} onChange={handleChange}>
+          <option value="client">Client</option>
+          <option value="admin">Admin</option>
+        </select>
 
-      <button type="submit" onClick={handleSubmit}>
-        Valider
-      </button>
-
-        <button className="delete-button" onClick={handleDelete} style={{ backgroundColor: "darkred", color: "white", marginTop: "1rem" }}>
-            Supprimer le client
+        <button type="submit" onClick={handleSubmit}>
+          Valider
         </button>
 
+        <button className="delete-button" onClick={handleDelete}>
+          Supprimer le client
+        </button>
+      </div>
     </div>
   );
 };

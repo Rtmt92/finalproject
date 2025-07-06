@@ -147,6 +147,89 @@
   cursor: pointer;
 }
 
+.client-banner-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.client-banner-box {
+  background-color: transparent; /* fond reste noir */
+  border: 2px solid white;       /* bordure blanche */
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: none;
+  text-align: center;
+  color: white;
+}
+
+.client-info--centered {
+  align-items: center;
+  text-align: center;
+}
+
+.client-name {
+  font-size: 1.4rem;
+  font-weight: bold;
+  font-style: italic;
+  margin-top: 1rem;
+  text-transform: capitalize;
+  color: #FFFF;
+}
+
+.edit-button {
+  background-color: #47545b;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  color: white;
+  font-style: italic;
+  margin-top: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.edit-button:hover {
+  background-color: #2c3a40;
+}
+
+.bio-block {
+  margin-top: 1.5rem;
+}
+
+.client-subtitle {
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  font-size: 1.1rem;
+  color: #ffff;
+}
+
+.client-description {
+  font-size: 0.95rem;
+  color: #ffff;
+  font-style: italic;
+}
+
+.client-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: #d3d3d3;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.client-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 
 /* Responsive */
 @media (max-width: 600px) {
