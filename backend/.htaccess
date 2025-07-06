@@ -1,12 +1,11 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-
-  # Redirige tout sauf les fichiers et dossiers existants vers index.php
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^ index.php [QSA,L]
 </IfModule>
+
 
 # Autorise les en-têtes CORS si nécessaire
 <IfModule mod_headers.c>
