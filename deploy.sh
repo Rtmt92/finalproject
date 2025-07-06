@@ -21,7 +21,7 @@ ssh -i "$KEY" -o StrictHostKeyChecking=no "$USER@$HOST" "sudo chmod -R 777 $DEST
 # 1) Synchronisation du projet
 ########################
 echo "🔄 Synchronisation des fichiers avec rsync…"
-rsync -az --delete \
+rsync -azO --delete \
   --exclude 'node_modules' \
   --exclude 'vendor' \
   --exclude '.env' \
