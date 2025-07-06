@@ -90,7 +90,7 @@ export default function SearchResults() {
             />
           ))
         ) : (
-          <p className="status">Aucun produit trouvé.</p>
+          <p className="status">Aucun produit trouvé. </p>
         )}
       </div>
     </main>
