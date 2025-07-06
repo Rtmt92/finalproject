@@ -4,6 +4,9 @@ set -euo pipefail
 DEST="/var/www/dejavu"
 DB="dejavu"
 
+echo "→ Attribution des droits à azureuser…"
+sudo chown -R azureuser:azureuser "$DEST"
+
 echo "→ (Re)création de la base $DB…"
 sudo mysql -e "DROP DATABASE IF EXISTS \`$DB\`; CREATE DATABASE \`$DB\`;"
 
@@ -24,25 +27,7 @@ fi
 
 echo "→ Installation des dépendances PHP (Composer)…"
 cd "$DEST/backend"
-sudo chown -R azureuser:azureuser "$DEST/backend"
 composer install --no-dev --optimize-autoloader
-
-echo "→ Vérification et création du fichier .htaccess si nécessaire…"
-HTACCESS_PATH="$DEST/backend/public/.htaccess"
-if [ ! -f "$HTACCESS_PATH" ]; then
-  cat <<EOF | sudo tee "$HTACCESS_PATH" > /dev/null
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^ index.php [QSA,L]
-</IfModule>
-EOF
-  echo "✅ .htaccess créé à $HTACCESS_PATH"
-else
-  echo "ℹ️ .htaccess déjà présent, aucune action."
-fi
 
 echo "→ Ajustement des permissions backend (www-data)…"
 sudo chown -R www-data:www-data "$DEST/backend"
@@ -62,7 +47,7 @@ echo "→ Ajustement des permissions /var/www/html…"
 sudo chown -R www-data:www-data /var/www/html
 sudo chmod -R 755 /var/www/html
 
-echo "→ Redémarrage d'Apache (et non nginx)…"
+echo "→ Redémarrage d'Apache…"
 sudo systemctl restart apache2
 
-echo "✅ Déploiement complet terminé avec succès !"
+echo "✅ Déploiement terminé avec succès !"
