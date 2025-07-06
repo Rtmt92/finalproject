@@ -26,6 +26,24 @@ echo "→ Installation des dépendances PHP (Composer)…"
 cd "$DEST/backend"
 sudo composer install --no-dev --optimize-autoloader
 
+echo "→ Vérification et création du fichier .htaccess si nécessaire…"
+HTACCESS_PATH="$DEST/backend/public/.htaccess"
+
+if [ ! -f "$HTACCESS_PATH" ]; then
+  cat <<EOF | sudo tee "$HTACCESS_PATH" > /dev/null
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.php [QSA,L]
+</IfModule>
+EOF
+  echo "✅ .htaccess créé à $HTACCESS_PATH"
+else
+  echo "ℹ️ .htaccess déjà présent, aucune action."
+fi
+
 echo "→ Ajustement des permissions backend (www-data)…"
 sudo chown -R www-data:www-data "$DEST/backend"
 
