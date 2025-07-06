@@ -18,10 +18,10 @@ echo "🔧 Correction des permissions sur le serveur distant…"
 ssh -i "$KEY" -o StrictHostKeyChecking=no "$USER@$HOST" "sudo chmod -R 777 $DEST"
 
 ########################
-# 1) Synchronisation du projet
+# 1) Synchronisation des fichiers
 ########################
 echo "🔄 Synchronisation des fichiers avec rsync…"
-rsync -azO --delete \
+rsync -azO --no-perms --delete \
   --exclude 'node_modules' \
   --exclude 'vendor' \
   --exclude '.env' \
@@ -31,7 +31,7 @@ rsync -azO --delete \
   ./ "$USER@$HOST:$DEST"
 
 ########################
-# 2) Copie et exécution du script de déploiement complet
+# 2) Lancer le script complet côté VM
 ########################
 ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << EOF
   set -euo pipefail
