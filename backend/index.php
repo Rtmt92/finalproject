@@ -50,13 +50,18 @@ use Controllers\StripeController;
 use Controllers\UploadImageController;
 
 
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+$allowedOrigins = ['http://localhost:3000', 'http://4.233.136.179'];
 
-// --- CORS & JSON headers ---
-header("Access-Control-Allow-Origin: http://localhost:3000");
+if (in_array($origin, $allowedOrigins)) {
+    header("Access-Control-Allow-Origin: $origin");
+}
+
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
 header("Content-Type: application/json; charset=utf-8");
+
 
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 $file = __DIR__ . $uri;
