@@ -7,46 +7,29 @@ set -euo pipefail
 USER="azureuser"
 HOST="4.233.136.179"
 DEST="/var/www/dejavu"
-KEY="$HOME/.ssh/id_rsa"
+KEY="$HOME/.ssh/id_rsa"   # Chemin vers votre clé privée
 
-echo "🚀 Début du déploiement vers $USER@$HOST:$DEST"
-
-########################
-# 1) Vérification de la clé SSH
-########################
-if [[ ! -f "$KEY" ]]; then
-  echo "❌ Clé SSH manquante : $KEY"
-  exit 1
-fi
+echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
 
 ########################
-# 2) Synchronisation du projet
+# 1) Synchronisation du projet
 ########################
 echo "🔄 Synchronisation des fichiers avec rsync…"
-
 rsync -az --delete \
   --exclude 'node_modules' \
   --exclude 'vendor' \
   --exclude '.env' \
   --exclude 'frontend/build' \
+  --exclude 'backend/uploads' \
   -e "ssh -i $KEY -o StrictHostKeyChecking=no" \
   ./ "$USER@$HOST:$DEST"
 
-echo "✅ Fichiers synchronisés."
-
 ########################
-# 3) Lancement du script distant
+# 2) Copie et exécution du script de déploiement complet
 ########################
-echo "🚀 Lancement du script de déploiement complet sur la VM…"
-
 ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST bash << EOF
   set -euo pipefail
-  echo "📁 Script de déploiement distant en cours…"
-  if [[ ! -x "$DEST/deploy_full.sh" ]]; then
-    echo "⚠️  Script deploy_full.sh non exécutable, tentative de correction…"
-    sudo chmod +x "$DEST/deploy_full.sh"
-  fi
+  echo "🛠️ Exécution de deploy_full.sh sur la VM distante…"
+  sudo chmod +x "$DEST/deploy_full.sh"
   sudo "$DEST/deploy_full.sh"
 EOF
-
-echo "🎉 Déploiement terminé avec succès !"

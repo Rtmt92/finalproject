@@ -24,11 +24,11 @@ fi
 
 echo "→ Installation des dépendances PHP (Composer)…"
 cd "$DEST/backend"
-sudo composer install --no-dev --optimize-autoloader
+sudo chown -R azureuser:azureuser "$DEST/backend"
+composer install --no-dev --optimize-autoloader
 
 echo "→ Vérification et création du fichier .htaccess si nécessaire…"
 HTACCESS_PATH="$DEST/backend/public/.htaccess"
-
 if [ ! -f "$HTACCESS_PATH" ]; then
   cat <<EOF | sudo tee "$HTACCESS_PATH" > /dev/null
 <IfModule mod_rewrite.c>
@@ -50,8 +50,8 @@ sudo chown -R www-data:www-data "$DEST/backend"
 echo "→ Préparation du front-end React…"
 cd "$DEST/frontend"
 sudo chown -R azureuser:azureuser "$DEST/frontend"
-sudo npm ci
-sudo npm run build
+npm ci
+npm run build
 
 echo "→ Déploiement des fichiers statiques frontend…"
 sudo mkdir -p /var/www/html
