@@ -4,7 +4,7 @@ set -euo pipefail
 DEST="/var/www/dejavu"
 DB="dejavu"
 
-echo "→ Attribution des droits à azureuser…"
+echo "→ Attribution des droits à azureuser pour éviter les erreurs rsync…"
 sudo chown -R azureuser:azureuser "$DEST"
 
 echo "→ (Re)création de la base $DB…"
@@ -29,9 +29,6 @@ echo "→ Installation des dépendances PHP (Composer)…"
 cd "$DEST/backend"
 composer install --no-dev --optimize-autoloader
 
-echo "→ Ajustement des permissions backend (www-data)…"
-sudo chown -R www-data:www-data "$DEST/backend"
-
 echo "→ Préparation du front-end React…"
 cd "$DEST/frontend"
 sudo chown -R azureuser:azureuser "$DEST/frontend"
@@ -43,7 +40,7 @@ sudo mkdir -p /var/www/html
 sudo rm -rf /var/www/html/*
 sudo cp -r build/* /var/www/html/
 
-echo "→ Ajustement des permissions /var/www/html…"
+echo "→ Ajustement des permissions /var/www/html pour Apache…"
 sudo chown -R www-data:www-data /var/www/html
 sudo chmod -R 755 /var/www/html
 
