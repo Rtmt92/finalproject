@@ -92,7 +92,7 @@ const AdminCategorie = () => {
 
         <button onClick={handleUpdate}>MODIFIER LA CATEGORIE</button>
         <button className="delete-button" onClick={handleDelete}>
-          SUPPRIMER LA CATEGORIE
+          SUPPRIMER LA CATEGORIE 
         </button>
       </div>
     </div>
