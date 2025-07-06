@@ -1,0 +1,28 @@
+# ─── BACKEND PHP ────────────────────────────────────────────────
+/backend/vendor/
+/backend/.env
+/backend/.DS_Store
+/backend/*.log
+
+# ─── FRONTEND REACT ─────────────────────────────────────────────
+/frontend/node_modules/
+/frontend/.env
+/frontend/.DS_Store
+/frontend/build/
+
+# ─── SYSTEM FILES (Windows/macOS/JetBrains etc.) ───────────────
+*.log
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ─── PHPStorm / VSCode ─────────────────────────────────────────
+.idea/
+.vscode/
+
+# ─── GIT SECRETS or TEMP ───────────────────────────────────────
+*.bak
+*.tmp
+*.secret
+.env.*
