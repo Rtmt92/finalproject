@@ -22,6 +22,7 @@ ssh -i "$KEY" -o StrictHostKeyChecking=no "$USER@$HOST" "sudo chmod -R 777 $DEST
 ########################
 echo "🔄 Synchronisation des fichiers avec rsync…"
 rsync -azO --no-perms --delete \
+  --include='.htaccess' \
   --exclude 'node_modules' \
   --exclude 'vendor' \
   --exclude '.env' \
