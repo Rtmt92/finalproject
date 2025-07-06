@@ -1,5 +1,3 @@
-/* styles/ProductBanner.css */
-
 .banner {
   display: flex;
   align-items: center;
@@ -7,8 +5,8 @@
   border-radius: 4px;
   padding: 1rem;
   margin-bottom: 1.5rem;
-  cursor: pointer;
   transition: background-color 0.2s;
+  flex-wrap: wrap;
 }
 
 .banner:hover {
@@ -25,7 +23,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #3a3a3a;
 }
 
 .banner-image img {
@@ -34,9 +31,19 @@
   object-fit: cover;
 }
 
+.no-image {
+  width: 100%;
+  height: 100%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .banner-details {
   flex: 1;
   color: white;
+  min-width: 200px;
 }
 
 .banner-details h3 {
@@ -66,4 +73,35 @@
 .banner-price .prix {
   font-size: 1.2rem;
   font-weight: bold;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .banner-image {
+    width: 100%;
+    height: auto;
+    margin-right: 0;
+    margin-bottom: 0.8rem;
+  }
+
+  .banner-image img {
+    height: auto;
+    max-height: 200px;
+    object-fit: contain;
+  }
+
+  .banner-details {
+    width: 100%;
+  }
+
+  .banner-price {
+    width: 100%;
+    text-align: left;
+    margin-top: 0.5rem;
+  }
 }

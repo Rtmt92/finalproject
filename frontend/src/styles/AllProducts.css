@@ -7,59 +7,101 @@
   font-family: 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Titre en haut à gauche */
-.all-products-page > h1 {
-  font-size: 2rem;
-  font-weight: 300;
+/* En-tête avec titre et filtres */
+.all-products-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
   margin-bottom: 1.5rem;
 }
 
-/* Barre de filtres alignée à droite */
+.all-products-header h2 {
+  font-size: 2rem;
+  font-style: italic;
+  margin: 0;
+  color: white;
+}
+
+/* Filtres */
 .filters {
   display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 250px;
 }
 
 .filters select {
-  background: #3b3f46;
-  color: #fff;
+  background: #4a535a;
+  color: white;
   border: none;
   padding: 0.5rem 0.75rem;
   border-radius: 4px;
-  font-size: 0.9rem;
-  cursor: pointer;
+  font-size: 1rem;
 }
 
-.filters select:hover {
-  background: #4a4f57;
-}
-
-/* Grille de produits : 4 colonnes */
+/* Grille de produits */
 .products-grid-all {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 1.5rem;
 }
 
-/* Au mobile, passe en 1 colonne */
-@media (max-width: 600px) {
-  .products-grid-all {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Message “aucun produit” */
-.all-products-page p {
+/* Message d'état */
+.status {
   text-align: center;
   font-size: 1.1rem;
   margin-top: 2rem;
 }
 
-/* Pour centrer verticalement la page si vide */
-.all-products-page:empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.status.error {
+  color: red;
+}
+
+/* ========================= */
+/*        Responsive         */
+/* ========================= */
+
+/* Tablette : header vertical, 2 colonnes */
+@media (max-width: 900px) {
+  .all-products-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .filters {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .filters select {
+    flex: 1;
+    min-width: 45%;
+  }
+
+  .products-grid-all {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Mobile : une colonne */
+@media (max-width: 600px) {
+  .filters {
+    flex-direction: column;
+  }
+
+  .filters select {
+    width: 100%;
+  }
+
+  .all-products-header h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Général */
+* {
+  box-sizing: border-box;
 }

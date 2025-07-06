@@ -1,26 +1,25 @@
 .client-banner {
   display: flex;
-  align-items: flex-start;         /* ✅ Aligne le haut des éléments */
-  justify-content: center;
-  gap: 40px;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
   width: 100%;
-  max-width: 1200px;
-  margin: 40px auto;
-  position: relative;
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  color: white;
 }
 
+/* Avatar */
 .client-avatar {
-  width: 150px;
-  height: 150px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   background-color: #d3d3d3;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
-  font-weight: bold;
-  flex-shrink: 0;
-  overflow: hidden;
 }
 
 .client-avatar img {
@@ -30,66 +29,128 @@
   border-radius: 50%;
 }
 
-.client-info {
-  background-color: #4a555f;
-  padding: 20px;
-  border-radius: 8px;
-  color: #fff;
-  min-width: 280px;
-  max-width: 600px;
-  flex: 1;
+.avatar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
 }
 
-.client-header {
+
+/* Zone de formulaire */
+.client-info {
+  width: 100%;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
 }
 
-.client-header h3 {
-  font-style: italic;
-  font-size: 22px;
-  margin: 0;
-}
-
-.edit-button {
-  background: none;
-  border: none;
-  font-size: 18px;
+/* Input file */
+.client-info input[type="file"] {
+  margin-bottom: 1rem;
   color: white;
-  cursor: pointer;
-  margin-left: 10px;
 }
 
-.client-subtitle {
-  font-style: italic;
-  margin-top: 10px;
-}
-
-.client-description {
-  font-style: italic;
-  margin-top: 5px;
-  font-size: 14px;
-}
-
-.client-delete-container {
-  position: absolute;
-  top: 180px;
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.delete-button {
-  margin-top: 20px;
-  padding: 12px 40px;
-  border-radius: 25px;
-  background-color: #dc4b4b;
-  color: white;
+/* Labels */
+.client-info label {
+  align-self: flex-start;
   font-weight: bold;
+  margin: 0.5rem 0 0.2rem;
+}
+
+/* Inputs / Textarea */
+.client-info input[type="text"],
+.client-info input[type="email"],
+.client-info input[type="password"],
+.client-info textarea {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background-color: #5f6a72; /* gris clair de la charte */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  margin-bottom: 0.6rem;
+  box-sizing: border-box;
+}
+
+.client-info input::placeholder,
+.client-info textarea::placeholder {
+  color: #e0e0e0;
+}
+
+/* Zone mot de passe */
+.change-password {
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.change-password h4 {
+  margin-bottom: 0.5rem;
   font-style: italic;
+}
+
+/* Bouton enregistrer */
+.btn-valider {
+  margin-top: 1.2rem;
+  padding: 0.8rem 2rem;
+  border-radius: 30px;
+  background-color: #47545b;
+  color: white;
   border: none;
   cursor: pointer;
-  font-size: 16px;
+  font-style: italic;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.btn-valider:hover {
+  background-color: #FFFF;
+  color: #47545B;
+}
+
+.message {
+  font-size: 0.9rem;
+  color: #ED0006;
+  margin-top: 0.4rem;
+}
+
+.upload-btn {
+  display: inline-block;
+  margin-top: 1rem;
+  background-color: #47545B;
+  color: white;
+  padding: 0.6rem 1.5rem;
+  border-radius: 30px;
+  cursor: pointer;
+  font-style: italic;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-btn:hover {
+  background-color: #FFFF;
+  color: #47545B;
+
+}
+
+.upload-btn input[type="file"] {
+  opacity: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
+}
+
+
+/* Responsive */
+@media (max-width: 600px) {
+  .client-banner {
+    padding: 1rem;
+  }
 }

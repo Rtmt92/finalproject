@@ -1,14 +1,26 @@
+:root {
+  --bg-dark: #000000;
+  --bg-secondary: #47545B;
+  --text-light: #FFFFFF;
+  --text-gray: #CCCCCC;
+  --red: #ED0006;
+}
+
 .profil-container {
-  background-color: #000;
-  color: #fff;
+  background-color: var(--bg-dark);
+  color: var(--text-light);
   padding: 2rem;
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 960px;
+  margin: auto;
 }
 
 .section-title {
   font-style: italic;
-  background-color: #454e57;
-  padding: 0.5rem 1rem;
+  background-color: var(--bg-secondary);
+  padding: 0.5rem 1.2rem;
+  border-radius: 5px;
+  font-size: 1.3rem;
   display: inline-block;
   margin: 2rem 0 1rem;
 }
@@ -17,107 +29,92 @@
   background-color: transparent;
 }
 
-
-
 .banner {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  flex-grow: 1;
+  background-color: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.banner-image img,
-.no-image {
-  width: 150px;
-  height: 150px;
-  border-radius: 5px;
-  background-color: #2f2f2f;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ccc;
+.banner-image img {
+  width: 140px;
+  height: 140px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .banner-details {
-  flex-grow: 1;
+  flex: 1;
   padding: 0 1rem;
 }
 
 .banner-details h3 {
-  margin: 0;
   font-style: italic;
   font-size: 1.2rem;
+  margin-bottom: 0.4rem;
 }
 
 .banner-details p {
-  margin: 0.3rem 0;
   font-size: 0.95rem;
-  color: #ccc;
+  color: var(--text-gray);
+  margin: 0.3rem 0;
 }
 
 .banner-price {
   font-size: 1.4rem;
   font-weight: bold;
-  color: white;
-  min-width: 100px;
+  color: var(--text-light);
   text-align: right;
+  min-width: 80px;
 }
 
-.btn-danger {
-  background-color: #dc4b4b;
-  color: white;
-  border: none;
-  padding: 0.7rem 2rem;
-  border-radius: 30px;
-  cursor: pointer;
-  font-style: italic;
-  white-space: nowrap;
-}
-
-.btn-danger:hover {
-  background-color: #c13434;
+.profil-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 2rem;
+  gap: 1rem;
 }
 
 .btn-valider {
-  background-color: #5e6770;
-  color: white;
+  background-color: var(--bg-secondary);
+  color: var(--text-light);
   border: none;
-  padding: 1rem 2rem;
-  border-radius: 30px;
+  padding: 0.9rem 2rem;
+  border-radius: 50px;
   font-style: italic;
   cursor: pointer;
+  transition: background-color 0.2s ease;
   font-size: 1rem;
 }
 
 .btn-valider:hover {
-  background-color: #6f7a84;
+  background-color: #5a6b75;
 }
 
-.profil-actions {
-  margin-top: 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+.btn-danger {
+  background-color: var(--red);
+  color: var(--text-light);
+  border: none;
+  padding: 0.9rem 2rem;
+  border-radius: 50px;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.btn-danger:hover {
+  background-color: #c40000;
 }
 
 .panier-total {
   text-align: right;
   font-style: italic;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   margin-top: 1rem;
+  color: var(--text-light);
 }
-
-.delete-icon {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 1.4rem;
-  cursor: pointer;
-  color: #dc4b4b;
-  transition: transform 0.2s ease;
-}
-
-.delete-icon:hover {
-  transform: scale(1.2);
-}
-

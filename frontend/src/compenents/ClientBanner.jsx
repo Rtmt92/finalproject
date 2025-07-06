@@ -24,7 +24,6 @@ const ClientBanner = ({
     email: email || "",
     numero_telephone: numero_telephone || "",
     description: description || "",
-    mot_de_passe: "",
     photo_profil: photo || "",
   });
 
@@ -81,13 +80,16 @@ const ClientBanner = ({
     setLoading(true);
 
     try {
+      // Ne pas inclure le champ mot_de_passe vide par erreur
+      const { mot_de_passe, ...infosSansMotDePasse } = form;
+
       const resInfo = await fetch(`http://localhost:8000/client/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(infosSansMotDePasse),
       });
 
       if (!resInfo.ok) {
@@ -97,6 +99,7 @@ const ClientBanner = ({
         return;
       }
 
+      // Changement de mot de passe uniquement si rempli
       if (passwordForm.ancien || passwordForm.nouveau || passwordForm.confirmation) {
         if (passwordForm.nouveau !== passwordForm.confirmation) {
           alert("Les mots de passe ne correspondent pas.");
@@ -135,14 +138,20 @@ const ClientBanner = ({
   if (mode === "edit") {
     return (
       <div className="client-banner">
-        <div className="client-info">
-          <img
-            src={form.photo_profil || "/default-avatar.png"}
-            alt={`client-${form.nom || "photo"}`}
-            className="client-avatar"
-          />
-          <input type="file" name="photo_profil" accept="image/*" onChange={handleChange} />
+        <div className="avatar-wrapper">
+          <div className="client-avatar">
+            <img
+              src={form.photo_profil || "/default-avatar.png"}
+              alt={`client-${form.nom || "photo"}`}
+            />
+          </div>
+          <label className="upload-btn">
+            Modifier la photo de profil
+            <input type="file" name="photo_profil" accept="image/*" onChange={handleChange} />
+          </label>
+        </div>
 
+        <div className="client-info">
           <label>Nom</label>
           <input type="text" name="nom" value={form.nom} onChange={handleChange} />
           <label>Prénom</label>

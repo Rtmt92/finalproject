@@ -40,7 +40,7 @@ export default function Pay() {
       });
 
     // Récupérer le panier
-    fetch("http://localhost:8000/api/panier", {
+    fetch("http://localhost:8000/panier", {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {

@@ -90,10 +90,11 @@ export default function Home() {
                   key={prod.id}
                   id={prod.id}
                   titre={prod.titre}
-                  description={prod.description}
-                  prix={prod.prix}
                   image={prod.image}
+                  prix={prod.prix}
+                  etat={prod.etat}
                 />
+
               ))
             ) : (
               <p>Aucun produit disponible.</p>
