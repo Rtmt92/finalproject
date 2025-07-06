@@ -12,6 +12,12 @@ KEY="$HOME/.ssh/id_rsa"   # Chemin vers votre clé privée
 echo "🚀 Début du déploiement vers $USER@$HOST:$DEST …"
 
 ########################
+# 0) Fix des permissions AVANT synchronisation
+########################
+echo "🔧 Correction des permissions sur le serveur distant…"
+ssh -i "$KEY" -o StrictHostKeyChecking=no "$USER@$HOST" "sudo chmod -R 777 $DEST"
+
+########################
 # 1) Synchronisation du projet
 ########################
 echo "🔄 Synchronisation des fichiers avec rsync…"
