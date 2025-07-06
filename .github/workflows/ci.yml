@@ -60,6 +60,16 @@ jobs:
             sleep 2
           done
 
+      - name: Créer un fichier .env pour les tests
+        working-directory: backend
+        run: |
+          cat <<EOF > .env
+          DB_HOST=127.0.0.1
+          DB_DATABASE=projet
+          DB_USERNAME=user
+          DB_PASSWORD=password
+          EOF
+
       - name: Run PHPUnit
         working-directory: backend
         env:
