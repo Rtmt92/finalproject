@@ -42,7 +42,7 @@ const ProductBanner = ({
         <p><strong>Quantité :</strong> {quantite ?? 'N/A'}</p>
       </div>
       <div className="banner-price">
-        <p className="prix">{parseFloat(prix).toFixed(2)}$</p>
+        <p className="prix">{parseFloat(prix).toFixed(2)}€</p>
       </div>
     </div>
   );

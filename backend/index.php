@@ -53,7 +53,6 @@ use Controllers\UploadImageController;
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
 $allowedOrigins = [
     'http://localhost:3000',
-    'http://4.233.136.179',
     'http://4.233.136.179:8080'
 ];
 
