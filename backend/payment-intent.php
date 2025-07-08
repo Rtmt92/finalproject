@@ -6,8 +6,13 @@ use Stripe\PaymentIntent;
 
 header('Content-Type: application/json');
 
+if (!isset($_ENV['STRIPE_SECRET_KEY'])) {
+    $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+    $dotenv->load();
+}
+
 // 🔐 Clé secrète Stripe
-Stripe::setApiKey('sk_test_51RcVcGPut8fuuvIhfsjBzBm8xrPKPP6LugDijy0RUsJDsdJZr2umABDkx78Fhl6zVdqChm5GGzFMRTJPQealR0gh005FxLmt32');
+Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
 
 // 🔒 CORS pour autoriser requêtes frontend
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
