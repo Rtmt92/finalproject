@@ -99,22 +99,17 @@ export default function Profil() {
         ) : (
           produitsUniques.map(prod => (
             <div key={prod.id_produit} className="panier-item">
-              <ProductBanner
-                id={prod.id_produit}
-                titre={prod.titre}
-                description={prod.description}
-                prix={prod.prix}
-                etat={prod.etat}
-                quantite={prod.quantite}
-                image={prod.image}
-                clickable={false}
-              />
-              <button
-                className="btn-supprimer"
-                onClick={() => handleDeleteFromPanier(prod.id_produit)}
-              >
-                ×
-              </button>
+            <ProductBanner
+              id={prod.id_produit}
+              titre={prod.titre}
+              description={prod.description}
+              prix={prod.prix}
+              etat={prod.etat}
+              quantite={prod.quantite}
+              image={prod.image}
+              clickable={false}
+              onDelete={handleDeleteFromPanier}  // <- ici
+            />
             </div>
           ))
         )}

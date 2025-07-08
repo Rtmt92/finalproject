@@ -5,15 +5,12 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
 
+$dotenv = Dotenv::createImmutable(__DIR__ . '/../../'); // remonte 2 niveaux depuis controllers/
+$dotenv->load();
+
 class StripeController {
     public function createCheckoutSession() {
-        if (!getenv('STRIPE_SECRET_KEY')) {
-            $dotenv = Dotenv::createImmutable(__DIR__ . '/../..');
-            $dotenv->load();
-        }
-
         \Stripe\Stripe::setApiKey(getenv('STRIPE_SECRET_KEY'));
-
         header('Content-Type: application/json');
 
         $input = json_decode(file_get_contents('php://input'), true);
@@ -26,13 +23,13 @@ class StripeController {
                     'price_data' => [
                         'currency' => 'eur',
                         'product_data' => ['name' => 'Paiement Panier'],
-                        'unit_amount' => (int)($amount * 100), 
+                        'unit_amount' => (int)($amount * 100),
                     ],
                     'quantity' => 1,
                 ]],
                 'mode' => 'payment',
                 'success_url' => 'http://localhost:5173/success',
-                'cancel_url'  => 'http://localhost:5173/cancel',
+                'cancel_url' => 'http://localhost:5173/cancel',
             ]);
 
             echo json_encode(['id' => $session->id]);

@@ -109,13 +109,47 @@
   color: #fff;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 520px) {
   .checkout-container {
-    width: 90vw;
-    padding: 24px;
+    width: 95vw;
+    padding: 30px 20px 25px 20px;
+    border-radius: 15px;
+  }
+
+  .checkout-total-label {
+    font-size: 1.3em;
+  }
+
+  .checkout-total-amount {
+    font-size: 2.8em;
+  }
+
+  .checkout-form {
+    gap: 14px;
+  }
+
+  .checkout-input {
+    font-size: 1em;
+    padding: 10px 14px;
+  }
+
+  .checkout-methods {
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .checkout-icon {
+    width: 48px;
+    height: 32px;
+    padding: 5px;
   }
 
   .checkout-btn {
-    width: 90vw;
+    width: 100%;
+    max-width: 100%;
+    font-size: 1.1em;
+    padding: 14px 0;
   }
 }
+

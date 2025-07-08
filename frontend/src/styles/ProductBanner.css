@@ -9,10 +9,6 @@
   flex-wrap: wrap;
 }
 
-.banner:hover {
-  background-color: #6c7680;
-}
-
 .banner-image {
   width: 120px;
   height: 100px;
@@ -74,6 +70,27 @@
   font-size: 1.2rem;
   font-weight: bold;
 }
+
+.btn-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: none;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
+}
+
+.btn-delete:hover {
+  background: rgba(255, 0, 0, 0.9);
+}
+
+
 
 /* Responsive */
 @media (max-width: 768px) {
