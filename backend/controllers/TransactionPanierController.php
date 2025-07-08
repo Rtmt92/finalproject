@@ -1,22 +1,20 @@
 <?php
 namespace Controllers;
 
-use Src\Models\TransactionPanier;
+use Src\Services\TransactionPanierService;
 
 class TransactionPanierController {
-    private TransactionPanier $model;
+    private TransactionPanierService $service;
 
     public function __construct() {
-        $this->model = new TransactionPanier();
+        $this->service = new TransactionPanierService();
     }
 
-    /** GET /transaction_panier */
     public function index(): void {
         header('Content-Type: application/json');
-        echo json_encode($this->model->getAll());
+        echo json_encode($this->service->getAll());
     }
 
-    /** POST /transaction_panier */
     public function store(): void {
         $data = json_decode(file_get_contents('php://input'), true);
         if (!isset($data['id_panier'], $data['id_transaction'])) {
@@ -25,7 +23,7 @@ class TransactionPanierController {
             echo json_encode(['error' => 'Champs manquants']);
             return;
         }
-        $ok = $this->model->create($data);
+        $ok = $this->service->create($data);
         if ($ok) {
             http_response_code(201);
             header('Content-Type: application/json');
@@ -37,9 +35,8 @@ class TransactionPanierController {
         }
     }
 
-    /** DELETE /transaction_panier/{panier}/{transaction} */
     public function destroy(int $idPanier, int $idTransaction): void {
-        $ok = $this->model->delete($idPanier, $idTransaction);
+        $ok = $this->service->delete($idPanier, $idTransaction);
         if ($ok) {
             header('Content-Type: application/json');
             echo json_encode(['message' => 'Lien transaction-panier supprimé']);

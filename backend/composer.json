@@ -4,14 +4,14 @@
   "type": "project",
   "license": "MIT",
 
-  "autoload": {
-    "psr-4": {
-      "Core\\":      "core/",
-      "Config\\":    "config/",
-      "Controllers\\": "controllers/",
-      "Src\\Models\\": "src/Models/"
-    }
-  },
+"autoload": {
+  "psr-4": {
+    "Core\\":      "core/",
+    "Config\\":    "config/",
+    "Controllers\\": "controllers/",
+    "Src\\":       "src/"
+  }
+},
 
   "autoload-dev": {
     "psr-4": {

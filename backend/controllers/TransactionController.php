@@ -1,29 +1,23 @@
 <?php
 namespace Controllers;
 
-use Src\Models\Transaction;
+use Src\Services\TransactionService;
 
 class TransactionController {
-    private Transaction $transactionModel;
+    private TransactionService $service;
 
     public function __construct() {
-        $this->transactionModel = new Transaction();
+        $this->service = new TransactionService();
     }
 
-    /**
-     * GET /transaction
-     */
     public function index(): void {
-        $list = $this->transactionModel->getAll();
+        $list = $this->service->getAll();
         header('Content-Type: application/json');
         echo json_encode($list);
     }
 
-    /**
-     * GET /transaction/{id}
-     */
     public function show(int $id): void {
-        $row = $this->transactionModel->getById($id);
+        $row = $this->service->getById($id);
         if (!$row) {
             http_response_code(404);
             header('Content-Type: application/json');
@@ -34,48 +28,24 @@ class TransactionController {
         echo json_encode($row);
     }
 
-    /**
-     * POST /transaction
-     */
     public function store(): void {
         $data = json_decode(file_get_contents('php://input'), true);
+        $newId = $this->service->create($data);
 
-        // on vérifie montant_total et non total
-        if (
-            empty($data['montant_total']) ||
-            empty($data['date_transaction']) ||
-            empty($data['id_client'])
-        ) {
+        if ($newId === false) {
             http_response_code(400);
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Champs manquants']);
             return;
         }
 
-        // Création
-        $newId = $this->transactionModel->create([
-            'montant_total'    => $data['montant_total'],
-            'date_transaction' => $data['date_transaction'],
-            'id_client'        => $data['id_client'],
-        ]);
-
-        if ($newId) {
-            http_response_code(201);
-            header('Content-Type: application/json');
-            echo json_encode(['message' => 'Transaction créée', 'id_transaction' => $newId]);
-        } else {
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => 'Impossible de créer la transaction']);
-        }
+        http_response_code(201);
+        header('Content-Type: application/json');
+        echo json_encode(['message' => 'Transaction créée', 'id_transaction' => $newId]);
     }
 
-    /**
-     * PATCH/PUT /transaction/{id}
-     */
     public function update(int $id): void {
-        // on vérifie l’existence
-        $existing = $this->transactionModel->getById($id);
+        $existing = $this->service->getById($id);
         if (!$existing) {
             http_response_code(404);
             header('Content-Type: application/json');
@@ -91,45 +61,28 @@ class TransactionController {
             return;
         }
 
-        // on renomme total → montant_total si présent
-        if (isset($data['montant_total'])) {
-            $payload['montant_total'] = $data['montant_total'];
-        }
-        if (isset($data['date_transaction'])) {
-            $payload['date_transaction'] = $data['date_transaction'];
-        }
-        if (isset($data['id_client'])) {
-            $payload['id_client'] = $data['id_client'];
-        }
-        if (empty($payload)) {
+        $ok = $this->service->update($id, $data);
+        if (!$ok) {
             http_response_code(400);
-            echo json_encode(['error' => 'Aucun champ à mettre à jour']);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Aucun champ à mettre à jour ou erreur']);
             return;
         }
 
-        $ok = $this->transactionModel->update($id, $payload);
-        if ($ok) {
-            header('Content-Type: application/json');
-            echo json_encode(['message' => 'Transaction mise à jour']);
-        } else {
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => 'Impossible de mettre à jour']);
-        }
+        header('Content-Type: application/json');
+        echo json_encode(['message' => 'Transaction mise à jour']);
     }
 
-    /**
-     * DELETE /transaction/{id}
-     */
     public function destroy(int $id): void {
-        $existing = $this->transactionModel->getById($id);
+        $existing = $this->service->getById($id);
         if (!$existing) {
             http_response_code(404);
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Transaction non trouvée']);
             return;
         }
-        $ok = $this->transactionModel->delete($id);
+
+        $ok = $this->service->delete($id);
         if ($ok) {
             header('Content-Type: application/json');
             echo json_encode(['message' => 'Transaction supprimée']);

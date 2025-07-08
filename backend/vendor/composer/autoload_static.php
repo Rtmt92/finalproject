@@ -25,7 +25,7 @@ class ComposerStaticInit1f508bf9c251bd8df4d5a06cceee7041
             'Symfony\\Polyfill\\Mbstring\\' => 26,
             'Symfony\\Polyfill\\Ctype\\' => 23,
             'Stripe\\' => 7,
-            'Src\\Models\\' => 11,
+            'Src\\' => 4,
         ),
         'P' => 
         array (
@@ -74,9 +74,9 @@ class ComposerStaticInit1f508bf9c251bd8df4d5a06cceee7041
         array (
             0 => __DIR__ . '/..' . '/stripe/stripe-php/lib',
         ),
-        'Src\\Models\\' => 
+        'Src\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/src/Models',
+            0 => __DIR__ . '/../..' . '/src',
         ),
         'PhpParser\\' => 
         array (

@@ -1,71 +1,29 @@
 <?php
-// src/Controllers/ProduitController.php
 namespace Controllers;
 
-use Src\Models\Produit;
-use Src\Models\ProduitImage;
-use Src\Models\Image;
-use Core\Database;
+use Src\Services\ProduitService;
 
 class ProduitController {
-    private Produit $produitModel;
-    private ProduitImage $prodImageModel;
-    private Image $imageModel;
-    private \PDO $db;
+    private ProduitService $service;
 
-    public function __construct(
-        ?Produit $produitModel = null,
-        ?ProduitImage $produitImageModel = null,
-        ?Image $imageModel = null
-    ) {
-        $this->produitModel   = $produitModel   ?? new Produit();
-        $this->prodImageModel = $produitImageModel ?? new ProduitImage();
-        $this->imageModel     = $imageModel     ?? new Image();
-        $this->db             = Database::getConnection();
+    public function __construct() {
+        $this->service = new ProduitService();
     }
 
-    /**
-     * GET /produit
-     */
     public function index(): void {
         header('Content-Type: application/json; charset=utf-8');
 
         $categorie = $_GET['categorie'] ?? null;
-        $etat      = $_GET['etat']      ?? null;
-        $search    = $_GET['q']         ?? null;
+        $etat = $_GET['etat'] ?? null;
+        $search = $_GET['q'] ?? null;
 
-        $produits  = $this->produitModel->filter($categorie, $etat, $search);
-        $results   = [];
-
-        foreach ($produits as $p) {
-            // récupérer première image
-            $pivots   = $this->prodImageModel->getImagesByProduitId($p['id_produit']);
-            $imageUrl = null;
-            if (!empty($pivots[0]['id_image'])) {
-                $img = $this->imageModel->getById((int)$pivots[0]['id_image']);
-                if ($img && !empty($img['lien'])) {
-                    $imageUrl = $img['lien'];
-                }
-            }
-            $results[] = [
-                'id'          => $p['id_produit'],
-                'titre'       => $p['nom_produit'],
-                'description' => $p['description'],
-                'prix'        => $p['prix'],
-                'etat'        => $p['etat']     ?? '',
-                'quantite'    => $p['quantite'] ?? 0,
-                'image'       => $imageUrl,
-            ];
-        }
+        $results = $this->service->getAllWithImages($categorie, $etat, $search);
 
         echo json_encode($results);
     }
 
-    /**
-     * GET /produit/{id}
-     */
     public function show(int $id): void {
-        $item = $this->produitModel->getById($id);
+        $item = $this->service->getById($id);
         if (!$item) {
             http_response_code(404);
             header('Content-Type: application/json');
@@ -73,22 +31,12 @@ class ProduitController {
             return;
         }
 
-        // ajouter toutes les images
-        $pivots = $this->prodImageModel->getImagesByProduitId($id);
-        $images = [];
-        foreach ($pivots as $pv) {
-            $img = $this->imageModel->getById((int)$pv['id_image']);
-            if ($img) $images[] = $img;
-        }
-        $item['images'] = $images;
+        $item['images'] = $this->service->getImagesByProduitId($id);
 
         header('Content-Type: application/json');
         echo json_encode($item);
     }
 
-    /**
-     * POST /produit
-     */
     public function store(): void {
         $data = json_decode(file_get_contents('php://input'), true);
 
@@ -105,13 +53,13 @@ class ProduitController {
             return;
         }
 
-        $newId = $this->produitModel->create([
-            'nom_produit'  => $data['nom_produit'],
-            'prix'         => (float)$data['prix'],
-            'description'  => $data['description'],
+        $newId = $this->service->create([
+            'nom_produit' => $data['nom_produit'],
+            'prix' => (float)$data['prix'],
+            'description' => $data['description'],
             'id_categorie' => (int)$data['id_categorie'],
-            'quantite'     => (int)$data['quantite'],
-            'etat'         => $data['etat'],
+            'quantite' => (int)$data['quantite'],
+            'etat' => $data['etat'],
         ]);
 
         if ($newId) {
@@ -123,30 +71,19 @@ class ProduitController {
         }
     }
 
-    /**
-     * DELETE /produit/{id}/image/{image}
-     */
     public function deleteImage(int $idProduit, int $idImage): void {
         header('Content-Type: application/json; charset=utf-8');
 
-        $ok = $this->prodImageModel->detachImageFromProduct($idProduit, $idImage);
+        $ok = $this->service->detachImageFromProduct($idProduit, $idImage);
         if (!$ok) {
             http_response_code(400);
             echo json_encode(['error' => 'Impossible de détacher l’image']);
             return;
         }
 
-        // si l’image n’est plus utilisée ailleurs, on la supprime
-        if (!$this->imageModel->isUsedElsewhere($idImage)) {
-            $this->imageModel->delete($idImage);
-        }
-
         echo json_encode(['message' => 'Image supprimée']);
     }
 
-    /**
-     * POST /produit/{id}/image
-     */
     public function uploadImage(int $id_produit): void {
         header('Content-Type: application/json; charset=utf-8');
 
@@ -157,53 +94,30 @@ class ProduitController {
         }
 
         $file = $_FILES['image'];
-        if ($file['error'] !== UPLOAD_ERR_OK) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Erreur lors du téléchargement']);
-            exit;
-        }
-
-        // préparation du dossier
         $uploadDir = __DIR__ . '/../public/uploads/';
-        if (!is_dir($uploadDir)) mkdir($uploadDir, 0775, true);
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'];
+        $publicLink = "{$scheme}://{$host}/uploads";
 
-        $ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $fileName = uniqid('', true) . '.' . $ext;
-        $filePath = $uploadDir . $fileName;
+        $result = $this->service->uploadImage($id_produit, $file, $uploadDir, $publicLink);
 
-        if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+        if ($result === null) {
             http_response_code(500);
-            echo json_encode(['error' => 'Échec enregistrement image']);
-            exit;
+            echo json_encode(['error' => 'Erreur lors du téléchargement ou enregistrement']);
+            return;
         }
 
-        // détecter HTTP ou HTTPS
-        $scheme     = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-        $host       = $_SERVER['HTTP_HOST'];
-        $publicLink = "{$scheme}://{$host}/uploads/{$fileName}";
-
-        // enregistrer en base + association produit
-        $idImage = $this->imageModel->create(['lien' => $publicLink]);
-        $this->prodImageModel->create([
-            'id_produit' => $id_produit,
-            'id_image'   => $idImage
-        ]);
-
-        // répondre
         echo json_encode([
-            'success'  => true,
-            'id_image' => $idImage,
-            'url'      => $publicLink,
+            'success' => true,
+            'id_image' => $result['id_image'],
+            'url' => $result['url'],
         ]);
     }
 
-    /**
-     * PUT/PATCH /produit/{id}
-     */
     public function update(int $id): void {
         header('Content-Type: application/json; charset=utf-8');
 
-        $existing = $this->produitModel->getById($id);
+        $existing = $this->service->getById($id);
         if (!$existing) {
             http_response_code(404);
             echo json_encode(['error' => 'Produit non trouvé']);
@@ -217,9 +131,8 @@ class ProduitController {
             return;
         }
 
-        // si quantité à 0 → suppression
         if (isset($data['quantite']) && (int)$data['quantite'] === 0) {
-            $deleted = $this->produitModel->destroy($id);
+            $deleted = $this->service->destroy($id);
             if ($deleted) {
                 echo json_encode(['message' => 'Produit supprimé (quantité 0)']);
             } else {
@@ -229,17 +142,15 @@ class ProduitController {
             return;
         }
 
-        $idCat = (isset($data['id_categorie']) && $data['id_categorie'] !== '')
-            ? (int)$data['id_categorie']
-            : null;
+        $idCat = (isset($data['id_categorie']) && $data['id_categorie'] !== '') ? (int)$data['id_categorie'] : null;
 
-        $ok = $this->produitModel->update($id, [
-            'nom_produit'  => $data['nom_produit']  ?? null,
-            'prix'         => isset($data['prix']) ? (float)$data['prix'] : null,
-            'description'  => $data['description']  ?? null,
+        $ok = $this->service->update($id, [
+            'nom_produit' => $data['nom_produit'] ?? null,
+            'prix' => isset($data['prix']) ? (float)$data['prix'] : null,
+            'description' => $data['description'] ?? null,
             'id_categorie' => $idCat,
-            'quantite'     => isset($data['quantite']) ? (int)$data['quantite'] : null,
-            'etat'         => $data['etat'] ?? null,
+            'quantite' => isset($data['quantite']) ? (int)$data['quantite'] : null,
+            'etat' => $data['etat'] ?? null,
         ]);
 
         if ($ok) {
@@ -250,51 +161,29 @@ class ProduitController {
         }
     }
 
-    /**
-     * DELETE /produit/{id}
-     */
     public function destroy(int $id): void {
         header('Content-Type: application/json; charset=utf-8');
 
-        try {
-            $this->db->prepare("DELETE FROM panier_produit WHERE id_produit = :id")
-                     ->execute(['id' => $id]);
-
-            $this->db->prepare("DELETE FROM produit_image WHERE id_produit = :id")
-                     ->execute(['id' => $id]);
-
-            $this->db->prepare("DELETE FROM produit WHERE id_produit = :id")
-                     ->execute(['id' => $id]);
-
+        $deleted = $this->service->destroy($id);
+        if ($deleted) {
             echo json_encode(['message' => 'Produit supprimé avec succès']);
-        } catch (\PDOException $e) {
+        } else {
             http_response_code(500);
             echo json_encode(['error' => 'Impossible de supprimer']);
         }
     }
 
-    /**
-     * GET /produit/random
-     */
     public function random(): void {
         header('Content-Type: application/json; charset=utf-8');
 
-        $prod = $this->produitModel->findRandom();
+        $prod = $this->service->findRandom();
         if (!$prod) {
             http_response_code(404);
             echo json_encode(['error' => 'Aucun produit trouvé']);
             return;
         }
 
-        $pivots = $this->prodImageModel->getImagesByProduitId((int)$prod['id_produit']);
-        $url    = null;
-        if (!empty($pivots[0]['id_image'])) {
-            $img = $this->imageModel->getById((int)$pivots[0]['id_image']);
-            if ($img && !empty($img['lien'])) {
-                $url = $img['lien'];
-            }
-        }
-        $prod['image_url'] = $url;
+        $prod['image_url'] = $this->service->getFirstImageUrl((int)$prod['id_produit']) ?? null;
 
         echo json_encode($prod);
     }

@@ -1,23 +1,24 @@
 <?php
 namespace Controllers;
 
-use Src\Models\Categorie;
+use Src\Services\CategorieService;
+
 
 class CategorieController {
-    private Categorie $categorieModel;
+    private CategorieService $categorieService;
 
     public function __construct() {
-        $this->categorieModel = new Categorie();
+        $this->categorieService = new CategorieService();
     }
 
     public function index(): void {
-        $cats = $this->categorieModel->getAll();
+        $cats = $this->categorieService->getAllCategories();
         header('Content-Type: application/json');
         echo json_encode($cats);
     }
 
     public function show(int $id): void {
-        $cat = $this->categorieModel->getById($id);
+        $cat = $this->categorieService->getCategoryById($id);
         if (!$cat) {
             http_response_code(404);
             echo json_encode(['error' => 'Catégorie non trouvée']);
@@ -29,53 +30,36 @@ class CategorieController {
 
     public function store(): void {
         $data = json_decode(file_get_contents('php://input'), true);
-        if (empty($data['nom'])) {
+        $newId = $this->categorieService->createCategory($data);
+        if ($newId === false) {
             http_response_code(400);
-            echo json_encode(['error' => 'Champs manquants']);
+            echo json_encode(['error' => 'Champs manquants ou invalides']);
             return;
         }
-        $newId = $this->categorieModel->create(['nom' => $data['nom']]);
         http_response_code(201);
         echo json_encode(['message' => 'Catégorie créée', 'id_categorie' => $newId]);
     }
 
     /** PUT|PATCH /categorie/{id} */
     public function update(int $id): void {
-        $existing = $this->categorieModel->getById($id);
-        if (!$existing) {
-            http_response_code(404);
-            echo json_encode(['error' => 'Catégorie non trouvée']);
-            return;
-        }
         $data = json_decode(file_get_contents('php://input'), true);
-        if (empty($data['nom'])) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Champs manquants']);
+        $ok = $this->categorieService->updateCategory($id, $data);
+        if (!$ok) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Catégorie non trouvée ou champs invalides']);
             return;
         }
-        $ok = $this->categorieModel->update($id, ['nom' => $data['nom']]);
-        if ($ok) {
-            echo json_encode(['message' => 'Catégorie mise à jour']);
-        } else {
-            http_response_code(500);
-            echo json_encode(['error' => 'Impossible de mettre à jour']);
-        }
+        echo json_encode(['message' => 'Catégorie mise à jour']);
     }
 
     /** DELETE /categorie/{id} */
     public function destroy(int $id): void {
-        $existing = $this->categorieModel->getById($id);
-        if (!$existing) {
+        $ok = $this->categorieService->deleteCategory($id);
+        if (!$ok) {
             http_response_code(404);
             echo json_encode(['error' => 'Catégorie non trouvée']);
             return;
         }
-        $ok = $this->categorieModel->delete($id);
-        if ($ok) {
-            echo json_encode(['message' => 'Catégorie supprimée']);
-        } else {
-            http_response_code(500);
-            echo json_encode(['error' => 'Impossible de supprimer']);
-        }
+        echo json_encode(['message' => 'Catégorie supprimée']);
     }
 }

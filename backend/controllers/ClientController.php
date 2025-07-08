@@ -1,46 +1,24 @@
 <?php
 namespace Controllers;
 
-use Src\Models\Client;
-use Src\Models\Message;
-use Src\Models\Signaler;
-use Src\Models\Panier;
-use Src\Models\Transaction;
-use PDOException;
+use Src\Services\ClientService;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class ClientController {
-    private Client $clientModel;
+    private ClientService $clientService;
 
     public function __construct() {
-        $this->clientModel = new Client();
+        $this->clientService = new ClientService();
     }
 
     public function storeFromData(array $data): void {
-        if (
-            empty($data['nom']) ||
-            empty($data['prenom']) ||
-            empty($data['email']) ||
-            empty($data['numero_telephone']) ||
-            empty($data['mot_de_passe'])
-        ) {
+        $result = $this->clientService->createClient($data);
+        if ($result === false) {
             http_response_code(400);
-            echo json_encode(['error' => 'Champs obligatoires manquants']);
+            echo json_encode(['error' => 'Champs obligatoires manquants ou invalides']);
             return;
         }
-
-        $data['mot_de_passe'] = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
-
-        $result = $this->clientModel->create([
-            'nom'              => $data['nom'],
-            'prenom'           => $data['prenom'],
-            'email'            => $data['email'],
-            'numero_telephone' => $data['numero_telephone'],
-            'mot_de_passe'     => $data['mot_de_passe'],
-            'role'             => $data['role'] ?? 'client',
-            'photo_profil'     => $data['photo_profil'] ?? null,
-            'description'      => $data['description']  ?? null,
-        ]);
-
         if (is_int($result)) {
             http_response_code(201);
             echo json_encode(['message' => 'Client créé', 'id_client' => $result]);
@@ -50,25 +28,15 @@ class ClientController {
         }
     }
 
-
     public function index(): void {
-        // on lit le paramètre search
         $q = $_GET['search'] ?? '';
-
-        if ($q !== '') {
-            // si search non vide → filtrage
-            $clients = $this->clientModel->filterBySearch($q);
-        } else {
-            // sinon tous les clients
-            $clients = $this->clientModel->getAll();
-        }
-
+        $clients = $this->clientService->getAllClients($q);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($clients);
     }
 
     public function show(int $id): void {
-        $client = $this->clientModel->getById($id);
+        $client = $this->clientService->getClientById($id);
         if (!$client) {
             http_response_code(404);
             echo json_encode(['error' => 'Client non trouvé']);
@@ -82,7 +50,6 @@ class ClientController {
         $this->storeFromData($data);
     }
 
-
     private function authenticate(): object {
         $h = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         if (!preg_match('/Bearer\s(\S+)/', $h, $m)) {
@@ -92,9 +59,9 @@ class ClientController {
         }
 
         try {
-            return \Firebase\JWT\JWT::decode(
+            return JWT::decode(
                 $m[1],
-                new \Firebase\JWT\Key(\Config\JwtConfig::SECRET_KEY, 'HS256')
+                new Key(\Config\JwtConfig::SECRET_KEY, 'HS256')
             );
         } catch (\Exception $e) {
             http_response_code(403);
@@ -103,97 +70,61 @@ class ClientController {
         }
     }
 
-
-
     public function update(int $id): void {
-        $existing = $this->clientModel->getById($id);
-        if (!$existing) {
-            http_response_code(404);
-            echo json_encode(['error' => 'Client non trouvé']);
-            return;
-        }
-
         $data = json_decode(file_get_contents('php://input'), true);
-
         if (!is_array($data)) {
             http_response_code(400);
             echo json_encode(['error' => 'Données invalides']);
             return;
         }
-        
 
-        // Si mot de passe est présent ET non vide, il sera hashé dans le modèle
-        $ok = $this->clientModel->update($id, $data);
-        if ($ok) {
-            echo json_encode(['message' => 'Client mis à jour']);
-        } else {
-            http_response_code(500);
-            echo json_encode(['error' => 'Impossible de mettre à jour le client']);
+        $ok = $this->clientService->updateClient($id, $data);
+        if (!$ok) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Client non trouvé ou impossible à mettre à jour']);
+            return;
         }
+        echo json_encode(['message' => 'Client mis à jour']);
     }
 
     public function destroy(int $id): void {
-        $existing = $this->clientModel->getById($id);
-        if (!$existing) {
+        $ok = $this->clientService->deleteClient($id);
+        if (!$ok) {
             http_response_code(404);
-            echo json_encode(['error' => 'Client non trouvé']);
+            echo json_encode(['error' => 'Client non trouvé ou erreur lors de la suppression']);
+            return;
+        }
+        echo json_encode(['message' => 'Client supprimé avec ses données associées']);
+    }
+
+    public function updatePassword(int $id): void {
+        $payload = $this->authenticate();
+
+        if ((int)$payload->sub !== $id) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Accès interdit']);
             return;
         }
 
-        (new Message())->deleteByClient($id);
-        (new Signaler())->deleteByClient($id);
-        (new Panier())->deleteByClient($id);
+        $data = json_decode(file_get_contents('php://input'), true);
 
-        try {
-            $this->clientModel->delete($id);
-            echo json_encode(['message' => 'Client supprimé avec ses données associées']);
-        } catch (PDOException $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Erreur SQL : ' . $e->getMessage()]);
+        if (
+            empty($data['ancien']) ||
+            empty($data['nouveau']) ||
+            empty($data['confirmation'])
+        ) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Champs requis manquants']);
+            return;
+        }
+
+        $result = $this->clientService->updatePassword($id, $data['ancien'], $data['nouveau'], $data['confirmation']);
+
+        if ($result === true) {
+            echo json_encode(['message' => 'Mot de passe mis à jour']);
+        } else {
+            http_response_code(400);
+            echo json_encode(['error' => $result]);
         }
     }
-public function updatePassword(int $id): void {
-    $payload = $this->authenticate(); // appel interne
-
-    if ((int)$payload->sub !== $id) {
-        http_response_code(403);
-        echo json_encode(['error' => 'Accès interdit']);
-        return;
-    }
-
-    $data = json_decode(file_get_contents('php://input'), true);
-
-    if (
-        empty($data['ancien']) ||
-        empty($data['nouveau']) ||
-        empty($data['confirmation'])
-    ) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Champs requis manquants']);
-        return;
-    }
-
-    if ($data['nouveau'] !== $data['confirmation']) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Les mots de passe ne correspondent pas']);
-        return;
-    }
-
-    $client = $this->clientModel->getById($id);
-    if (!$client || !password_verify($data['ancien'], $client['mot_de_passe'])) {
-        http_response_code(403);
-        echo json_encode(['error' => 'Mot de passe actuel incorrect']);
-        return;
-    }
-
-    $success = $this->clientModel->update($id, ['mot_de_passe' => $data['nouveau']]);
-    if ($success) {
-        echo json_encode(['message' => 'Mot de passe mis à jour']);
-    } else {
-        http_response_code(500);
-        echo json_encode(['error' => 'Erreur lors de la mise à jour']);
-    }
-}
-
-
 }
