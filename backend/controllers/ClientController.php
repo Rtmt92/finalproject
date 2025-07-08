@@ -83,8 +83,9 @@ class ClientController {
     }
 
 
-        private function authenticate(): object {
-        if (!isset($_COOKIE['token'])) {
+    private function authenticate(): object {
+        $h = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        if (!preg_match('/Bearer\s(\S+)/', $h, $m)) {
             http_response_code(401);
             echo json_encode(['error' => 'Token manquant']);
             exit;
@@ -92,7 +93,7 @@ class ClientController {
 
         try {
             return \Firebase\JWT\JWT::decode(
-                $_COOKIE['token'],
+                $m[1],
                 new \Firebase\JWT\Key(\Config\JwtConfig::SECRET_KEY, 'HS256')
             );
         } catch (\Exception $e) {
@@ -101,6 +102,7 @@ class ClientController {
             exit;
         }
     }
+
 
 
     public function update(int $id): void {

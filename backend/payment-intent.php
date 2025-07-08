@@ -10,7 +10,15 @@ header('Content-Type: application/json');
 Stripe::setApiKey('sk_test_51RcVcGPut8fuuvIhfsjBzBm8xrPKPP6LugDijy0RUsJDsdJZr2umABDkx78Fhl6zVdqChm5GGzFMRTJPQealR0gh005FxLmt32');
 
 // 🔒 CORS pour autoriser requêtes frontend
-header("Access-Control-Allow-Origin: http://localhost:5173");
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+$allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173'
+];
+
+if (in_array($origin, $allowedOrigins)) {
+    header("Access-Control-Allow-Origin: $origin");
+}
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");

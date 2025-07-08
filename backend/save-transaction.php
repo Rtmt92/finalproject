@@ -6,7 +6,19 @@ use Src\Models\Transaction;
 use Src\Models\TransactionPanier;
 
 // 🔐 Sécurité CORS
-header("Access-Control-Allow-Origin: http://localhost:5173");
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+$allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173'
+];
+
+if (in_array($origin, $allowedOrigins)) {
+    header("Access-Control-Allow-Origin: $origin");
+}
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
