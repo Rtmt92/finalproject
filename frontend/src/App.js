@@ -117,16 +117,14 @@ function AppRoutes() {
 }
 
 export default function App() {
-  const loc = useLocation();
-  const hideHeader = ["/login", "/register"].includes(loc.pathname);
 
   return (
     <>
-      {!hideHeader && <Header />}
+      <Header />
       <main className="main-content">
         <AppRoutes />
       </main>
-      {!hideHeader && <Footer />}
+      <Footer />
     </>
   );
 }

@@ -79,8 +79,6 @@
   margin: 0 6px; /* Ajoute un petit espace autour de chaque icône */
 }
 
-
-
 /* Burger toggle (menu icon) */
 .burger-toggle {
   display: none;
@@ -139,6 +137,10 @@
 
   .burger-toggle {
     display: block;
+  }
+
+  .header-logo {
+    height:40px;
   }
 }
 

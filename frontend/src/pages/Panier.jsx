@@ -73,7 +73,7 @@ export default function Panier() {
         ) : (
           items.map(p => (
             <div key={p.id_produit} className="panier-item">
-              <ProductBanner
+                <ProductBanner
                 id={p.id_produit}
                 titre={p.titre}
                 description={p.description}
@@ -82,13 +82,8 @@ export default function Panier() {
                 quantite={p.quantite}
                 image={p.image}
                 clickable={false}
-              />
-              <button
-                className="btn-supprimer"
-                onClick={() => removeFromCart(p.id_produit)}
-              >
-                ×
-              </button>
+                onDelete={removeFromCart}  // passe la suppression ici
+                />
             </div>
           ))
         )}
