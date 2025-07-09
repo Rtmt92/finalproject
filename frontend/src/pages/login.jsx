@@ -5,14 +5,11 @@ import API_BASE_URL from '../config';
 import '../styles/log.css';
 
 export default function Login() {
-  const [form, setForm] = useState({ email: '', mot_de_passe: '' });
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState('');
+  const [motDePasse, setMotDePasse] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,7 +19,7 @@ export default function Login() {
       const res = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ email, mot_de_passe: motDePasse }),
       });
 
       const body = await res.json();
@@ -31,10 +28,8 @@ export default function Login() {
       localStorage.setItem('token', body.token);
       localStorage.setItem('role', body.role);
 
-      if (body.role === 'admin') navigate('/admin');
-      else navigate('/home');
+      navigate(body.role === 'admin' ? '/admin' : '/home');
     } catch (err) {
-      console.error('Erreur login :', err);
       setError(err.message);
     }
   };
@@ -46,20 +41,18 @@ export default function Login() {
 
         <input
           type="email"
-          name="email"
           placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
 
         <div className="password-input-wrapper">
           <input
             type={showPassword ? 'text' : 'password'}
-            name="mot_de_passe"
             placeholder="Mot de passe"
-            value={form.mot_de_passe}
-            onChange={handleChange}
+            value={motDePasse}
+            onChange={(e) => setMotDePasse(e.target.value)}
             required
           />
           <button

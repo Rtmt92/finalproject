@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
+import API_BASE_URL from '../config';
 import '../styles/log.css';
 import { isValidPassword } from '../utils/passwordValidator';
-import API_BASE_URL from '../config';
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -21,10 +21,17 @@ export default function Register() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = e => {
-    const { name, value, type, checked } = e.target;
-    setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
-  };
+const handleChange = e => {
+  const { name, value, type, checked } = e.target;
+
+  if (name === 'numero_telephone') {
+    const digitsOnly = value.replace(/\D/g, ''); 
+    setForm(prev => ({ ...prev, [name]: digitsOnly }));
+  } else {
+    setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  }
+};
+
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -51,25 +58,24 @@ export default function Register() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-
       const body = await res.json();
 
-      if (res.ok) {
-        localStorage.setItem('token', body.token);
-        localStorage.setItem('role', body.role || 'client');
-        navigate('/');
-      } else {
+      if (!res.ok) {
         setError(body.error || "Une erreur est survenue.");
+        return;
       }
-    } catch (err) {
-      console.error("Erreur réseau :", err);
+
+      localStorage.setItem('token', body.token);
+      localStorage.setItem('role', body.role || 'client');
+      navigate('/');
+    } catch {
       setError("Erreur réseau, impossible de joindre le serveur.");
     }
   };
 
   return (
     <div className="login-wrapper">
-      <form className="login-form" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="login-form">
         <h1>Inscription</h1>
 
         <input name="nom" placeholder="Nom" onChange={handleChange} required />
@@ -89,7 +95,7 @@ export default function Register() {
           <button
             type="button"
             className="password-toggle-button"
-            onClick={() => setShowPassword(!showPassword)}
+            onClick={() => setShowPassword(prev => !prev)}
             aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -108,7 +114,7 @@ export default function Register() {
           <button
             type="button"
             className="password-toggle-button"
-            onClick={() => setShowConfirmation(!showConfirmation)}
+            onClick={() => setShowConfirmation(prev => !prev)}
             aria-label={showConfirmation ? 'Masquer la confirmation' : 'Afficher la confirmation'}
           >
             {showConfirmation ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -118,15 +124,16 @@ export default function Register() {
         <div className="register-extra">
           <label>
             <input type="checkbox" name="accept" checked={form.accept} onChange={handleChange} />
-            J’accepte les <a href="/generalterm">conditions générales</a>
+            J’accepte les <Link to="/generalterm">conditions générales</Link>
           </label>
         </div>
 
         <div className="login-link">
-          Tu es déjà un habitué ? <a href="/login">Connecte-toi ici</a>
+          Tu es déjà un habitué ? <Link to="/login">Connecte-toi ici</Link>
         </div>
 
         {error && <p className="error">{error}</p>}
+
         <button type="submit" className="btn-main">S’inscrire</button>
       </form>
     </div>
