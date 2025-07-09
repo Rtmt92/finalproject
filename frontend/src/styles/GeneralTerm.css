@@ -13,4 +13,5 @@ p {
   font-size: 16px;
   line-height: 1.6;
   margin: 0;
+  text-align: justify; /* ajouté */
 }

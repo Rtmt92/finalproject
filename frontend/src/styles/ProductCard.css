@@ -21,7 +21,7 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  aspect-ratio: 3/4;
+  aspect-ratio: 3 / 4;
 }
 
 .product-title {
@@ -33,14 +33,14 @@
 
 .product-img {
   width: 100%;
-  height: auto;       /* Garde la hauteur proportionnelle à la largeur */
-  max-height: 60%;    /* Limite la hauteur maximale pour garder un bon aspect */
+  height: auto;
+  max-height: 60%;
   border-radius: 8px;
-  object-fit: contain; /* Contient l’image dans la zone sans la déformer */
+  object-fit: contain;
   display: block;
-  margin: 0 auto;     /* Centre l’image horizontalement si elle est plus petite */
+  margin: 0 auto;
+  flex-grow: 1;
 }
-
 
 .product-info {
   font-size: 0.85rem;
@@ -48,6 +48,7 @@
   flex-direction: column;
   gap: 0.15rem;
   text-align: center;
+  align-items: center;
 }
 
 .product-price {
@@ -64,6 +65,7 @@
   color: #ddd;
 }
 
+/* Responsive */
 @media (max-width: 768px) {
   .product-card {
     height: 260px;
@@ -86,10 +88,16 @@
   .product-info {
     font-size: 0.65rem;
     gap: 0.1rem;
+    align-items: center;
   }
 
   .product-price {
     font-size: 0.85rem;
+  }
+  
+  /* Réduire taille du texte état */
+  .product-etat {
+    font-size: 0.6rem;
   }
 }
 
@@ -115,9 +123,15 @@
   .product-info {
     font-size: 0.6rem;
     gap: 0.1rem;
+    align-items: center;
   }
 
   .product-price {
     font-size: 0.8rem;
+  }
+
+  /* Réduire encore plus la taille du texte état */
+  .product-etat {
+    font-size: 15px;
   }
 }

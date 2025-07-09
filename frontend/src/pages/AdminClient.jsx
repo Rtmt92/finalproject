@@ -17,7 +17,7 @@ const AdminClient = () => {
 
     fetch(`${API_BASE_URL}/client?${params.toString()}`, {
       headers: {
-        // "Authorization": `Bearer ${localStorage.getItem("token")}`
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
       }
     })
       .then((res) => res.json())
@@ -33,7 +33,7 @@ const AdminClient = () => {
     const res = await fetch(`${API_BASE_URL}/client/${id}`, {
       method: "DELETE",
       headers: {
-        // "Authorization": `Bearer ${localStorage.getItem("token")}`
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
       }
     });
 

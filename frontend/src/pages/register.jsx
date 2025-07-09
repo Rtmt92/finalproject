@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import '../styles/log.css';
 import { isValidPassword } from '../utils/passwordValidator';
-import API_BASE_URL from '../config'; // ✅ base URL configurable
+import API_BASE_URL from '../config';
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -16,6 +17,8 @@ export default function Register() {
   });
 
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = e => {
@@ -73,8 +76,44 @@ export default function Register() {
         <input name="prenom" placeholder="Prénom" onChange={handleChange} required />
         <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
         <input name="numero_telephone" placeholder="Téléphone" onChange={handleChange} required />
-        <input type="password" name="mot_de_passe" placeholder="Mot de passe" onChange={handleChange} required />
-        <input type="password" name="confirmation" placeholder="Confirmer le mot de passe" onChange={handleChange} required />
+
+        <div className="password-input-wrapper">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="mot_de_passe"
+            placeholder="Mot de passe"
+            value={form.mot_de_passe}
+            onChange={handleChange}
+            required
+          />
+          <button
+            type="button"
+            className="password-toggle-button"
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
+
+        <div className="password-input-wrapper">
+          <input
+            type={showConfirmation ? 'text' : 'password'}
+            name="confirmation"
+            placeholder="Confirmer le mot de passe"
+            value={form.confirmation}
+            onChange={handleChange}
+            required
+          />
+          <button
+            type="button"
+            className="password-toggle-button"
+            onClick={() => setShowConfirmation(!showConfirmation)}
+            aria-label={showConfirmation ? 'Masquer la confirmation' : 'Afficher la confirmation'}
+          >
+            {showConfirmation ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
 
         <div className="register-extra">
           <label>
@@ -88,7 +127,7 @@ export default function Register() {
         </div>
 
         {error && <p className="error">{error}</p>}
-        <button type="submit">S’inscrire</button>
+        <button type="submit" className="btn-main">S’inscrire</button>
       </form>
     </div>
   );

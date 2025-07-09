@@ -1,0 +1,44 @@
+.contact-container {
+  color: white;
+  background-color: black;
+  padding: 40px;
+  max-width: 900px;
+  margin: auto;
+}
+
+.contact-title {
+  background-color: #47545B;
+  padding: 10px 20px;
+  text-align: center;
+}
+
+.contact-intro {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.contact-main {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3rem;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.contact-info {
+  flex: 1;
+  min-width: 280px;
+  line-height: 1.6;
+}
+
+.contact-map {
+  flex: 1;
+  min-width: 280px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.contact-map iframe {
+  border-radius: 8px;
+  border: none;
+}

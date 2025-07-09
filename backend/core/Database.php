@@ -10,7 +10,6 @@ class Database {
     public static function getConnection(): PDO {
         if (self::$instance === null) {
 
-            // Charger .env si non déjà chargé
             if (!isset($_ENV['DB_HOST'])) {
                 $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
                 $dotenv->load();

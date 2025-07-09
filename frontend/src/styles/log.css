@@ -50,6 +50,50 @@ body {
   color: #c9c9c9;
 }
 
+/* Wrapper spécifique pour mot de passe avec icône */
+.password-input-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background-color: #47545B;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.password-input-wrapper input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 1rem;
+  font-style: italic;
+  padding: 0.75rem 1rem;
+  outline: none;
+}
+
+.password-toggle-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: none;
+  user-select: none;
+  padding: 0;
+  margin: 0;
+}
+
+.password-toggle-button:hover {
+  background-color: transparent !important;
+  color: white !important;
+  cursor: pointer;
+}
+
 /* Erreur */
 .login-error {
   color: red;
@@ -59,7 +103,7 @@ body {
 }
 
 /* Bouton */
-.login-form button {
+.login-form button.btn-main {
   padding: 0.75rem 2.5rem;
   border-radius: 9999px;
   background-color: #47545B;
@@ -73,7 +117,7 @@ body {
   min-width: 150px;
 }
 
-.login-form button:hover {
+.login-form button.btn-main:hover {
   background-color: #6B7280;
 }
 
@@ -101,7 +145,6 @@ body {
   color: #ccc;
   text-align: center; /* 👈 Centre le texte aussi */
 }
-
 
 .register-extra label {
   display: flex;
@@ -148,4 +191,3 @@ body {
   margin-top: 0.5rem;
   text-align: center;
 }
-

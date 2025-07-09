@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import API_BASE_URL from '../config'; // 🔁 Import de l'URL dynamique
+import { Eye, EyeOff } from 'lucide-react';
+import API_BASE_URL from '../config';
 import '../styles/log.css';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', mot_de_passe: '' });
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -50,14 +52,25 @@ export default function Login() {
           onChange={handleChange}
           required
         />
-        <input
-          type="password"
-          name="mot_de_passe"
-          placeholder="Mot de passe"
-          value={form.mot_de_passe}
-          onChange={handleChange}
-          required
-        />
+
+        <div className="password-input-wrapper">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="mot_de_passe"
+            placeholder="Mot de passe"
+            value={form.mot_de_passe}
+            onChange={handleChange}
+            required
+          />
+          <button
+            type="button"
+            className="password-toggle-button"
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
 
         <div className="login-link">
           Tu n’as pas encore de compte ? <Link to="/register">inscris-toi</Link>
@@ -65,7 +78,7 @@ export default function Login() {
 
         {error && <div className="login-error">{error}</div>}
 
-        <button type="submit">Se connecter</button>
+        <button type="submit" className="btn-main">Se connecter</button>
       </form>
     </div>
   );

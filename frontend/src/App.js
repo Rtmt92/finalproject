@@ -24,6 +24,7 @@ import EditClient     from "./pages/EditClient";
 import AdminCategorie from "./pages/AdminCategorie";
 import Panier from "./pages/Panier";
 import AllProducts from "./pages/AllProducts";
+import Contact from "./pages/Contact";
 
 function AppRoutes() {
   const token = localStorage.getItem("token");
@@ -37,9 +38,10 @@ function AppRoutes() {
       <Route path="/register"    element={<Register />} />
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/recherche"   element={<SearchResults />} />
-      <Route path="/cgu"         element={<GeneralTerm />} />
+      <Route path="/generalterm"         element={<GeneralTerm />} />
       <Route path="/panier"         element={<Panier />} />
       <Route path="/allproducts"     element={<AllProducts />} />
+      <Route path="/Contact"     element={<Contact />} />
 
 
       {/* ─── Routes client (nécessite d'être loggé) ─── */}
@@ -117,14 +119,14 @@ function AppRoutes() {
 }
 
 export default function App() {
-
   return (
-    <>
+    <div className="app-wrapper">  {/* Nouveau wrapper */}
       <Header />
       <main className="main-content">
         <AppRoutes />
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
+

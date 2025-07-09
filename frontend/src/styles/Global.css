@@ -8,16 +8,20 @@
 }
 
 /* ======= ROOT + BODY ======= */
-html, body {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;        /* Coupe tout débordement horizontal */
-  font-family: 'Arial', sans-serif;
-  background-color: black;
-  color: #e0e0e0;
-  font-size: 16px;
-  line-height: 1.6;
-  scroll-behavior: smooth;
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.app-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex-grow: 1; /* Prend tout l’espace disponible */
 }
 
 /* ======= SCROLL FIX ======= */
@@ -33,6 +37,8 @@ body::-webkit-scrollbar-track {
 }
 
 /* ======= LAYOUT CONTAINER ======= */
+
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -75,8 +81,6 @@ button:hover, .btn:hover {
   background-color: #555;
 }
 
-
-
 /* ======= FORMS ======= */
 form {
   display: flex;
@@ -96,8 +100,9 @@ input:focus, textarea:focus {
   border-color: #00aaff;
 }
 
-
 /* ======= FORCE WIDTH LIMITS IN RESPONSIVE ======= */
 img, video, iframe, input, textarea, button {
   max-width: 100%;
 }
+
+
