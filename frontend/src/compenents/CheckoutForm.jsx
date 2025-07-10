@@ -9,77 +9,101 @@ const CheckoutForm = ({ amount, clientId, panierId }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!stripe || !elements) {
-      alert("Stripe n’est pas prêt.");
+  if (!stripe || !elements) {
+    alert("Stripe n’est pas prêt.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    // 1. Demander à backend de créer le paiement
+    const res = await fetch(`${API_BASE_URL}/payment-intent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount }),
+    });
+
+    const data = await res.json();
+    if (!data.clientSecret) throw new Error("Client secret introuvable");
+
+    // 2. Confirmer le paiement Stripe
+    const result = await stripe.confirmCardPayment(data.clientSecret, {
+      payment_method: { card: elements.getElement(CardElement) },
+    });
+
+    if (result.error) {
+      alert(result.error.message);
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
+    if (result.paymentIntent.status === "succeeded") {
+      alert("Paiement réussi !");
 
-    try {
-      // 1. Demander à backend de créer le paiement
-      const res = await fetch(`${API_BASE_URL}/payment-intent`, {
+      // Récupération du token
+      const token = localStorage.getItem("token");
+
+      // 3. Enregistrer la transaction
+      const save = await fetch(`${API_BASE_URL}/enregistrer-transaction`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,  // token obligatoire
+        },
+        body: JSON.stringify({
+          amount,
+          id_client: clientId,
+          id_panier: panierId,
+        }),
       });
 
-      const data = await res.json();
-      if (!data.clientSecret) throw new Error("Client secret introuvable");
-
-      // 2. Confirmer le paiement Stripe
-      const result = await stripe.confirmCardPayment(data.clientSecret, {
-        payment_method: { card: elements.getElement(CardElement) },
-      });
-
-      if (result.error) {
-        alert(result.error.message);
+      if (!save.ok) {
+        alert("Le paiement a réussi, mais la transaction n’a pas été enregistrée.");
+        setLoading(false);
         return;
       }
 
-      if (result.paymentIntent.status === "succeeded") {
-        alert("Paiement réussi !");
+      const response = await save.json();
+      console.log("Transaction enregistrée :", response);
 
-        // 3. Enregistrer la transaction
-        const save = await fetch(`${API_BASE_URL}/enregistrer-transaction`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount,
-            id_client: clientId,
-            id_panier: panierId,
-          }),
-        });
+      // 4. Vider le panier (produits + total) avec token Authorization
+      const viderRes = await fetch(`${API_BASE_URL}/panier/${panierId}/vider`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,   // très important
+        },
+        credentials: "include",
+      });
 
-        if (!save.ok) {
-          alert("Le paiement a réussi, mais la transaction n’a pas été enregistrée.");
-          return;
-        }
 
-        const response = await save.json();
-        console.log("Transaction enregistrée :", response);
-
-        // 4. Vider le panier (produits + total)
-        await fetch(`${API_BASE_URL}/panier/${panierId}/vider`, {
-          method: "DELETE",
-          credentials: "include",
-        });
-
-        // 5. Redirection vers le profil
-        navigate("/profil");
-      } else {
-        alert("Paiement non finalisé.");
-      }
-    } catch (err) {
-      console.error("Erreur paiement:", err);
-      alert("Erreur durant le paiement.");
-    } finally {
-      setLoading(false);
+      // 5. Redirection vers le profil
+      navigate("/profil");
+    } else {
+      alert("Paiement non finalisé.");
     }
-  };
+  }catch (err) {
+  if (err instanceof Response) {
+    err.json().then(errorBody => {
+      alert("Erreur durant le paiement :\n" + JSON.stringify(errorBody, null, 2));
+    }).catch(() => {
+      err.text().then(text => {
+        alert("Erreur durant le paiement :\n" + text);
+      });
+    });
+  } else {
+    alert("Erreur durant le paiement :\n" + (typeof err === "object" ? JSON.stringify(err, null, 2) : err));
+  }
+  console.error("Erreur paiement:", err);
+}finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="checkout-form">

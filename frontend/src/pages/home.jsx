@@ -1,8 +1,7 @@
-// frontend/src/pages/Home.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductCard from '../compenents/ProductCard';
-import API_BASE_URL from '../config'; // ✅ Utilisation d'une base dynamique
+import API_BASE_URL from '../config';
 import '../styles/Home.css';
 
 export default function Home() {
@@ -12,39 +11,42 @@ export default function Home() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Charger l'utilisateur connecté
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return setUser(null);
-
-    fetch(`${API_BASE_URL}/api/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then(setUser)
-      .catch(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return setUser(null);
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('Utilisateur non authentifié');
+        const data = await res.json();
+        setUser(data);
+      } catch {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
         setUser(null);
-      });
+      }
+    };
+    fetchUser();
   }, []);
 
-  // Charger les produits
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-
-    fetch(`${API_BASE_URL}/api/produit`)
-      .then((res) => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/produit`);
         if (!res.ok) throw new Error(`Erreur ${res.status}`);
-        return res.json();
-      })
-      .then((data) => setProducts(data))
-      .catch((err) => {
-        console.error(err);
+        const data = await res.json();
+        setProducts(data);
+      } catch {
         setError("Impossible de charger les produits.");
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
   }, []);
 
   const preview = products.slice(0, 8);
@@ -86,9 +88,8 @@ export default function Home() {
         <>
           <div className="products-grid">
             {preview.length > 0 ? (
-              preview.map((prod) => (
+              preview.map(prod => (
                 <ProductCard
-                  key={prod.id}
                   id={prod.id}
                   titre={prod.titre}
                   image={prod.image}

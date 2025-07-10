@@ -1,4 +1,3 @@
-// src/pages/CreateAnnounce.jsx
 import React, { useState, useEffect } from 'react';
 import '../styles/CreateAnnounce.css';
 import API_BASE_URL from '../config';
@@ -68,11 +67,11 @@ const CreateAnnounce = () => {
   };
 
   const handleRemoveImage = (indexToRemove) => {
-    const updatedPreviews = imagePreviews.filter((_, i) => i !== indexToRemove);
-    const updatedFiles = formData.images.filter((_, i) => i !== indexToRemove);
-
-    setImagePreviews(updatedPreviews);
-    setFormData((prev) => ({ ...prev, images: updatedFiles }));
+    setImagePreviews(prev => prev.filter((_, i) => i !== indexToRemove));
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== indexToRemove),
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -226,22 +225,9 @@ const CreateAnnounce = () => {
 
       <div className="image-previews">
         {imagePreviews.map((img, i) => (
-          <div key={i} style={{ position: "relative", display: "inline-block", margin: "5px" }}>
-            <img src={img.url} alt={`preview-${i}`} style={{ width: "100px", height: "100px", objectFit: "cover" }} />
-            <button
-              type="button"
-              onClick={() => handleRemoveImage(i)}
-              style={{
-                position: "absolute",
-                top: 0,
-                right: 0,
-                background: "red",
-                color: "white",
-                border: "none",
-                cursor: "pointer",
-                padding: "2px 5px"
-              }}
-            >
+          <div key={i} className="image-preview-item">
+            <img src={img.url} alt={`preview-${i}`} />
+            <button type="button" onClick={() => handleRemoveImage(i)} className="btn-remove-image">
               ✕
             </button>
           </div>

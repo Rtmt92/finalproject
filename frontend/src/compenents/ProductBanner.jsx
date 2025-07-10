@@ -4,17 +4,7 @@ import "../styles/ProductBanner.css";
 import API_BASE_URL from "../config";
 import { Trash2 } from 'lucide-react';
 
-const ProductBanner = ({
-  titre,
-  description,
-  prix,
-  image,
-  id,
-  etat,
-  quantite,
-  clickable = true,
-  onDelete,  // Ajout de la prop onDelete
-}) => {
+const ProductBanner = ({titre, description, prix, image, id, etat, quantite, clickable = true, onDelete,}) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -27,13 +17,13 @@ const ProductBanner = ({
     <div
       className="banner"
       onClick={clickable ? handleClick : undefined}
-      style={{ cursor: clickable ? "pointer" : "default", position: 'relative' }} // position relative pour placer la croix
+      style={{ cursor: clickable ? "pointer" : "default", position: 'relative' }} 
     >
       {onDelete && (
         <button
           className="btn-delete"
           onClick={(e) => {
-            e.stopPropagation(); // empêcher le clic de remonter et déclencher la navigation
+            e.stopPropagation(); 
             onDelete(id);
           }}
           aria-label="Supprimer ce produit"

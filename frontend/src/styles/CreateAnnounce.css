@@ -44,19 +44,21 @@ select {
   gap: 16px;
 }
 
-.image-previews div {
+.image-preview-item {
   position: relative;
+  display: inline-block;
+  margin: 5px;
 }
 
-.image-previews img {
-  width: 120px;
-  height: 120px;
+.image-preview-item img {
+  width: 100px;
+  height: 100px;
   object-fit: cover;
   border-radius: 10px;
   border: 2px solid #fff;
 }
 
-.image-previews button {
+.btn-remove-image {
   position: absolute;
   top: -8px;
   right: -8px;

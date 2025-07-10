@@ -90,7 +90,16 @@ export default function Profil() {
 
   return (
     <div className="profil-container">
-      <ClientBanner {...client} photo={client.photo_profil} mode="edit" />
+      <ClientBanner
+        id={client.id_client}
+        nom={client.nom}
+        prenom={client.prenom}
+        email={client.email}
+        numero_telephone={client.numero_telephone}
+        description={client.description}
+        photo={client.photo_profil}
+        mode="edit"
+      />
 
       <h3 className="section-title">Votre panier</h3>
       <div className="panier-section">
@@ -108,7 +117,7 @@ export default function Profil() {
               quantite={prod.quantite}
               image={prod.image}
               clickable={false}
-              onDelete={handleDeleteFromPanier}  // <- ici
+              onDelete={handleDeleteFromPanier}  
             />
             </div>
           ))

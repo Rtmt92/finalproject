@@ -98,4 +98,4 @@ jobs:
 
       - name: Run Jest
         working-directory: frontend
-        run: npm test -- --ci --passWithNoTests
+        run: npm test -- --ci 

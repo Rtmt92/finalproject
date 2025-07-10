@@ -63,7 +63,19 @@ class Client {
         }
     }
 
-    public function update(int $id, array $data): bool {
+    public function update(int $id, array $data): bool|string {
+        // Vérification si email existe déjà pour un autre client
+        if (isset($data['email'])) {
+            $stmt = $this->db->prepare("SELECT id_client FROM client WHERE email = :email AND id_client != :id");
+            $stmt->execute([':email' => $data['email'], ':id' => $id]);
+            $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($existing) {
+                // Email déjà utilisé par un autre utilisateur
+                return 'EMAIL_ALREADY_EXISTS';
+            }
+        }
+
         $fields = [];
         $params = [':id' => $id];
 
@@ -98,6 +110,7 @@ class Client {
             return false;
         }
     }
+
 
     public function delete(int $id): bool {
         $stmt = $this->db->prepare("DELETE FROM client WHERE id_client = ?");

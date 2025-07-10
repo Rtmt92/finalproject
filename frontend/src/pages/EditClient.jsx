@@ -1,8 +1,7 @@
-// src/pages/EditClient.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import '../styles/EditClient.css'; 
-import API_BASE_URL from '../config'; // ← ajoute cette ligne
+import API_BASE_URL from '../config';
 
 const EditClient = () => {
   const { id } = useParams();
@@ -17,18 +16,32 @@ const EditClient = () => {
   });
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/client/${id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setForm({
-          nom: data.nom || "",
-          prenom: data.prenom || "",
-          email: data.email || "",
-          mot_de_passe: "",
-          role: data.role || "client",
-        });
+    const token = localStorage.getItem("token");
+    fetch(`${API_BASE_URL}/client/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error("Non autorisé");
+      }
+      return res.json();
+    })
+    .then((data) => {
+      setForm({
+        nom: data.nom || "",
+        prenom: data.prenom || "",
+        email: data.email || "",
+        mot_de_passe: "",
+        role: data.role || "client",
       });
-  }, [id]);
+    })
+    .catch(() => {
+      alert("Vous n'êtes pas autorisé à accéder à cette page.");
+      navigate("/login");
+    });
+  }, [id, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,9 +49,13 @@ const EditClient = () => {
   };
 
   const handleSubmit = async () => {
+    const token = localStorage.getItem("token");
     const res = await fetch(`${API_BASE_URL}/client/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
       body: JSON.stringify(form),
     });
 
@@ -54,8 +71,12 @@ const EditClient = () => {
     const confirmation = window.confirm("Supprimer définitivement ce client ?");
     if (!confirmation) return;
 
+    const token = localStorage.getItem("token");
     const res = await fetch(`${API_BASE_URL}/client/${id}`, {
       method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
 
     if (res.ok) {

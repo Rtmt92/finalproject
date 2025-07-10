@@ -85,6 +85,19 @@ class ClientController {
             return;
         }
         echo json_encode(['message' => 'Client mis à jour']);
+
+        $result = $clientModel->update($id, $data);
+
+        if ($result === 'EMAIL_ALREADY_EXISTS') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Cette adresse email est déjà utilisée.']);
+            exit;
+        }
+        if (!$result) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur lors de la mise à jour.']);
+            exit;
+        }
     }
 
     public function destroy(int $id): void {

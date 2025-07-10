@@ -49,43 +49,45 @@
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);  gap: 1rem;
+  grid-template-columns: repeat(4, 1fr);  
+  gap: 5%;
   justify-items: center;
-  padding-bottom: 2rem;
 }
 
 .voir-plus-wrapper {
   display: flex;
   justify-content: center;
-  margin: 2rem 0;
 }
 
 .voir-plus-btn {
-  background-color: #5a6169;
+  background-color: #47545B;
   color: #fff;
   border: none;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
   font-weight: 500;
   border-radius: 24px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.voir-plus-btn:hover {
-  background-color: #6b727a;
 }
 
 .error {
   color: #f44336;
   text-align: center;
-  margin: 1rem 0;
 }
 
 @media (max-width: 768px) {
+  .home {
+    padding-left: 5%;
+    padding-right: 5%;
+    box-sizing: border-box;
+  }
+
   .products-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    gap: 3%;
+  }
+
+  .voir-plus-wrapper {
+    margin: 15%;
+    display: flex;
+    justify-content: center;
   }
 
   .home-hero {
@@ -93,24 +95,25 @@
     flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
-    gap:5%; /* réduit encore l'espace */
+    gap: 5%; 
     margin-bottom: 2rem;
   }
 
   .home-hero-img {
-    flex: 0 0 90%; /* fixe l'image à ~48% */
+    flex: 0 0 90%; 
     max-width: 90%;
     height: auto;
   }
 
   .home-hero-text {
     flex: 1;
-    font-size: 1.1rem;
-    line-height: 1.4;
+    font-size: medium;
+    line-height: 1.5;
     padding: 0;
     text-align: left;
   }
 }
+
 
 
 

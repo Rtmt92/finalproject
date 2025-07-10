@@ -1,16 +1,8 @@
-// frontend/src/compenents/ProductCard.jsx
-import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/ProductCard.css';
 import API_BASE_URL from '../config';
 
-export default function ProductCard({
-  id,
-  titre,
-  image,
-  prix,
-  etat,
-}) {
+export default function ProductCard({ id, titre, image, prix, etat }) {
   return (
     <Link to={`/product/${id}`} className="product-card-link">
       <div className="product-card">

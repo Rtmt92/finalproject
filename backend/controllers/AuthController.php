@@ -35,7 +35,6 @@ class AuthController {
             return;
         }
 
-        // 🔐 HASHAGE DU MOT DE PASSE
         $data['mot_de_passe'] = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
 
         $id = $this->clientModel->create([
@@ -74,28 +73,32 @@ class AuthController {
         header('Content-Type: application/json; charset=utf-8');
         $data = json_decode(file_get_contents('php://input'), true);
 
-        if (empty($data['email']) || empty($data['mot_de_passe'])) {
+        if (empty($data['email'])) {
             http_response_code(400);
-            echo json_encode(['error' => 'Email et mot de passe obligatoires']);
+            echo json_encode(['error' => 'Veuillez entrer votre email']);
+            return;
+        }
+        if (empty($data['mot_de_passe'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Veuillez entrer votre mot de passe']);
             return;
         }
 
         $user = $this->clientModel->findByEmail($data['email']);
         if (!$user) {
             http_response_code(401);
-            echo json_encode(['error' => 'Identifiants invalides']);
+            echo json_encode(['error' => 'Email ou mot de passe incorrect']);
             return;
         }
 
-        // ✅ Vérification du mot de passe hashé
         if (!password_verify($data['mot_de_passe'], $user['mot_de_passe'])) {
             http_response_code(401);
-            echo json_encode(['error' => 'Identifiants invalides']);
+            echo json_encode(['error' => 'Email ou mot de passe incorrect']);
             return;
         }
 
         $payload = [
-            'iss'   => 'your-app',
+            'iss'   => 'DejaVu',
             'sub'   => $user['id_client'],
             'email' => $user['email'],
             'role'  => $user['role'],
@@ -104,8 +107,9 @@ class AuthController {
         ];
 
         $token = JWT::encode($payload, JwtConfig::SECRET_KEY, 'HS256');
-        echo json_encode(['token' => $token, 'role' => $user['role']]);
+        echo json_encode(['message' => 'Connexion réussie', 'token' => $token, 'role' => $user['role']]);
     }
+
 
     public function me(): void {
     header('Content-Type: application/json; charset=utf-8');

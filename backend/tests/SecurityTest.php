@@ -8,7 +8,7 @@ class SecurityTest extends TestCase
     {
         $controller = new ClientController();
 
-        $malicious = [
+        $injection = [
             'nom' => "'; DROP TABLE client; --",
             'prenom' => 'Injection',
             'email' => 'inject@test.com',
@@ -17,7 +17,7 @@ class SecurityTest extends TestCase
         ];
 
         ob_start();
-        $controller->storeFromData($malicious);
+        $controller->storeFromData($injection);
         $output = ob_get_clean();
 
         $this->assertNotEmpty($output, "La réponse est vide.");
