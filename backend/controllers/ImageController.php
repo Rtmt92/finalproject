@@ -4,18 +4,20 @@ namespace Controllers;
 use Src\Services\ImageService;
 
 class ImageController {
-    private ImageService $imageService;
+    private ImageService $imageService; // Service pour gérer les images
 
     public function __construct() {
-        $this->imageService = new ImageService();
+        $this->imageService = new ImageService(); // Initialise le service image
     }
 
+    // GET /images : retourne toutes les images
     public function index(): void {
         $images = $this->imageService->getAllImages();
         header('Content-Type: application/json');
         echo json_encode($images);
     }
 
+    // GET /images/{id} : retourne une image par son ID
     public function show(int $id): void {
         $image = $this->imageService->getImageById($id);
         if (!$image) {
@@ -27,6 +29,7 @@ class ImageController {
         echo json_encode($image);
     }
 
+    // POST /images : crée une nouvelle image
     public function store(): void {
         $data = json_decode(file_get_contents('php://input'), true);
         $newId = $this->imageService->createImage($data);
@@ -39,6 +42,7 @@ class ImageController {
         echo json_encode(['message' => 'Image créée', 'id_image' => $newId]);
     }
 
+    // PUT|PATCH /images/{id} : met à jour une image existante
     public function update(int $id): void {
         $data = json_decode(file_get_contents('php://input'), true);
         $ok = $this->imageService->updateImage($id, $data);
@@ -50,6 +54,7 @@ class ImageController {
         echo json_encode(['message' => 'Image mise à jour']);
     }
 
+    // DELETE /images/{id} : supprime une image
     public function destroy(int $id): void {
         $ok = $this->imageService->deleteImage($id);
         if (!$ok) {

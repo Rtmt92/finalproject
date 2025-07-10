@@ -54,10 +54,14 @@
   justify-items: center;
 }
 
+/* juste après votre .products-grid */
 .voir-plus-wrapper {
   display: flex;
   justify-content: center;
+  margin-top: 5%;     /* espace au-dessus du bouton */
+  margin-bottom: 5%;  /* espace en dessous si nécessaire */
 }
+
 
 .voir-plus-btn {
   background-color: #47545B;
@@ -85,10 +89,10 @@
   }
 
   .voir-plus-wrapper {
-    margin: 15%;
     display: flex;
     justify-content: center;
-  }
+    margin-top: 25%;
+ }
 
   .home-hero {
     flex-direction: row;
